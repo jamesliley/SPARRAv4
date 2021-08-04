@@ -1,0 +1,352 @@
+Total patients
+5829532
+
+Total recorded episodes of any type
+443849703
+
+Total patients used for training and testing
+12957648
+
+Number of events in training and testing
+1163520
+
+Variable names
+id
+emergency_bed_days
+num_emergency_admissions
+elective_bed_days
+num_elective_admissions
+emergency_drugAndalcohol_admin
+numLTCs_resulting_in_admin
+pis_PAID_GIC_INCL_BB
+pis_NUMBER_OF_PAID_ITEMS
+pis_countBNFsections
+pis_Respiratory
+pis_CentralNervousSystem
+pis_Infections
+pis_EndocrineSystem
+pis_IncontinenceDevices
+pis_CombinedStomaDevices
+pis_Anticoagulants_And_Protamine
+pis_Antiepileptic_Drugs
+pis_Antifibrinolytic_Drugs._Haemostatics
+pis_Antisecretory_Drugs_Mucosal_Protectants
+pis_Antispasmod_Other_Drgs_Alt_Gut_Motility
+pis_Arm_Sling_Bandages
+pis_Catheters
+pis_Corticosteroids_Respiratory
+pis_Dementia
+pis_Drugs_Affecting_Intestinal_Secretions
+pis_Drugs_Used_In_Diabetes
+pis_Drugs_Used_In_Neuromuscular_Disorders
+pis_Drugs_Used_In_Park.ism_Related_Disorders
+pis_Drugs_Used_In_Substance_Dependence
+pis_Fluids_And_Electrolytes
+pis_Minerals
+pis_Mucolytics
+pis_Oral_Nutrition
+pis_Vitamins
+num_psych_admissions
+num_ae2_attendances
+num_outpatient_appointment_general
+num_outpatient_appointment_mental
+age
+SIMD_DECILE_2016_SCT
+parkinsons_indicated
+MS_indicated
+epilepsy_indicated
+dementia_indicated
+days_since_last_AE2
+days_since_last_SMR00
+days_since_last_SMR01
+days_since_last_SMR01E
+days_since_last_SMR04
+days_since_last_SMR01_emergency_only
+days_since_last_SMR01E_emergency_only
+ltc_FIRST_ARTHRITIS_EPISODE_yearssincediag
+ltc_FIRST_ASTHMA_EPISODE_yearssincediag
+ltc_FIRST_ATRIAL_FIBRILLATION_EPISODE_yearssincediag
+ltc_FIRST_CANCER_EPISODE_yearssincediag
+ltc_FIRST_CHRONIC_LIVER_DISEASE_EPISODE_yearssincediag
+ltc_FIRST_COPD_EPISODE_yearssincediag
+ltc_FIRST_DEMENTIA_EPISODE_yearssincediag
+ltc_FIRST_DIABETES_EPISODE_yearssincediag
+ltc_FIRST_EPILEPSY_EPISODE_yearssincediag
+ltc_FIRST_HEART_DISEASE_EPISODE_yearssincediag
+ltc_FIRST_HEART_FAILURE_EPISODE_yearssincediag
+ltc_FIRST_MULTIPLE_SCLEROSIS_EPISODE_yearssincediag
+ltc_FIRST_PARKINSON_DISEASE_EPISODE_yearssincediag
+ltc_FIRST_RENAL_FAILURE_EPISODE_yearssincediag
+ltc_FIRST_CEREBROVASCULAR_DISEASE_EPISODE_yearssincediag
+ltc_rawdata_NUMBEROFLTCS
+time
+target
+sexM
+cv
+v3score
+
+
+Sources
+
+AE2
+7539454
+3031773
+
+
+deaths
+283554
+283554
+
+
+PIS
+393643499
+5590857
+
+
+SMR00
+27463987
+3753240
+
+
+SMR01
+8100908
+2205606
+
+
+SMR01E
+34335
+25015
+
+
+SMR04
+111487
+51635
+
+
+SPARRALTC
+2548977
+1396543
+
+
+SystemWatch
+4123502
+1750009
+
+
+
+Super-learner coefficients
+
+
+Fold1
+Lambda_min
+  ann.h2o   glm.h2o    nb.h2o   rf1.h2o   rf2.h2o        v3  xgb1.xgb  xgb2.xgb  xgb3.xgb 
+0.0000000 0.0000000 0.0000000 0.3353040 0.2827641 0.0000000 1.3699400 1.5229505 1.2879281 
+
+
+Fold2
+Lambda_min
+  ann.h2o   glm.h2o    nb.h2o   rf1.h2o   rf2.h2o        v3  xgb1.xgb  xgb2.xgb  xgb3.xgb 
+0.0000000 0.0000000 0.0000000 0.2501794 0.0000000 0.0000000 0.7382466 1.4996756 1.1322035 
+
+
+Fold3
+Lambda_min
+  ann.h2o   glm.h2o    nb.h2o   rf1.h2o   rf2.h2o        v3  xgb1.xgb  xgb2.xgb  xgb3.xgb 
+0.0000000 0.0000000 0.0000000 0.9840369 0.1452345 0.0000000 0.9133495 1.9138883 0.9065834 
+
+
+Calibrating transforms
+
+
+Fold1
+x_e=NULL
+
+y_e=NULL
+
+
+
+
+
+Fold2
+x_e=NULL
+
+y_e=NULL
+
+
+
+
+
+Fold3
+x_e=NULL
+
+y_e=NULL
+
+
+
+
+
+
+Missingness
+id ,  0 
+emergency_bed_days ,  0 
+num_emergency_admissions ,  0 
+elective_bed_days ,  0 
+num_elective_admissions ,  0 
+emergency_drugAndalcohol_admin ,  0 
+numLTCs_resulting_in_admin ,  0 
+pis_PAID_GIC_INCL_BB ,  0 
+pis_NUMBER_OF_PAID_ITEMS ,  0 
+pis_countBNFsections ,  0 
+pis_Respiratory ,  0 
+pis_CentralNervousSystem ,  0 
+pis_Infections ,  0 
+pis_EndocrineSystem ,  0 
+pis_IncontinenceDevices ,  0 
+pis_CombinedStomaDevices ,  0 
+pis_Anticoagulants_And_Protamine ,  0 
+pis_Antiepileptic_Drugs ,  0 
+pis_Antifibrinolytic_Drugs._Haemostatics ,  0 
+pis_Antisecretory_Drugs_Mucosal_Protectants ,  0 
+pis_Antispasmod_Other_Drgs_Alt_Gut_Motility ,  0 
+pis_Arm_Sling_Bandages ,  0 
+pis_Catheters ,  0 
+pis_Corticosteroids_Respiratory ,  0 
+pis_Dementia ,  0 
+pis_Drugs_Affecting_Intestinal_Secretions ,  0 
+pis_Drugs_Used_In_Diabetes ,  0 
+pis_Drugs_Used_In_Neuromuscular_Disorders ,  0 
+pis_Drugs_Used_In_Park.ism_Related_Disorders ,  0 
+pis_Drugs_Used_In_Substance_Dependence ,  0 
+pis_Fluids_And_Electrolytes ,  0 
+pis_Minerals ,  0 
+pis_Mucolytics ,  0 
+pis_Oral_Nutrition ,  0 
+pis_Vitamins ,  0 
+num_psych_admissions ,  0 
+num_ae2_attendances ,  0 
+num_outpatient_appointment_general ,  0 
+num_outpatient_appointment_mental ,  0 
+age ,  0 
+SIMD_DECILE_2016_SCT ,  0.006687016 
+parkinsons_indicated ,  0 
+MS_indicated ,  0 
+epilepsy_indicated ,  0 
+dementia_indicated ,  0 
+days_since_last_AE2 ,  0 
+days_since_last_SMR00 ,  0 
+days_since_last_SMR01 ,  0 
+days_since_last_SMR01E ,  0 
+days_since_last_SMR04 ,  0 
+days_since_last_SMR01_emergency_only ,  0 
+days_since_last_SMR01E_emergency_only ,  0 
+ltc_FIRST_ARTHRITIS_EPISODE_yearssincediag ,  0 
+ltc_FIRST_ASTHMA_EPISODE_yearssincediag ,  0 
+ltc_FIRST_ATRIAL_FIBRILLATION_EPISODE_yearssincediag ,  0 
+ltc_FIRST_CANCER_EPISODE_yearssincediag ,  0 
+ltc_FIRST_CHRONIC_LIVER_DISEASE_EPISODE_yearssincediag ,  0 
+ltc_FIRST_COPD_EPISODE_yearssincediag ,  0 
+ltc_FIRST_DEMENTIA_EPISODE_yearssincediag ,  0 
+ltc_FIRST_DIABETES_EPISODE_yearssincediag ,  0 
+ltc_FIRST_EPILEPSY_EPISODE_yearssincediag ,  0 
+ltc_FIRST_HEART_DISEASE_EPISODE_yearssincediag ,  0 
+ltc_FIRST_HEART_FAILURE_EPISODE_yearssincediag ,  0 
+ltc_FIRST_MULTIPLE_SCLEROSIS_EPISODE_yearssincediag ,  0 
+ltc_FIRST_PARKINSON_DISEASE_EPISODE_yearssincediag ,  0 
+ltc_FIRST_RENAL_FAILURE_EPISODE_yearssincediag ,  0 
+ltc_FIRST_CEREBROVASCULAR_DISEASE_EPISODE_yearssincediag ,  0 
+ltc_rawdata_NUMBEROFLTCS ,  0 
+topic_1_fit12 ,  0.008150399 
+topic_2_fit12 ,  0.008150399 
+topic_3_fit12 ,  0.008150399 
+topic_4_fit12 ,  0.008150399 
+topic_5_fit12 ,  0.008150399 
+topic_6_fit12 ,  0.008150399 
+topic_7_fit12 ,  0.008150399 
+topic_8_fit12 ,  0.008150399 
+topic_9_fit12 ,  0.008150399 
+topic_10_fit12 ,  0.008150399 
+topic_11_fit12 ,  0.008150399 
+topic_12_fit12 ,  0.008150399 
+topic_13_fit12 ,  0.008150399 
+topic_14_fit12 ,  0.008150399 
+topic_15_fit12 ,  0.008150399 
+topic_16_fit12 ,  0.008150399 
+topic_17_fit12 ,  0.008150399 
+topic_18_fit12 ,  0.008150399 
+topic_19_fit12 ,  0.008150399 
+topic_20_fit12 ,  0.008150399 
+topic_21_fit12 ,  0.008150399 
+topic_22_fit12 ,  0.008150399 
+topic_23_fit12 ,  0.008150399 
+topic_24_fit12 ,  0.008150399 
+topic_25_fit12 ,  0.008150399 
+topic_26_fit12 ,  0.008150399 
+topic_27_fit12 ,  0.008150399 
+topic_28_fit12 ,  0.008150399 
+topic_29_fit12 ,  0.008150399 
+topic_30_fit12 ,  0.008150399 
+topic_1_fit13 ,  0.008150399 
+topic_2_fit13 ,  0.008150399 
+topic_3_fit13 ,  0.008150399 
+topic_4_fit13 ,  0.008150399 
+topic_5_fit13 ,  0.008150399 
+topic_6_fit13 ,  0.008150399 
+topic_7_fit13 ,  0.008150399 
+topic_8_fit13 ,  0.008150399 
+topic_9_fit13 ,  0.008150399 
+topic_10_fit13 ,  0.008150399 
+topic_11_fit13 ,  0.008150399 
+topic_12_fit13 ,  0.008150399 
+topic_13_fit13 ,  0.008150399 
+topic_14_fit13 ,  0.008150399 
+topic_15_fit13 ,  0.008150399 
+topic_16_fit13 ,  0.008150399 
+topic_17_fit13 ,  0.008150399 
+topic_18_fit13 ,  0.008150399 
+topic_19_fit13 ,  0.008150399 
+topic_20_fit13 ,  0.008150399 
+topic_21_fit13 ,  0.008150399 
+topic_22_fit13 ,  0.008150399 
+topic_23_fit13 ,  0.008150399 
+topic_24_fit13 ,  0.008150399 
+topic_25_fit13 ,  0.008150399 
+topic_26_fit13 ,  0.008150399 
+topic_27_fit13 ,  0.008150399 
+topic_28_fit13 ,  0.008150399 
+topic_29_fit13 ,  0.008150399 
+topic_30_fit13 ,  0.008150399 
+topic_1_fit23 ,  0.008150399 
+topic_2_fit23 ,  0.008150399 
+topic_3_fit23 ,  0.008150399 
+topic_4_fit23 ,  0.008150399 
+topic_5_fit23 ,  0.008150399 
+topic_6_fit23 ,  0.008150399 
+topic_7_fit23 ,  0.008150399 
+topic_8_fit23 ,  0.008150399 
+topic_9_fit23 ,  0.008150399 
+topic_10_fit23 ,  0.008150399 
+topic_11_fit23 ,  0.008150399 
+topic_12_fit23 ,  0.008150399 
+topic_13_fit23 ,  0.008150399 
+topic_14_fit23 ,  0.008150399 
+topic_15_fit23 ,  0.008150399 
+topic_16_fit23 ,  0.008150399 
+topic_17_fit23 ,  0.008150399 
+topic_18_fit23 ,  0.008150399 
+topic_19_fit23 ,  0.008150399 
+topic_20_fit23 ,  0.008150399 
+topic_21_fit23 ,  0.008150399 
+topic_22_fit23 ,  0.008150399 
+topic_23_fit23 ,  0.008150399 
+topic_24_fit23 ,  0.008150399 
+topic_25_fit23 ,  0.008150399 
+topic_26_fit23 ,  0.008150399 
+topic_27_fit23 ,  0.008150399 
+topic_28_fit23 ,  0.008150399 
+topic_29_fit23 ,  0.008150399 
+topic_30_fit23 ,  0.008150399 
+time ,  0 
+target ,  0 
+sexM ,  0 
+cv ,  0 
+v3score ,  0 

@@ -1,0 +1,38 @@
+
+	DeLong's test for two correlated ROC curves
+
+data:  roc_topic and roc_notopic
+Z = 28.175, p-value < 2.2e-16
+alternative hypothesis: true difference in AUC is not equal to 0
+sample estimates:
+AUC of roc1 AUC of roc2 
+  0.7890564   0.7877610 
+
+
+
+P-value:  1.177167e-174
+
+
+               [,1] [,2] [,3]  [,4]  [,5]   [,6]   [,7]    [,8]
+TopN           1000 2000 5000 10000 50000 100000 500000 1000000
+N_adm_topics    216  387  944  1967 10054  20226  87613  132771
+N_adm_notopics  199  383  986  2043 10041  20080  87419  132609
+Difference       17    4  -42   -76    13    146    194     162
+
+
+
+***************
+
+r0=structure(list(alternative = "two.sided", data.names = "roc_topic and roc_notopic", 
+    estimate = c(`AUC of roc1` = 0.789056444587706, `AUC of roc2` = 0.787760977232515
+    ), null.value = c(`difference in AUC` = 0), statistic = c(Z = 28.1752091799546), 
+    method = "DeLong's test for two correlated ROC curves", p.value = 1.17716666972963e-174), class = "htest")
+
+
+out=structure(c(1000, 216, 199, 17, 2000, 387, 383, 4, 5000, 944, 
+986, -42, 10000, 1967, 2043, -76, 50000, 10054, 10041, 13, 1e+05, 
+20226, 20080, 146, 5e+05, 87613, 87419, 194, 1e+06, 132771, 132609, 
+162), .Dim = c(4L, 8L), .Dimnames = list(c("TopN", "N_adm_topics", 
+"N_adm_notopics", "Difference"), NULL))
+
+

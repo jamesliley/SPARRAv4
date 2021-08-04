@@ -1,0 +1,225 @@
+Difference_timepoint_ 1 _ 2015-05-01 _vs_timepoint_ 2 _ 2015-12-01 
+
+
+	DeLong's test for two correlated ROC curves
+
+data:  roc_t1 and roc_t2
+Z = -0.20038, p-value = 0.8412
+alternative hypothesis: true difference in AUC is not equal to 0
+sample estimates:
+AUC of roc1 AUC of roc2 
+  0.7890625   0.7893026 
+
+
+
+
+Difference_timepoint_ 1 _ 2015-05-01 _vs_timepoint_ 3 _ 2016-05-01 
+
+
+	DeLong's test for two correlated ROC curves
+
+data:  roc_t1 and roc_t2
+Z = -0.84747, p-value = 0.3967
+alternative hypothesis: true difference in AUC is not equal to 0
+sample estimates:
+AUC of roc1 AUC of roc2 
+  0.7890625   0.7900739 
+
+
+
+
+Difference_timepoint_ 1 _ 2015-05-01 _vs_timepoint_ 4 _ 2016-12-01 
+
+
+	DeLong's test for two correlated ROC curves
+
+data:  roc_t1 and roc_t2
+Z = -3.1148, p-value = 0.001841
+alternative hypothesis: true difference in AUC is not equal to 0
+sample estimates:
+AUC of roc1 AUC of roc2 
+  0.7890625   0.7927891 
+
+
+
+
+Difference_timepoint_ 1 _ 2015-05-01 _vs_timepoint_ 5 _ 2017-05-01 
+
+
+	DeLong's test for two correlated ROC curves
+
+data:  roc_t1 and roc_t2
+Z = -4.3888, p-value = 1.14e-05
+alternative hypothesis: true difference in AUC is not equal to 0
+sample estimates:
+AUC of roc1 AUC of roc2 
+  0.7890625   0.7942842 
+
+
+
+
+Difference_timepoint_ 2 _ 2015-12-01 _vs_timepoint_ 3 _ 2016-05-01 
+
+
+	DeLong's test for two correlated ROC curves
+
+data:  roc_t1 and roc_t2
+Z = -0.6467, p-value = 0.5178
+alternative hypothesis: true difference in AUC is not equal to 0
+sample estimates:
+AUC of roc1 AUC of roc2 
+  0.7893026   0.7900739 
+
+
+
+
+Difference_timepoint_ 2 _ 2015-12-01 _vs_timepoint_ 4 _ 2016-12-01 
+
+
+	DeLong's test for two correlated ROC curves
+
+data:  roc_t1 and roc_t2
+Z = -2.9195, p-value = 0.003506
+alternative hypothesis: true difference in AUC is not equal to 0
+sample estimates:
+AUC of roc1 AUC of roc2 
+  0.7893026   0.7927891 
+
+
+
+
+Difference_timepoint_ 2 _ 2015-12-01 _vs_timepoint_ 5 _ 2017-05-01 
+
+
+	DeLong's test for two correlated ROC curves
+
+data:  roc_t1 and roc_t2
+Z = -4.2157, p-value = 2.49e-05
+alternative hypothesis: true difference in AUC is not equal to 0
+sample estimates:
+AUC of roc1 AUC of roc2 
+  0.7893026   0.7942842 
+
+
+
+
+Difference_timepoint_ 3 _ 2016-05-01 _vs_timepoint_ 4 _ 2016-12-01 
+
+
+	DeLong's test for two correlated ROC curves
+
+data:  roc_t1 and roc_t2
+Z = -2.2809, p-value = 0.02255
+alternative hypothesis: true difference in AUC is not equal to 0
+sample estimates:
+AUC of roc1 AUC of roc2 
+  0.7900739   0.7927891 
+
+
+
+
+Difference_timepoint_ 3 _ 2016-05-01 _vs_timepoint_ 5 _ 2017-05-01 
+
+
+	DeLong's test for two correlated ROC curves
+
+data:  roc_t1 and roc_t2
+Z = -3.5397, p-value = 0.0004006
+alternative hypothesis: true difference in AUC is not equal to 0
+sample estimates:
+AUC of roc1 AUC of roc2 
+  0.7900739   0.7942842 
+
+
+
+
+Difference_timepoint_ 4 _ 2016-12-01 _vs_timepoint_ 5 _ 2017-05-01 
+
+
+	DeLong's test for two correlated ROC curves
+
+data:  roc_t1 and roc_t2
+Z = -1.2587, p-value = 0.2081
+alternative hypothesis: true difference in AUC is not equal to 0
+sample estimates:
+AUC of roc1 AUC of roc2 
+  0.7927891   0.7942842 
+
+
+
+
+
+
+
+***************
+
+rt_1_2=structure(list(alternative = "two.sided", data.names = "roc_t1 and roc_t2", 
+    estimate = c(`AUC of roc1` = 0.789062522347803, `AUC of roc2` = 0.789302578205738
+    ), null.value = c(`difference in AUC` = 0), statistic = c(Z = -0.200382086659598), 
+    method = "DeLong's test for two correlated ROC curves", p.value = 0.841181768153053), class = "htest")
+
+
+
+rt_1_3=structure(list(alternative = "two.sided", data.names = "roc_t1 and roc_t2", 
+    estimate = c(`AUC of roc1` = 0.789062522347803, `AUC of roc2` = 0.790073905967471
+    ), null.value = c(`difference in AUC` = 0), statistic = c(Z = -0.847468218130829), 
+    method = "DeLong's test for two correlated ROC curves", p.value = 0.396734194597084), class = "htest")
+
+
+
+rt_1_4=structure(list(alternative = "two.sided", data.names = "roc_t1 and roc_t2", 
+    estimate = c(`AUC of roc1` = 0.789062522347803, `AUC of roc2` = 0.792789120959148
+    ), null.value = c(`difference in AUC` = 0), statistic = c(Z = -3.11477360258712), 
+    method = "DeLong's test for two correlated ROC curves", p.value = 0.00184086142848237), class = "htest")
+
+
+
+rt_1_5=structure(list(alternative = "two.sided", data.names = "roc_t1 and roc_t2", 
+    estimate = c(`AUC of roc1` = 0.789062522347803, `AUC of roc2` = 0.794284172541516
+    ), null.value = c(`difference in AUC` = 0), statistic = c(Z = -4.38875195673685), 
+    method = "DeLong's test for two correlated ROC curves", p.value = 1.14003004607738e-05), class = "htest")
+
+
+
+rt_2_3=structure(list(alternative = "two.sided", data.names = "roc_t1 and roc_t2", 
+    estimate = c(`AUC of roc1` = 0.789302578205738, `AUC of roc2` = 0.790073905967471
+    ), null.value = c(`difference in AUC` = 0), statistic = c(Z = -0.646697127991784), 
+    method = "DeLong's test for two correlated ROC curves", p.value = 0.517827982239488), class = "htest")
+
+
+
+rt_2_4=structure(list(alternative = "two.sided", data.names = "roc_t1 and roc_t2", 
+    estimate = c(`AUC of roc1` = 0.789302578205738, `AUC of roc2` = 0.792789120959148
+    ), null.value = c(`difference in AUC` = 0), statistic = c(Z = -2.91952719644782), 
+    method = "DeLong's test for two correlated ROC curves", p.value = 0.00350562803863964), class = "htest")
+
+
+
+rt_2_5=structure(list(alternative = "two.sided", data.names = "roc_t1 and roc_t2", 
+    estimate = c(`AUC of roc1` = 0.789302578205738, `AUC of roc2` = 0.794284172541516
+    ), null.value = c(`difference in AUC` = 0), statistic = c(Z = -4.21567518042931), 
+    method = "DeLong's test for two correlated ROC curves", p.value = 2.49031989095647e-05), class = "htest")
+
+
+
+rt_3_4=structure(list(alternative = "two.sided", data.names = "roc_t1 and roc_t2", 
+    estimate = c(`AUC of roc1` = 0.790073905967471, `AUC of roc2` = 0.792789120959148
+    ), null.value = c(`difference in AUC` = 0), statistic = c(Z = -2.28093307769969), 
+    method = "DeLong's test for two correlated ROC curves", p.value = 0.0225524072454724), class = "htest")
+
+
+
+rt_3_5=structure(list(alternative = "two.sided", data.names = "roc_t1 and roc_t2", 
+    estimate = c(`AUC of roc1` = 0.790073905967471, `AUC of roc2` = 0.794284172541516
+    ), null.value = c(`difference in AUC` = 0), statistic = c(Z = -3.53969005860816), 
+    method = "DeLong's test for two correlated ROC curves", p.value = 0.000400597202694663), class = "htest")
+
+
+
+rt_4_5=structure(list(alternative = "two.sided", data.names = "roc_t1 and roc_t2", 
+    estimate = c(`AUC of roc1` = 0.792789120959148, `AUC of roc2` = 0.794284172541516
+    ), null.value = c(`difference in AUC` = 0), statistic = c(Z = -1.25871119120128), 
+    method = "DeLong's test for two correlated ROC curves", p.value = 0.208134667700545), class = "htest")
+
+
+

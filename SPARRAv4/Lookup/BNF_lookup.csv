@@ -1,0 +1,232 @@
+BNF_Section,BNF_Section1,BNF_Section2,Description,Description1
+1.1,0101,NUM_BNF_0101, Dyspep&Gastro-Oesophageal Reflux Disease,Dyspep_Gastro_Oesophageal_Reflux_Disease
+   1.2,0102,NUM_BNF_0102, Antispasmod.&Other Drgs Alt.Gut Motility,Antispasmod_Other_Drgs_Alt_Gut_Motility
+   1.3,0103,NUM_BNF_0103, Antisecretory Drugs+Mucosal Protectants,Antisecretory_Drugs_Mucosal_Protectants
+   1.4,0104,NUM_BNF_0104, Acute Diarrhoea,Acute_Diarrhoea
+   1.5,0105,NUM_BNF_0105, Chronic Bowel Disorders,Chronic_Bowel_Disorders
+   1.6,0106,NUM_BNF_0106, Laxatives,Laxatives
+   1.7,0107,NUM_BNF_0107, Local Prepn for Anal & Rectal Disorders,Local_Prepn_for_Anal _Rectal_Disorders
+   1.8,0108,NUM_BNF_0108, Stoma Care,Stoma_Care
+   1.9,0109,NUM_BNF_0109, Drugs Affecting Intestinal Secretions,Drugs_Affecting_Intestinal_Secretions
+   2.1,0201,NUM_BNF_0201, Positive Inotropic Drugs,Positive_Inotropic_Drugs
+   2.2,0202,NUM_BNF_0202, Diuretics,Diuretics
+   2.3,0203,NUM_BNF_0203, Anti-Arrhythmic Drugs,Anti_Arrhythmic_Drugs
+   2.4,0204,NUM_BNF_0204, Beta-Adrenoceptor Blocking Drugs,Beta_Adrenoceptor_Blocking_Drugs
+   2.5,0205,NUM_BNF_0205, Hypertension and Heart Failure,Hypertension_and_Heart_Failure
+   2.6,0206,NUM_BNF_0206," Nit,Calc Block & Other Antianginal Drugs",Nit_Calc_Block_Other_Antianginal_Drugs
+   2.7,0207,NUM_BNF_0207, Sympathomimetics,Sympathomimetics
+   2.8,0208,NUM_BNF_0208, Anticoagulants And Protamine,Anticoagulants_And_Protamine
+   2.9,0209,NUM_BNF_0209, Antiplatelet Drugs,Antiplatelet_Drugs
+   2.10,0210,NUM_BNF_0210," Stable Angina, Acute/Crnry Synd&Fibrin",Stable_Angina_Acute_Crnry_Synd_Fibrin
+   2.11,0211,NUM_BNF_0211, Antifibrinolytic Drugs & Haemostatics,Antifibrinolytic_Drugs _Haemostatics
+   2.12,0212,NUM_BNF_0212, Lipid-Regulating Drugs,Lipid_Regulating_Drugs
+   2.13,0213,NUM_BNF_0213, Local Sclerosants,Local_Sclerosants
+   3.1,0301,NUM_BNF_0301, Bronchodilators,Bronchodilators
+   3.2,0302,NUM_BNF_0302, Corticosteroids (Respiratory),Corticosteroids_Respiratory
+   3.3,0303,NUM_BNF_0303," Cromoglycate,Rel,Leukotriene Antagonists",Cromoglycate_Rel_Leukotriene_Antagonists
+   3.4,0304,NUM_BNF_0304," Antihist, Hyposensit & Allergic Emergen",Antihist_Hyposensit _Allergic_Emergen
+   3.5,0305,NUM_BNF_0305, Resp Stimulants & Pulmonary Surfactants,Resp_Stimulants _Pulmonary_Surfactants
+   3.6,0306,NUM_BNF_0306, Oxygen,Oxygen
+   3.7,0307,NUM_BNF_0307, Mucolytics,Mucolytics
+   3.8,0308,NUM_BNF_0308, Aromatic Inhalations,Aromatic_Inhalations
+   3.9,0309,NUM_BNF_0309, Cough Preparations,Cough_Preparations
+   3.10,0310,NUM_BNF_0310, Systemic Nasal Decongestants,Systemic_Nasal_Decongestants
+   3.11,0311,NUM_BNF_0311, Antifibrotics,Antifibrotics
+   4.1,0401,NUM_BNF_0401, Hypnotics And Anxiolytics,Hypnotics_And_Anxiolytics
+   4.2,0402,NUM_BNF_0402, Drugs Used In Psychoses & Rel.Disorders,Drugs_Used_In_Psychoses_Rel_Disorders
+   4.3,0403,NUM_BNF_0403, Antidepressant Drugs,Antidepressant_Drugs
+   4.4,0404,NUM_BNF_0404, CNS Stimulants and drugs used for ADHD,CNS_Stimulants_and_drugs_used_for_ADHD
+   4.5,0405,NUM_BNF_0405, Obesity,Obesity
+   4.6,0406,NUM_BNF_0406, Drugs Used In Nausea And Vertigo,Drugs_Used_In_Nausea_And_Vertigo
+   4.7,0407,NUM_BNF_0407, Analgesics,Analgesics
+   4.8,0408,NUM_BNF_0408, Antiepileptic Drugs,Antiepileptic_Drugs
+   4.9,0409,NUM_BNF_0409, Drugs Used In Park'ism/Related Disorders,Drugs_Used_In_Park'ism_Related_Disorders
+   4.10,0410,NUM_BNF_0410, Drugs Used In Substance Dependence,Drugs_Used_In_Substance_Dependence
+   4.11,0411,NUM_BNF_0411, Dementia,Dementia
+   5.1,0501,NUM_BNF_0501, Antibacterial Drugs,Antibacterial_Drugs
+   5.2,0502,NUM_BNF_0502, Antifungal Drugs,Antifungal_Drugs
+   5.3,0503,NUM_BNF_0503, Antiviral Drugs,Antiviral_Drugs
+   5.4,0504,NUM_BNF_0504, Antiprotozoal Drugs,Antiprotozoal_Drugs
+   5.5,0505,NUM_BNF_0505, Anthelmintics,Anthelmintics
+   6.1,0601,NUM_BNF_0601, Drugs Used In Diabetes,Drugs_Used_In_Diabetes
+   6.2,0602,NUM_BNF_0602, Thyroid And Antithyroid Drugs,Thyroid_And_Antithyroid_Drugs
+   6.3,0603,NUM_BNF_0603, Corticosteroids (Endocrine),Corticosteroids_Endocrine
+   6.4,0604,NUM_BNF_0604, Sex Hormones,Sex_Hormones
+   6.5,0605,NUM_BNF_0605, Hypothalamic&Pituitary Hormones&Antioest,Hypothalamic_Pituitary_Hormones_Antioest
+   6.6,0606,NUM_BNF_0606, Drugs Affecting Bone Metabolism,Drugs_Affecting_Bone_Metabolism
+   6.7,0607,NUM_BNF_0607, Other Endocrine Drugs,Other_Endocrine_Drugs
+   7.1,0701,NUM_BNF_0701, Drugs Used In Obstetrics,Drugs_Used_In_Obstetrics
+   7.2,0702,NUM_BNF_0702, Treatment Of Vaginal & Vulval Conditions,Treatment_Of_Vaginal_Vulval_Conditions
+   7.3,0703,NUM_BNF_0703, Contraceptives,Contraceptives
+   7.4,0704,NUM_BNF_0704, Drugs For Genito-Urinary Disorders,Drugs_For_Genito_Urinary_Disorders
+   8.1,0801,NUM_BNF_0801, Cytotoxic Drugs,Cytotoxic_Drugs
+   8.2,0802,NUM_BNF_0802, Drugs Affecting The Immune Response,Drugs_Affecting_The_Immune_Response
+   8.3,0803,NUM_BNF_0803, Sex Hormones & Antag In Malig Disease,Sex_Hormones_Antag_In_Malig_Disease
+   9.1,0901,NUM_BNF_0901, Anaemias + Other Blood Disorders,Anaemias_Other_Blood_Disorders
+   9.2,0902,NUM_BNF_0902, Fluids And Electrolytes,Fluids_And_Electrolytes
+   9.3,0903,NUM_BNF_0903, Intravenous Nutrition,Intravenous_Nutrition
+   9.4,0904,NUM_BNF_0904, Oral Nutrition,Oral_Nutrition
+   9.5,0905,NUM_BNF_0905, Minerals,Minerals
+   9.6,0906,NUM_BNF_0906, Vitamins,Vitamins
+   9.7,0907,NUM_BNF_0907, Bitters And Tonics,Bitters_And_Tonics
+   9.8,0908,NUM_BNF_0908, Metabolic Disorders,Metabolic_Disorders
+   9.9,0909,NUM_BNF_0909, Foods,Foods
+   9.10,0910,NUM_BNF_0910, Compound Vit/Mineral Formulations,Compound_Vit_Mineral_Formulations
+   9.11,0911,NUM_BNF_0911, Health Supplements,Health_Supplements
+   9.12,0912,NUM_BNF_0912, Other Health Supplements,Other_Health_Supplements
+10.1,1001,NUM_BNF_1001,Unknown,Unknown1
+   10.2,1002,NUM_BNF_1002, Drugs Used In Neuromuscular Disorders,Drugs_Used_In_Neuromuscular_Disorders
+   10.3,1003,NUM_BNF_1003, Soft-Tissue Disorders & Topical Pain Rel,Soft_Tissue_Disorders _Topical_Pain_Rel
+   11.3,1103,NUM_BNF_1103, Anti-Infective Eye Preparations,Anti_Infective_Eye_Preparations
+   11.4,1104,NUM_BNF_1104, Corti'roids & Other Anti-Inflamm.Preps.,Corti'roids _Other_Anti_Inflamm_Preps_
+   11.5,1105,NUM_BNF_1105, Mydriatics And Cycloplegics,Mydriatics_And_Cycloplegics
+   11.6,1106,NUM_BNF_1106, Treatment Of Glaucoma,Treatment_Of_Glaucoma
+   11.7,1107,NUM_BNF_1107, Local Anaesthetics,Local_Anaesthetics
+   11.8,1108,NUM_BNF_1108, Miscellaneous Ophthalmic Preparations,Miscellaneous_Ophthalmic_Preparations
+11.9,1109,NUM_BNF_1109,Unknown,Unknown2
+   12.1,1201,NUM_BNF_1201, Drugs Acting On The Ear,Drugs_Acting_On_The_Ear
+   12.2,1202,NUM_BNF_1202, Drugs Acting On The Nose,Drugs_Acting_On_The_Nose
+   12.3,1203,NUM_BNF_1203, Drugs Acting On The Oropharynx,Drugs_Acting_On_The_Oropharynx
+   13.1,1301,NUM_BNF_1301, Management of Skin Conditions,Management_of_Skin_Conditions
+   13.2,1302,NUM_BNF_1302, Emollient & Barrier Preparations,Emollient _Barrier_Preparations
+   13.3,1303,NUM_BNF_1303, Top Local Anaesthetics & Antipruritics,Top_Local_Anaesthetics _Antipruritics
+   13.4,1304,NUM_BNF_1304, Topical Corticosteroids,Topical_Corticosteroids
+   13.5,1305,NUM_BNF_1305, Preparations For Eczema And Psoriasis,Preparations_For_Eczema_And_Psoriasis
+   13.6,1306,NUM_BNF_1306, Acne and Rosacea,Acne_and_Rosacea
+   13.7,1307,NUM_BNF_1307, Preparations For Warts And Calluses,Preparations_For_Warts_And_Calluses
+   13.8,1308,NUM_BNF_1308, Sunscreens And Camouflagers,Sunscreens_And_Camouflagers
+   13.9,1309,NUM_BNF_1309, Shampoo&Other Preps For Scalp&Hair Cond,Shampoo_Other_Preps_For_Scalp_Hair_Cond
+   13.10,1310,NUM_BNF_1310, Anti-Infective Skin Preparations,Anti_Infective_Skin_Preparations
+   13.11,1311,NUM_BNF_1311," Skin Cleansers,Antiseptics & Desloughing",Skin_Cleansers_Antiseptics _Desloughing
+   13.12,1312,NUM_BNF_1312, Antiperspirants,Antiperspirants
+   13.13,1313,NUM_BNF_1313, Wound Management Products,Wound_Management_Products
+   13.14,1314,NUM_BNF_1314, Topical Circulatory Preparations,Topical_Circulatory_Preparations
+   13.15,1315,NUM_BNF_1315, Miscellaneous Topical Preparations,Miscellaneous_Topical_Preparations
+   14.3,1403,NUM_BNF_1403, Diagnostic Vaccines,Diagnostic_Vaccines
+   14.4,1404,NUM_BNF_1404, Vaccines And Antisera,Vaccines_And_Antisera
+   14.5,1405,NUM_BNF_1405, Immunoglobulins,Immunoglobulins
+   15.1,1501,NUM_BNF_1501, General Anaesthesia,General_Anaesthesia
+   15.2,1502,NUM_BNF_1502, Local Anaesthesia,Local_Anaesthesia
+18.1,1801,NUM_BNF_1801,Unknown,Unknown3
+   18.3,1803,NUM_BNF_1803, X-Ray Contrast Media,X_Ray_Contrast_Media
+   18.4,1804,NUM_BNF_1804, Diagnostic Agents,Diagnostic_Agents
+   19.1,1901,NUM_BNF_1901," Alcohol, Wines & Spirits",Alcohol_Wines _Spirits
+   19.2,1902,NUM_BNF_1902, Selective Preparations,Selective_Preparations
+19.3,1903,NUM_BNF_1903,Adjuncts to dispensing,Adjuncts_to_dispensing
+   19.4,1904,NUM_BNF_1904, Single Substances,Single_Substances
+   19.5,1905,NUM_BNF_1905, Other Preparations,Other_Preparations
+   19.6,1906,NUM_BNF_1906, Acids,Acids
+   19.7,1907,NUM_BNF_1907, Base/Dil/Susp Agents/Stabilisers,Base_Dil_Susp_Agents_Stabilisers
+   19.8,1908,NUM_BNF_1908," Colouring,Flavouring & Sweetening Agents",Colouring_Flavouring _Sweetening_Agents
+   19.9,1909,NUM_BNF_1909," Disinfectants,Preserv&Sterilising Agents",Disinfectants_Preserv_Sterilising_Agents
+19.11,1911,NUM_BNF_1911,Lubricating Jellies/Pessaries,Lubricating_Jellies_Pessaries
+19.12,1912,NUM_BNF_1912,Electrode/Ultrasonis Gels,Electrode_Ultrasonis_ Gels
+   19.13,1913,NUM_BNF_1913, Cordials/Soft Drinks,Cordials_Soft_Drinks
+   19.14,1914,NUM_BNF_1914, Waters,Waters
+   19.15,1915,NUM_BNF_1915, Other Gases,Other_Gases
+   20.1,2001,NUM_BNF_2001, Absorbent Cottons,Absorbent_Cottons
+   20.10,2010,NUM_BNF_2010, Surgical Adhesive Tape,Surgical_Adhesive_Tape
+   20.11,2011,NUM_BNF_2011, Surgical Sutures,Surgical_Sutures
+   20.12,2012,NUM_BNF_2012, Swabs,Swabs
+   20.13,2013,NUM_BNF_2013, Unspecified Dressing,Unspecified_Dressing
+   20.14,2014,NUM_BNF_2014," Skin Closure Strips, Sterile",Skin_Closure_Strips_Sterile
+   20.15,2015,NUM_BNF_2015," Skin Adhesive, Sterile",Skin_Adhesive_Sterile
+   20.16,2016,NUM_BNF_2016, Tapeless Holders,Tapeless_Holders
+   20.17,2017,NUM_BNF_2017, Cervical Collar,Cervical_Collar
+   20.18,2018,NUM_BNF_2018, Cellulose Wadding BP 1988,Cellulose_Wadding_BP_1988
+   20.2,2002,NUM_BNF_2002, Arm Sling/Bandages,Arm_Sling_Bandages
+   20.3,2003,NUM_BNF_2003, Wound Management & Other Dressings,Wound_Management _Other_Dressings
+   20.4,2004,NUM_BNF_2004, Gauzes & Gauze Tissue,Gauzes _Gauze_Tissue
+   20.5,2005,NUM_BNF_2005, Tracheostomy & Laryngectomy Appliances,Tracheostomy _Laryngectomy_Appliances
+   20.6,2006,NUM_BNF_2006, Foam,Foam
+   20.7,2007,NUM_BNF_2007, Lints,Lints
+   20.8,2008,NUM_BNF_2008, Plasters,Plasters
+   20.9,2009,NUM_BNF_2009, Stockinette,Stockinette
+   20.20,2020,NUM_BNF_2020, Silk Garments,Silk_Garments
+   21.1,2101,NUM_BNF_2101, Other Appliances,Other_Appliances
+   21.2,2102,NUM_BNF_2102, Catheters,Catheters
+   21.3,2103,NUM_BNF_2103, Chiropody Appliances,Chiropody_Appliances
+   21.4,2104,NUM_BNF_2104, Contraceptive Devices,Contraceptive_Devices
+   21.5,2105,NUM_BNF_2105, Suprapubic Appliances,Suprapubic_Appliances
+   21.6,2106,NUM_BNF_2106, Trusses,Trusses
+   21.7,2107,NUM_BNF_2107, Elastic Hosiery,Elastic_Hosiery
+   21.8,2108,NUM_BNF_2108, Oxygen Masks,Oxygen_Masks
+   21.9,2109,NUM_BNF_2109, Special Sanction Authorisations,Special_Sanction_Authorisations
+   21.10,2110,NUM_BNF_2110, C.A.P.D. Administration Equipment,CAPD_Administration_Equipment
+   21.11,2111,NUM_BNF_2111, Special Authorisation Guernsey,Special_Authorisation_Guernsey
+   21.12,2112,NUM_BNF_2112, Peak Flow Meters,Peak_Flow_Meters
+   21.13,2113,NUM_BNF_2113, Catheter Maintenance Products,Catheter_Maintenance_Products
+   21.14,2114,NUM_BNF_2114, Lubricant Gels,Lubricant_Gels
+   21.16,2116,NUM_BNF_2116, Irrigation Solutions,Irrigation_Solutions
+   21.17,2117,NUM_BNF_2117, Nasal Device,Nasal_Device
+   21.18,2118,NUM_BNF_2118, Vacuum Pumps for Erectile Dysfunction,Vacuum_Pumps_for_Erectile_Dysfunction
+   21.19,2119,NUM_BNF_2119, Oral Film Forming Agents,Oral_Film_Forming_Agents
+   21.20,2120,NUM_BNF_2120, Venous Ulcer Compression System,Venous_Ulcer_Compression_System
+   21.21,2121,NUM_BNF_2121, Dry Mouth Products,Dry_Mouth_Products
+   21.22,2122,NUM_BNF_2122, Emollients,Emollients
+   21.23,2123,NUM_BNF_2123, Vaginal Moisturisers,Vaginal_Moisturisers
+   21.24,2124,NUM_BNF_2124, Nasal Products,Nasal_Products
+   21.25,2125,NUM_BNF_2125, Vaginal Dilators,Vaginal_Dilators
+   21.26,2126,NUM_BNF_2126, Leg Ulcer Wrap,Leg_Ulcer_Wrap
+   21.27,2127,NUM_BNF_2127, Lymphoedema Garments,Lymphoedema_Garments
+   21.28,2128,NUM_BNF_2128, Anal Irrigation System,Anal_Irrigation_System
+   21.29,2129,NUM_BNF_2129, Plantar Pressure Offloading Device,Plantar_Pressure_Offloading_Device
+   21.30,2130,NUM_BNF_2130, Eye Products,Eye_Products
+   21.31,2131,NUM_BNF_2131, Cycloidal Vibration Accessories,Cycloidal_Vibration_Accessories
+   21.32,2132,NUM_BNF_2132, Inhalation Solutions,Inhalation_Solutions
+   21.33,2133,NUM_BNF_2133, Indwelling Pleural Cath Drain System,Indwelling_Pleural_Cath_Drain_System
+   21.34,2134,NUM_BNF_2134, Vaginal PH Correction Products,Vaginal_PH_Correction_Products
+   21.35,2135,NUM_BNF_2135, Acne Treatment,Acne_Treatment
+   21.36,2136,NUM_BNF_2136, Adhesive Dressing Remover Ster Silicone,Adhesive_Dressing_Remover_Ster_Silicone
+   21.37,2137,NUM_BNF_2137, Pelvic Toning Devices,Pelvic_Toning_Devices
+   21.38,2138,NUM_BNF_2138, Low Friction Products,Low_Friction_Products
+   21.39,2139,NUM_BNF_2139, Prosthetic Adhesives,Prosthetic_Adhesives
+   21.40,2140,NUM_BNF_2140, Bacterial Decolonisation Products,Bacterial_Decolonisation_Products
+   21.41,2141,NUM_BNF_2141, Physical Debridement Device,Physical_Debridement_Device
+   21.42,2142,NUM_BNF_2142, Jaw Rehabilitation Device,Jaw_Rehabilitation_Device
+   21.43,2143,NUM_BNF_2143, Micro-Enema - Sodium Citrate,Micro_Enema _Sodium_Citrate
+   21.44,2144,NUM_BNF_2144, Dev For Adjunctive Tt Of Hypertension,Dev_For_Adjunctive_Tt_Of_Hypertension
+   21.45,2145,NUM_BNF_2145, Douches,Douches
+   21.46,2146,NUM_BNF_2146, Hernia Support Garments,Hernia_Support_Garments
+   21.47,2147,NUM_BNF_2147, Dev For Fungal Nail Infections,Dev_For_Fungal_Nail_Infections
+   21.48,2148,NUM_BNF_2148,Detection sensor interstitial fluid/gluc,Detection_sensor_interstitial_fluid_gluc
+   21.49,2149,NUM_BNF_2149,Pulsed electromagnetic stimulator,Pulsed_Electromagnetic_Stimulator
+22.1,2201,NUM_BNF_2201,Incontinence pads,Incontinent_Pads
+   22.2,2202,NUM_BNF_2202, Anal Plugs,Anal_Plugs
+   22.5,2205,NUM_BNF_2205, Catheter Valves,Catheter_Valves
+   22.10,2210,NUM_BNF_2210, Drainable Dribbling Appliances,Drainable_Dribbling_Appliances
+   22.15,2215,NUM_BNF_2215, Faecal Collectors,Faecal_Collectors
+   22.20,2220,NUM_BNF_2220, Incontinence Belts,Incontinence_Belts
+   22.30,2230,NUM_BNF_2230, Incontinence Sheaths,Incontinence_Sheaths
+   22.40,2240,NUM_BNF_2240, Incontinence Sheath Fixing Strips & Adh,Incontinence_Sheath_Fixing_Strips _Adh
+   22.50,2250,NUM_BNF_2250, Leg Bags,Leg_Bags
+   22.60,2260,NUM_BNF_2260, Night Drainage Bags,Night_Drainage_Bags
+   22.70,2270,NUM_BNF_2270, Suspensory Systems,Suspensory_Systems
+   22.80,2280,NUM_BNF_2280, Tubing And Accessories,Tubing_And_Accessories
+   22.85,2285,NUM_BNF_2285, Insert For Female Stress Incont,Insert_For_Female_Stress_Incont
+   22.90,2290,NUM_BNF_2290, Urinal Systems,Urinal_Systems
+   23.5,2305,NUM_BNF_2305, Adhesive Discs/Rings/Pads/Plasters,Adhesive_Discs_Rings_Pads_Plasters
+   23.10,2310,NUM_BNF_2310, Adhesive (Pastes/Sprays/Solutions),Adhesive_Pastes_Sprays_Solutions
+   23.15,2315,NUM_BNF_2315, Adhesive Removers (Sprays/Liquids/Wipes),Adhesive_Removers_Sprays_Liquids_Wipes
+   23.20,2320,NUM_BNF_2320, Bag Closures,Bag_Closures
+   23.25,2325,NUM_BNF_2325, Bag Covers,Bag_Covers
+   23.30,2330,NUM_BNF_2330, Belts,Belts
+   23.35,2335,NUM_BNF_2335, Colostomy Bags,Colostomy_Bags
+   23.40,2340,NUM_BNF_2340, Colostomy Sets,Colostomy_Sets
+   23.45,2345,NUM_BNF_2345, Deodorants,Deodorants
+   23.46,2346,NUM_BNF_2346, Discharge Solidifying Agents,Discharge_Solidifying_Agents
+   23.50,2350,NUM_BNF_2350, Filters/Bridges,Filters_Bridges
+   23.55,2355,NUM_BNF_2355, Flanges,Flanges
+   23.60,2360,NUM_BNF_2360, Ileostomy Bags,Ileostomy_Bags
+   23.65,2365,NUM_BNF_2365, Ileostomy Sets,Ileostomy_Sets
+   23.70,2370,NUM_BNF_2370, Irrigation Washout Appliances,Irrigation_Washout_Appliances
+   23.75,2375,NUM_BNF_2375, Pressure Plates/Shields,Pressure_Plates_Shields
+   23.80,2380,NUM_BNF_2380, Skin Fillers And Protectives,Skin_Fillers_And_Protectives
+   23.85,2385,NUM_BNF_2385, Skin Protectors,Skin_Protectors
+   23.90,2390,NUM_BNF_2390, Stoma Caps/Dressings,Stoma_Caps_Dressings
+   23.92,2392,NUM_BNF_2392, Tubing & Accessories,Tubing _Accessories
+   23.93,2393,NUM_BNF_2393, Accessories (Guernsey),Accessories_Guernsey
+   23.94,2394,NUM_BNF_2394, Two Piece Ostomy Systems,Two_Piece_Ostomy_Systems
+   23.96,2396,NUM_BNF_2396, Urostomy Bags,Urostomy_Bags
+   23.98,2398,NUM_BNF_2398, Urostomy Sets,Urostomy_Sets
+   23.99,2399,NUM_BNF_2399, Ostomy Appliances R/Sub Allowed Pre 1985,Ostomy_Appliances_R_Sub_Allowed_Pre_1985
