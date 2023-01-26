@@ -10,9 +10,18 @@
 ##' @param variable_list a list of transformed variables to request, together with parameters to call the transformation function with. Format is variable_list=list(name=list(option1=value1,option2=value2...)) where {name} corresponds to a function transformer_{name} which takes arguments {option1},{option2}...
 ##' @param time_cutoffs a vector of time cutoffs: training matrix uses data before these cutoffs
 ##' @param hard_max_lookback maximum lookback in days; training matrix is agnostic to any data before time_cutoffs-hard_max_lookback and after time_cutoffs
+##' @param reload a memory helper. If non-null, then set patients, episodes, and list_of_data_tables to NULL, and they will be loaded in the function, with parameters in list `reload` passed to load_cleanData()
 ##' @returns a tibble containing the training matrix  with column time indicating the time cutoff
 transformer <- function(patients, episodes, list_of_data_tables,
-                        variable_list, time_cutoffs, hard_max_lookback) {
+                        variable_list, time_cutoffs, hard_max_lookback,
+                        reload=NULL) {
+  
+  # `Reload` and associated code added by James. Load clean data.
+  if (!is.null(reload)) {
+    do.call("load_cleanData",
+      c(reload))
+  }
+  
   # Error checking of inputs
   if(!("data.frame" %in% class(patients))) {
     stop("patients must be a data frame")
@@ -47,7 +56,7 @@ transformer <- function(patients, episodes, list_of_data_tables,
   }
   if(!(setequal(names(list_of_data_tables),
                 c("AE2", "deaths", "PIS", "SMR00", "SMR01", "SMR01E",
-                  "SMR04", "SPARRALTC", "SystemWatch")))) {
+                  "SMR04", "SPARRALTC", "SystemWatch","SMR01M")))) {
     stop("list_of_data_tables does not contain the correct list of data frames")
   }
   if(!all(sapply(sapply(list_of_data_tables, names), function(x) { "time" %in% x }))) {
@@ -67,7 +76,8 @@ transformer <- function(patients, episodes, list_of_data_tables,
   # Transform all to data tables for performance when filtering time cutoffs
   episodes <- episodes %>% mutate(unixtime = as.integer(time))
   for(i in 1:length(list_of_data_tables)) {
-    list_of_data_tables[[i]] <- list_of_data_tables[[i]] %>% mutate(unixtime = as.integer(time))
+    list_of_data_tables[[i]] <- list_of_data_tables[[i]] %>%
+      mutate(unixtime = as.integer(time))
   }
   hard_max_lookback <- hard_max_lookback * (3600*24) # Convert days to seconds (to use with unix time)
   
@@ -77,16 +87,36 @@ transformer <- function(patients, episodes, list_of_data_tables,
   var.res <- list()
   all.var.names <- NULL
   for(t in time_cutoffs) {
-    # Subset time
-    episodes2 <- episodes %>% filter(unixtime < t, unixtime > t-hard_max_lookback) %>% select(-unixtime)
+    # Memory-efficient: reload raw data at each step
+    if (!is.null(reload) & !exists("patients")) {
+      do.call("load_cleanData",
+        c(reload))
+      episodes <- episodes %>% mutate(unixtime = as.numeric(time))
+      for(i in 1:length(list_of_data_tables)) {
+        list_of_data_tables[[i]] <- list_of_data_tables[[i]] %>% mutate(unixtime = as.numeric(time))
+      }
+    }
+    
+    # Subset time - episodes
+    episodes2 <- episodes %>% filter(unixtime < t, unixtime >= t-hard_max_lookback) %>% select(-unixtime)
+    if (!is.null(reload)) {
+      rm(list=c("episodes"))
+      gc()
+    }
+    
     list_of_data_tables2 <- list_of_data_tables
     for(i in 1:length(list_of_data_tables2)) {
-      list_of_data_tables2[[i]] <- list_of_data_tables2[[i]] %>% filter(unixtime < t, unixtime > t-hard_max_lookback) %>% select(-unixtime)
+      list_of_data_tables2[[i]] <- list_of_data_tables2[[i]] %>% filter(unixtime < t, unixtime >= t-hard_max_lookback) %>% select(-unixtime)
       if(nrow(list_of_data_tables2[[i]]) == 0) {
         warning(glue("the cutoff and lookback choices result in no observations in data table '{names(list_of_data_tables2)[i]}'"))
       }
     }
     patients2 <- patients %>% filter(id %in% episodes2$id)
+    
+    if (!is.null(reload)) {
+      rm(list=c("patients","list_of_data_tables"))
+      gc()
+    }
     
     # Fetch variables
     for(i in 1:length(variable_list)) {
@@ -97,7 +127,8 @@ transformer <- function(patients, episodes, list_of_data_tables,
                             list_of_data_tables = list_of_data_tables2,
                             time_cutoff = t),
                        variable_list[[i]]))
-      gc()  ########## Added by James 
+      gc()
+            
       # Check return value
       if(!is.list(res) ||
          !setequal(names(res), c("matrix", "missing_default")) ||
@@ -142,6 +173,12 @@ transformer <- function(patients, episodes, list_of_data_tables,
           bind_rows(var.res[[i]]$matrix, res$matrix)
       }
     }
+    
+    ########## Added by James 
+    rm(list=c("patients2","episodes2","list_of_data_tables2"))
+    gc()  
+    ########## Added by James 
+    
   }
   
   

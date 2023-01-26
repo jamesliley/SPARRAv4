@@ -20,6 +20,9 @@ summarise_per_patient_from_list_of_tables <- function(
   column_names_matrix <- str_split(column_names_flat, pattern = '\\.', n=2, simplify = TRUE)
   column_names <- as_tibble(as.data.frame(column_names_matrix)) %>% rename(source_table = V1, column_name = V2)
   
+  if ("quosure" %in% class(summary_func)) {
+    summary_func_general=eval(parse(text=paste0("~",quo_name(summary_func))))
+  } else summary_func_general=summary_func
   out = NULL
   for (cur_table_name in unique(column_names$source_table)){
     
@@ -31,8 +34,9 @@ summarise_per_patient_from_list_of_tables <- function(
                )$column_name)
       ) %>%
       group_by_at(vars(one_of(table_key))) %>%
-      summarise_all(summary_func) %>%
-      rename_at(vars(-one_of(table_key)), funs(paste0(cur_table_name, ".", .)))
+      summarise_all(summary_func_general) %>%
+      rename_at(vars(-one_of(table_key)), ~paste0(cur_table_name,".",.))
+    #funs(paste0(cur_table_name, ".", .)))
     
     # # Parallel version
     # tmp2 <- list_of_data_tables[[cur_table_name]] %>%

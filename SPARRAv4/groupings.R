@@ -559,7 +559,7 @@ get_bnf_lookup=function() {
 					"Anaemias_Other_Blood_Disorders", "Fluids_And_Electrolytes", 
 					"Intravenous_Nutrition", "Oral_Nutrition", "Minerals", "Vitamins", 
 					"Bitters_And_Tonics", "Metabolic_Disorders", "Foods", "Compound_Vit_Mineral_Formulations", 
-					"Health_Supplements", "Other_Health_Supplements", "Unknown1", 
+					"Health_Supplements", "Other_Health_Supplements", "Nonsteroidal_Antiinflammatory", 
 					"Drugs_Used_In_Neuromuscular_Disorders", "Soft_Tissue_Disorders _Topical_Pain_Rel", 
 					"Anti_Infective_Eye_Preparations", "Corti'roids _Other_Anti_Inflamm_Preps_", 
 					"Mydriatics_And_Cycloplegics", "Treatment_Of_Glaucoma", "Local_Anaesthetics", 
@@ -620,4 +620,22 @@ get_bnf_lookup=function() {
 
 }
 
+
+### Get ICD10 codes related to falls
+get_falls_codes=function() {
+  falls_codes=c()
+  for (i in 0:199) {
+    falls_codes=c(falls_codes,sprintf("W%03d",i))
+  }
+  return(falls_codes)
+}
+
+### Get ICD10 codes related to self-harm
+get_selfharm_codes= function() {
+  selfharm_codes=c()
+  for (i in 600:849) {
+    selfharm_codes = c(selfharm_codes,sprintf("X%03d",i))
+  }
+  return(selfharm_codes)
+}
 

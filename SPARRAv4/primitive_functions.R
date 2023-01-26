@@ -49,8 +49,8 @@ primitive_all_codes_docterm_sparsematrix <- function(
     print("Table of all codes generated")
     
     # Turn into a long table format
-  	table_of_all_codes_long <- primitive_base_R_longtable(table_of_all_codes)
-
+    table_of_all_codes_long <- primitive_base_R_longtable(table_of_all_codes)
+    
   }
   
   print("Long table generated")
@@ -101,7 +101,7 @@ primitive_all_codes_docterm_sparsematrix <- function(
     ) %>% filter(
       !is.na(all_codes)
     )
-    
+  
   
   print("Ready to produce sparse matrix")
   
@@ -110,7 +110,7 @@ primitive_all_codes_docterm_sparsematrix <- function(
                                          j = as.integer(tmp$all_codes), 
                                          x = as.numeric(tmp$value),
                                          dims = c(max(as.integer(tmp$id)), length(all_unique_codes))
-                                         )
+  )
   
   rownames(doc_term_sparse_matrix) <- all_ids[1:nrow(doc_term_sparse_matrix)]
   colnames(doc_term_sparse_matrix) <- all_unique_codes[1:ncol(doc_term_sparse_matrix)]
@@ -124,7 +124,7 @@ primitive_all_codes_docterm_sparsematrix <- function(
       table_of_extra_codes = table_of_extra_codes
     )
   } else {
-  
+    
     # Return the sparse doc_term_matrix
     out <- doc_term_sparse_matrix
   }
@@ -147,49 +147,53 @@ primitive_all_codes_docterm_sparsematrix <- function(
 # If verbose is set, print progress every 10k rows.
 
 primitive_base_R_longtable=function(tab,verbose=T) {
-
   
-xall_codes=unlist(unlist(tab$all_codes))
-xid=rep(tab$id,tab$count_codes)
-xcount_codes=rep(tab$count_codes,tab$count_codes)
-xcount_unique_codes=rep(tab$count_unique_codes,tab$count_codes)
-
-newtab=as.tibble(data.frame(id=xid,all_codes=xall_codes,
-	count_codes=xcount_codes,
-	count_unique_codes=xcount_unique_codes,
-	stringsAsFactors=FALSE))
-
-rm(xall_codes)
-rm(xid)
-rm(xcount_codes)
-rm(xcount_unique_codes)
-gc()
-
-if (verbose) print("Unnested")
-
-newtab <- newtab %>% group_by(id, count_codes, count_unique_codes, all_codes) 
-newtab=newtab[order(newtab$id),]
-
-if (verbose) print("Grouped")
-
-nx=newtab %>% summarise(value = as.integer(n()))
-
-# Add back in any samples with no codes
-w0=tab$id[which(tab$count_codes==0)]
-w1=tab$id[which(tab$count_codes>0)]
-wx=setdiff(w0,w1)
-tx=nx[1:length(wx),]
-tx[[1]]=wx
-tx[[2]]=0
-tx[[3]]=0
-tx[[4]]=""
-tx[[5]]=0
-
-nx=rbind(nx,tx)
-nx=nx[order(nx$id),]
   
-return(nx)
-
+  xall_codes=unlist(unlist(tab$all_codes))
+  xid=rep(tab$id,tab$count_codes)
+  xcount_codes=rep(tab$count_codes,tab$count_codes)
+  xcount_unique_codes=rep(tab$count_unique_codes,tab$count_codes)
+  
+  newtab=as_tibble(data.frame(id=xid,all_codes=xall_codes,
+                              count_codes=xcount_codes,
+                              count_unique_codes=xcount_unique_codes,
+                              stringsAsFactors=FALSE))
+  
+  rm(xall_codes)
+  rm(xid)
+  rm(xcount_codes)
+  rm(xcount_unique_codes)
+  gc()
+  
+  if (verbose) print("Unnested")
+  
+  newtab <- newtab %>% group_by(id, count_codes, count_unique_codes, all_codes) 
+  newtab=newtab[order(newtab$id),]
+  
+  if (verbose) print("Grouped")
+  
+  nx=newtab %>% summarise(value = as.integer(n()))
+  
+  # Add back in any samples with no codes
+  w0=tab$id[which(tab$count_codes==0)]
+  w1=tab$id[which(tab$count_codes>0)]
+  if (length(w0)>0) {
+    wx=setdiff(w0,w1)
+    tx=nx[1:length(wx),]
+    tx[[1]]=wx
+    tx[[2]]=0
+    tx[[3]]=0
+    tx[[4]]=""
+    tx[[5]]=0
+    
+    nx=rbind(nx,tx)
+  } 
+  
+  nx=nx[order(nx$id),]
+  
+  
+  return(nx)
+  
 }
 
 
@@ -222,7 +226,7 @@ primitive_codes_docterm_sparsematrix <- function(
   all_unique_codes = NULL # Supply a pre-existing set of condition codes to use as column names 
 ){
   
-
+  
   
   # If all_unique_codes are not given, compute from current data, 
   # otherwise create matrix from the supplied one (presumably that of training data)
@@ -272,14 +276,14 @@ primitive_codes_docterm_sparsematrix <- function(
     ) %>% filter(
       !is.na(code)
     )
-    
+  
   
   library(Matrix)
   doc_term_sparse_matrix <- sparseMatrix(i = as.integer(tmp$id), 
                                          j = as.integer(tmp$code), 
                                          x = as.numeric(tmp$value),
                                          dims = c(max(as.integer(tmp$id)), length(all_unique_codes))
-                                         )
+  )
   
   rownames(doc_term_sparse_matrix) <- all_ids[1:nrow(doc_term_sparse_matrix)]
   colnames(doc_term_sparse_matrix) <- all_unique_codes[1:ncol(doc_term_sparse_matrix)]
@@ -291,7 +295,7 @@ primitive_codes_docterm_sparsematrix <- function(
       table_of_extra_codes = table_of_extra_codes
     )
   } else {
-  
+    
     # Return the sparse doc_term_matrix
     out <- doc_term_sparse_matrix
   }
@@ -302,6 +306,103 @@ primitive_codes_docterm_sparsematrix <- function(
 }
 
 
+
+#' Returns all diagnosis codes for all patients as a list column
+#' furthermore returns the number of condition codes and number of unique cond. codes for each patient
+#' 
+primitive_diagnosis_codes_count_simple <- function(
+  # Input data
+  list_of_data_tables,
+  
+  time_cutoff=dmy_hm("2-5-2100 00:00"), # Filter to only times before this
+  time_min=dmy_hm("2-5-1900 00:00") # Filter to only times after this
+) {
+  
+  # Extract
+  SMR01M = list_of_data_tables$SMR01M
+  
+  # Filter
+  SMR01M = SMR01M[which(SMR01M$time < time_cutoff &
+                          SMR01M$time >= time_min), ]
+  
+  # List of ICD10 codes
+  out = SMR01M[, c("id", "all_stay_code_list", "time", "time_discharge","cis_marker","source_table")]
+  
+  # Remove NAs
+  out$all_stay_code_list = lapply(out$all_stay_code_list, function(x)
+    x[which(!is.na(x) & length(x)>0)])
+  
+  # Fix ICD10 codes with spaces
+  out$all_stay_code_list = lapply(out$all_stay_code_list, function(x) 
+    gsub(" ","_",x))
+  
+  # Rename lists of condition codes
+  names(out$all_stay_code_list) = rep(NULL, dim(out)[1])
+  
+  print("Extracted all_stay_code_list")
+  
+  # Fix records generated after time cutoff
+  w=which(is.na(out$time_discharge) | (out$time_discharge >= time_cutoff))
+  sn=c("main_condition",paste0("OTHER_CONDITION_",1:5)) # Pertinent column names in SMR01
+  sen=c("main_condition",paste0("OTHER_CONDITION_",1:5)) # Pertinent column names in SMR01E
+  swn=c("main_condition",paste0("DIAGNOSIS_",2:6)) # Pertinent column names in SystemWatch
+  SMR01 = list_of_data_tables$SMR01
+  SMR01E = list_of_data_tables$SMR01E
+  SystemWatch = list_of_data_tables$SystemWatch
+  SMR01=SMR01[which(SMR01$id %in% out$id[w]),]
+  SMR01E=SMR01E[which(SMR01E$id %in% out$id[w]),]
+  SystemWatch=SystemWatch[which(SystemWatch$id %in% out$id[w]),]
+  for (i in 1:length(w)) {
+    if ((i %% 500)==0) print(paste0("Completed ",i," of ",length(w)))
+    s1=SMR01[which(
+      SMR01$id==out$id[w[i]] & 
+        SMR01$CIS_MARKER==out$cis_marker[w[i]] &
+        SMR01$time < time_cutoff &
+        out$source_table[w[i]] =="SMR01"),sn]
+    s1e=SMR01E[which(
+      (SMR01E$id==out$id[w[i]] &
+         SMR01E$CIS_MARKER==out$cis_marker[w[i]] &
+         SMR01E$time < time_cutoff &
+         out$source_table[w[i]] =="SMR01E") |
+        (SMR01E$id==out$id[w[i]] &
+           SMR01E$time==out$time[w[i]] &
+           SMR01E$time < time_cutoff) &
+        out$source_table[w[i]] =="SMR01E"),sen]
+    sw1=SystemWatch[which(
+      SystemWatch$id==out$id[w[i]] & 
+        SystemWatch$time==out$time[w[i]] & 
+        SystemWatch$time < time_cutoff &
+        out$source_table[w[i]] =="SystemWatch"),swn]
+    xlist=c(unlist(s1),unlist(s1e),unlist(sw1))
+    if (length(xlist)>0) {
+      out$all_stay_code_list[w[i]][[1]]=unique(xlist[which(!is.na(xlist))]) 
+    } else out$all_stay_code_list[w[i]][[1]]=c("")
+  }
+  out=out[which(!unlist(lapply(out$all_stay_code_list,function(x) x[1]==""))),]
+  out=out[,1:2]
+  
+  # Remove NAs
+  out$all_stay_code_list = lapply(out$all_stay_code_list, function(x)
+    x[which(x!= "")])
+  
+  # Combine by ID 
+  out = out %>% 
+    group_by(id) %>% 
+    unnest(all_stay_code_list) %>% 
+    summarise(all_condition_codes=list(all_stay_code_list))
+  
+  # Count
+  out$count_condition_codes = unlist(lapply(out$all_condition_codes, function(x)
+    length(x)))
+  out$count_unique_condition_codes = unlist(lapply(out$all_condition_codes, function(x)
+    length(unique(x))))
+  
+  
+  # Trim to non-zero
+  out = out[which(out$count_condition_codes > 0), ]
+  
+  return(out)
+}
 
 
 #' Returns all diagnosis codes for all patients as a list column
@@ -323,7 +424,7 @@ primitive_diagnosis_codes_count <- function(
   # Collect relevant column names that contain condition (ICD10 code)
   column_names_flat <- c()
   
-  for (cur_table in c("SMR00", "SMR01", "SMR01E", "SMR04")){
+  for (cur_table in c("SMR01M", "SMR00","SMR04")) { #, "SMR01", "SMR01E", "SMR04")){
     if (cur_table %in% source_table_names){
       column_names_flat <- c(
         column_names_flat,
@@ -334,6 +435,17 @@ primitive_diagnosis_codes_count <- function(
     
   }
   
+  # Change ""'s to NAs
+  for (cur_table in c("SMR01M", "SMR00","SMR04")) { #, "SMR01", "SMR01E", "SMR04")){
+    if (cur_table %in% source_table_names){
+      cx=names(list_of_data_tables[[cur_table]] %>% select(contains("CONDITION")))
+      for (i in 1:length(cx)) {
+        w=which(list_of_data_tables[[cur_table]][,cx[i]]=="")
+        list_of_data_tables[[cur_table]][w,cx[i]]=NA
+      }
+    }
+    
+  }
   
   # This is all condition codes for all people as lists in columns over many columns
   lists_elementwise <- collect_and_full_join_from_list_of_tables(
@@ -362,10 +474,8 @@ primitive_diagnosis_codes_count <- function(
   # We get to do various statistics on the diagnosis codes
   #tmp2 <- tmp %>% mutate(allcodes2 = map(.x = allcodes, ~ .[[1]][length(.[[1]])]))
   
-  
-  
   # Return the diagnosis codes table
-  table_of_diag_codes
+  return(table_of_diag_codes)
   
 }
 
@@ -409,16 +519,16 @@ primitive_diagnosis_codes_docterm_sparsematrix <- function(
     xid=rep(tab$id,tab$count_condition_codes)
     xcount_codes=rep(tab$count_condition_codes,tab$count_condition_codes)
     xcount_unique_codes=rep(tab$count_unique_condition_codes,tab$count_condition_codes)
-
-    newtab=as.tibble(data.frame(id=xid,all_condition_codes=xall_codes,
-  	count_condition_codes=xcount_codes,
-  	count_unique_condition_codes=xcount_unique_codes,
-  	stringsAsFactors=FALSE))
+    
+    newtab=as_tibble(data.frame(id=xid,all_condition_codes=xall_codes,
+                                count_condition_codes=xcount_codes,
+                                count_unique_condition_codes=xcount_unique_codes,
+                                stringsAsFactors=FALSE))
     
     table_of_diag_codes_long <- newtab %>% 
       group_by(id, count_condition_codes, count_unique_condition_codes, all_condition_codes) %>%
       summarise(value = as.integer(n()))
- 
+    
   }
   
   print("Long table generated")
@@ -469,7 +579,7 @@ primitive_diagnosis_codes_docterm_sparsematrix <- function(
     ) %>% filter(
       !is.na(all_condition_codes)
     )
-    
+  
   
   print("Ready to produce sparse matrix")
   
@@ -478,7 +588,7 @@ primitive_diagnosis_codes_docterm_sparsematrix <- function(
                                          j = as.integer(tmp$all_condition_codes), 
                                          x = as.numeric(tmp$value),
                                          dims = c(max(as.integer(tmp$id)), length(all_unique_codes))
-                                         )
+  )
   
   rownames(doc_term_sparse_matrix) <- all_ids[1:nrow(doc_term_sparse_matrix)]
   colnames(doc_term_sparse_matrix) <- all_unique_codes[1:ncol(doc_term_sparse_matrix)]
@@ -492,14 +602,14 @@ primitive_diagnosis_codes_docterm_sparsematrix <- function(
       table_of_extra_codes = table_of_extra_codes
     )
   } else {
-  
+    
     # Return the sparse doc_term_matrix
     out <- doc_term_sparse_matrix
   }
   
   
   # Return
-  out
+  return(out)
 }
 
 
@@ -520,26 +630,18 @@ primitive_prescriptions_count <- function(
   time_min=dmy_hm("2-5-1900 00:00") # Filter to only times after this
 ){
   
-#  stop("primitive_prescriptions_count() NEEDS UPDATING DUE TO CHANGES TO PIS FORMAT ON 26 Feb 2019")
   
- ############ As of current version, the commented code is intractably slow in dplyr so a workaround is below
-  # Collect prescription codes for each individual into a single list (time invariant)
-  ## table_of_prescription_codes= list_of_data_tables$PIS %>% 
-  ##    group_by(id) %>% 
-  ##    summarise(all_prescription_codes = list(as.character(BNF_section)[!is.na(BNF_section)]))  
-
-#  Line summarise() takes time O(nlines^2)??? something to do with online factor->character conversion maybe, expanding list of factor labels on the go?
-#  Above code takes 950 hours by extrapolation...
+  bnf_char=as.character(list_of_data_tables$PIS$bnf_section)[
+    which(list_of_data_tables$PIS$time<time_cutoff & 
+            list_of_data_tables$PIS$time >= time_min)] # pre-emptively do factor->character conversion, using R's stored list of factor labels
+  table_of_prescription_codes= list_of_data_tables$PIS %>% 
+    filter(time<time_cutoff) %>%
+    filter(time>= time_min) %>%
+    mutate(bnf_char=bnf_char) %>%
+    group_by(id) %>%
+    summarise(all_prescription_codes = list(bnf_char[!is.na(bnf_char)]))
   
-bnf_char=as.character(list_of_data_tables$PIS$BNF_section)[which(list_of_data_tables$PIS$time<time_cutoff & list_of_data_tables$PIS$time>time_min)] # pre-emptively do factor->character conversion, using R's stored list of factor labels
-table_of_prescription_codes= list_of_data_tables$PIS %>% 
-  filter(time<time_cutoff) %>%
-  filter(time>time_min) %>%
-  mutate(bnf_char=bnf_char) %>%
-  group_by(id) %>%
-  summarise(all_prescription_codes = list(bnf_char[!is.na(bnf_char)]))
-
-# above takes 1 min
+  # above takes 1 min
   
   table_of_prescription_codes <- table_of_prescription_codes %>%
     mutate(
@@ -547,11 +649,11 @@ table_of_prescription_codes= list_of_data_tables$PIS %>%
       count_unique_prescription_codes = unlist(map(.x = all_prescription_codes, ~ length(unique(.))))
     )
   
-  # Return the diagnosis codes table
-  table_of_prescription_codes
+  # Return the prescription codes table
+  return(table_of_prescription_codes)
   
 }
-  
+
 
 
 

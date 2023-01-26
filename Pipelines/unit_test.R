@@ -7,7 +7,7 @@
 ##
 ## INSTRUCTIONS TO RUN ON NSH
 ## 1. Run up to end of 'Transformation to training and test matrices' on Windows machine
-## 2. Run up to end of 'Check R and package versions' and then 'Fit models and predict' on Linux machine
+## 2. Run up to end of 'Check R and package versions' and then from start to end of  'Fit models and predict' on Linux machine
 ## 3. Run up to end of 'Packages and scripts', then 'Fit models and predict', then remainder of script on Windows machine.
 
 
@@ -45,7 +45,8 @@ dir_sparra="James/SPARRAv4/" # Directory containing scripts for SPARRAv4 functio
 
 if (!all(file.exists(c(dir_rawData,dir_cleanData,dir_model,dir_output,dir_sparra)))) stop("Ensure appropriate directories exist")
 
-
+# Hard max lookback
+hardmax=366
 
 ######################################################
 ## Packages and scripts                             ##
@@ -90,6 +91,8 @@ if (!pkgcheck[[1]]) stop(paste0("Packages have incorrect versions: packages ",pa
 ## Mockup EHR tables                                ##
 ######################################################
 
+if (location=="Windows") {
+
 ehr_mockup(dir_rawData,seed=seed)
 
 ## Check reproducibility
@@ -100,12 +103,14 @@ rep_correct=c( "01Z","Z665T","28-02-2014","22:27","5:16"  )
 
 if (!all(rep_check==rep_correct)) stop("EHR mockup reproducibility failed.") else message("EHR mockup correct")
 
-
+}
 
 
 ######################################################
 ## Clean and load raw data                          ##
 ######################################################
+
+if (location=="Windows") {
 
 suppressWarnings(clean_rawData(force_redo=TRUE,dir_rawData=dir_rawData,dir_cleanData=dir_cleanData))
 
@@ -119,10 +124,13 @@ w=which(is.na(rep_correct)); w2=setdiff(1:5,w)
 if (!(all(is.na(rep_check[w])) & all(rep_check[w2]==rep_correct[w2]))) 
   stop("Data cleaning reproducibility failed.") else message("Data cleaning correct")
 
+}
 
 ######################################################
 ## Load clean data                                  ##
 ######################################################
+
+if (location=="Windows") {
 
 load_cleanData(partition = "all",
 	subset_frac=1, subset_seed = 1234,
@@ -134,10 +142,13 @@ load_cleanData(partition = "all",
 # Time cutoff
 time_cutoff=dmy_hm("1-5-2015 00:00")
 
+}
 
 ######################################################
 ## Topic model                                      ##
 ######################################################
+
+if (location=="Windows") {
 
 topic_matrix=topic_training_matrix(patients,episodes,list_of_data_tables,time_cutoff,
 	save_file=paste0(dir_output,"topic_matrix"))
@@ -150,7 +161,7 @@ topic_train=topic_matrix[which(topic_cv==1),]
 topic_test1=topic_matrix[which(topic_cv==2),]
 topic_test2=topic_matrix[which(topic_cv==2),]
 
-topic_model <- LDA(x = topic_train, k = 30)
+topic_model <- LDA(x = topic_train, k = 30,control=list(seed=seed))
 saveRDS(topic_model,file=paste0(dir_output,"topic_model.RDS"))
 
 
@@ -158,13 +169,18 @@ saveRDS(topic_model,file=paste0(dir_output,"topic_model.RDS"))
 set.seed(seed)
 tb=topic_model@beta
 topic_check=tb[cbind(sample(1:dim(tb)[1],5,rep=T),sample(1:dim(tb)[2],5,rep=T))]
-topic_correct=c(-100.0000, -100.0000, -158.1726, -531.8807, -740.3473)
+topic_correct=c(-100.0000, -100.0000, -141.3287, -180.5888, -705.0263)
 if (!all(abs(topic_check-topic_correct)<1e-4)) stop("Reproducibility failed for topic model") else message("Topic model correct")
 
+}
 
 ######################################################
 ## Transformation to training and test matrices     ##
 ######################################################
+
+
+if (location=="Windows") {
+
 
 # Topics
 topic_features <- transformer(patients, episodes, list_of_data_tables,
@@ -172,7 +188,8 @@ topic_features <- transformer(patients, episodes, list_of_data_tables,
     all_codes_topic = list(topic_model_fit = topic_model)
   ),
   as.integer(time_cutoff),
-  hard_max_lookback = 366)
+  hard_max_lookback = hardmax)
+
 
 # Long-term condition counts
 ltc_features <- transformer(patients, episodes, list_of_data_tables,
@@ -180,7 +197,7 @@ ltc_features <- transformer(patients, episodes, list_of_data_tables,
     ltcs = list(output_type = "rawdata_NUMBEROFLTCs")
   ),
   as.integer(time_cutoff),
-  hard_max_lookback = 366)
+  hard_max_lookback = hardmax)
 
 # Time-since-event features
 time_features <- transformer(patients, episodes, list_of_data_tables,
@@ -190,7 +207,7 @@ time_features <- transformer(patients, episodes, list_of_data_tables,
     ltcs = list(output_type = "years_since_diag")
   ),
   as.integer(time_cutoff),
-  hard_max_lookback = 366)
+  hard_max_lookback = hardmax)
 
 
 # Features from SPARRAv3. We can only use these with a one-year lookback
@@ -199,7 +216,7 @@ v3_features <- transformer(patients, episodes, list_of_data_tables,
     sparrav3 = list()
   ),
   as.integer(time_cutoff),
-  hard_max_lookback = 366)
+  hard_max_lookback = hardmax)
 
 
 # Join
@@ -210,6 +227,25 @@ data_matrix = combine_training_matrices(v3_features,topic_features,time_features
 ## Remove extraneous variables relating to time cutoff
 data_matrix = data_matrix %>% select(-c("topic_cutoff","ltc_cutoff"))
 
+# Add sex as predictor
+data_matrix$sexM=as.integer((patients$gender=="Male")[match(data_matrix$id,patients$id)])
+
+# Fix 'Days since/Years since' style predictors'
+dsince=colnames(data_matrix)[grep("days_since",colnames(data_matrix))]
+for (i in 1:length(dsince)) {
+  x=data_matrix[[dsince[i]]]
+  w=which(!is.finite(x)|(x==0))
+  x[w]=2*hardmax # If the person has never had an episode, set value to 2* hardmax
+  data_matrix[[dsince[i]]]=x
+}
+ysince=colnames(data_matrix)[grep("yearssince",colnames(data_matrix))]
+for (i in 1:length(ysince)) {
+  x=data_matrix[[ysince[i]]]
+  w=which(!is.finite(x)|(x==0))
+  x[w]=100 # If the person has never had an episode, set value to 100
+  data_matrix[[ysince[i]]]=x
+}
+
 # Adjoin (random) v3 scores
 set.seed(seed)
 v3score=sample(1:99,dim(data_matrix)[1],replace=T)
@@ -217,6 +253,7 @@ data_matrix$v3score=v3score
 
 # Cleanup
 data_matrix=data_matrix[which(!is.na(data_matrix$target)),]
+
 
 # Split into training and test matrices
 cv_data=patients$cv[match(data_matrix$id,patients$id)]
@@ -228,7 +265,7 @@ saveRDS(train_matrix,file=paste0(dir_output,"train_matrix.RDS"))
 saveRDS(test_matrix1,file=paste0(dir_output,"test_matrix1.RDS"))
 saveRDS(test_matrix2,file=paste0(dir_output,"test_matrix2.RDS"))
 
-
+}
 
 ######################################################
 ## Fit models and predict                           ##
@@ -281,5 +318,5 @@ all(p1[1:n1]==p2[1:n1])
 # Check reproducibility
 set.seed(seed)
 pred_check=p1[sample(n1,5)]
-pred_correct=c(1.335638e-07, 1.713412e-07, 1.415303e-07, 7.440449e-08, 7.641015e-08)
+pred_correct=c(0.06233488, 0.06793719, 0.06407466, 0.04654139, 0.04739927)
 if (all(abs(pred_check-pred_correct)<1e-4)) message("Output successfully reproduced") else stop("Output of prediction failed to reproduce")

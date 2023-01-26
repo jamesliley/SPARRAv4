@@ -45,15 +45,20 @@ if (location=="Windows") {
 dir_cleanData = "../Data/Data_clean/"
 model_dir="James/Analysis/Data/full_model/"
 out_dir="James/Analysis/Output/full_model/"
-plot_dir="James/Analysis/Output/full_model/plots/"
+plot_dir="James/Analysis/Output/full_model/"
 
 # Specific file locations
 fullmatrix=paste0(model_dir,"full_data_matrix.RDS") # Full training matrix location
-exclusions_file=paste0(model_dir,"exclusions.RData") # Esclusions 
+design_exclusions_file=paste0(model_dir,"design_exclusions.RData")
 
 # In text outputs, everything after this marker should be readable by R.
 sink_marker="\n\n\n***************\n\n"
 options(width=1e4)
+
+
+
+
+
 
 ######################################################
 ## File paths for data matrices and models          ##
@@ -66,6 +71,11 @@ loc3=paste0(model_dir,"models_cv/model_fold3")
 output1=paste0(loc1,".output") # Predictions for fold 1 stored in {output1}.RDS
 output2=paste0(loc2,".output")
 output3=paste0(loc3,".output")
+
+
+# Models fitted to design matrices with no topic features
+loc1_notopic=paste0(model_dir,"models_cv/model_fold1_notopic") 
+output1_notopic=paste0(loc1_notopic,".output")
 
 
 
@@ -87,21 +97,24 @@ if (!file.exists(all_pred_file)) {
   
   # Read in training matrix
   nhs=readRDS(fullmatrix)
-  load(exclusions_file)
-  nhs=nhs[v34,] # redefine nhs for memory considerations
+  load(design_exclusions_file)
+  nhs=nhs[v34,] # redefine nhs for memory considerations 
   rm(list=c("v34","v3x"))
   gc()
   
   # Load patients, episodes, list_of_data_tables
   load_cleanData(partition = "all",
-    subset_frac=1, subset_seed = 1234,
-    load_to_global=TRUE,
-    load_sparrav3_scores = FALSE)
-
+                 subset_frac=1, subset_seed = 1234,
+                 load_to_global=TRUE)
+  
   # Gather predictions 
   pred1=readRDS(paste0(output1,".RDS"))
   pred2=readRDS(paste0(output2,".RDS"))
   pred3=readRDS(paste0(output3,".RDS"))
+  
+  # Predictions from fold 1 with no topic features
+  pred1_notopic=readRDS(paste0(output1_notopic,".RDS"))
+  
   
   ## Collect predictions from various constituents and super-learner
   cpred=grep("pred.",names(pred1),value=T)
@@ -111,76 +124,385 @@ if (!file.exists(all_pred_file)) {
   for (i in 1:3) {
     w=which(nhs$cv==i)
     for (j in 1:length(cpred)) {
-     all_pred[w,j]=get(paste0("pred",i))[[j]]
+      all_pred[w,j]=get(paste0("pred",i))[[j]]
     }
     all_pred$super[w]=get(paste0("pred",i))$final.full
   }
   
+  ## Collect predictions from super-learner for predictor with no topic features
+  all_pred$super_notopic=rep(NA,dim(all_pred)[1])
+  w1=which (nhs$cv==1)
+  all_pred$super_notopic[w1]=pred1_notopic$final.full
   
   ## Affix various other useful data
   all_pred=cbind(id=nhs$id,cv=patients$cv[match(nhs$id,patients$id)],
-    time=as.numeric(nhs$time),
-    cv=nhs$cv,
-    v3=as.numeric(nhs$v3score)/100,
-    age=nhs$age,sexM=(patients$gender[match(nhs$id,patients$id)]=="Male"),
-    simd=nhs$SIMD_DECILE_2016_SCT,ae2=nhs$num_ae2_attendances,
-    all_pred,target=as.numeric(nhs$target))
+                 time=as.numeric(nhs$time),
+                 cv=nhs$cv,
+                 v3=as.numeric(nhs$v3score)/100,
+                 age=nhs$age,sexM=(patients$gender[match(nhs$id,patients$id)]=="Male"),
+                 simd=nhs$SIMD_DECILE_2016_SCT,ae2=nhs$num_ae2_attendances,
+                 all_pred,target=as.numeric(nhs$target),reason=nhs$reason)
+  
+  wpos=which(nhs$target==TRUE)
+  
+  cutoffs=sort(as_datetime(unique(nhs$time)))
+  SMR01M=list_of_data_tables$SMR01M
 
-wpos=which(nhs$target==TRUE)
+  # Initialise columns
+  admission_type=rep(NA,dim(all_pred)[1])
+  main_condition=rep(NA,dim(all_pred)[1])
+  cis_marker=rep(NA,dim(all_pred)[1])
+  time_to_first_event=rep(NA,dim(all_pred)[1])
+  n_event=rep(NA,dim(all_pred)[1])
+  
 
-t0=as_datetime(nhs$time[1]) # time cutoff for SPARRA score
-tdiff=round(as.integer(episodes$time-t0)/(24*3600)) # time since time cutoff for each episode
+  for (it in 1:length(cutoffs)) {
+    
+    t0=cutoffs[it] # as_datetime(nhs$time[1]) # time cutoff for SPARRA score
+    tsub=which(nhs$time==t0)
+    idsub=nhs$id[tsub]
+    
+    tdiff=round(as.integer(SMR01M$time-t0)/(24*3600)) # time since time cutoff for each episode
+    
+    w1=which(SMR01M$id %in% intersect(idsub,nhs$id[wpos])) # individuals who had an AE
+    w2=which(tdiff> -1 & tdiff<367)
+    subep=SMR01M[intersect(w1,w2),] # all episodes in the right time frame, involving the right samples
+    
+    subep=subep[which(subep$emergency_admin==1),] # now only valid events, as per v4
+    
+    # Number of admissions. Sometimes events are recorded more than once,
+    #  and conditions etc are only recorded for one of them, so we have to 
+    #  be careful. We can sort this out using 'order' since it puts NAs last
+    subep=subep[order(subep$main_condition),]
+    idt=paste0(subep$id,"_",as.integer(subep$time))
+    subep=subep[match(unique(idt),idt),]
+    tn=table(subep$id)
+    
+    # only consider first episode for each sample
+    subep=subep[order(subep$time),]
+    subep=subep[match(unique(subep$id),subep$id),]
+    
+    # Admission type. We can match IDs because subep only contains each ID once.
+    admission_type0=rep(NA,length(tsub))
+    admission_type0[match(subep$id,idsub)]=subep$admission_type
+    admission_type[tsub]=admission_type0
+    
+    # Main condition
+    main_condition0=rep(NA,length(tsub))
+    main_condition0[match(subep$id,idsub)]=subep$main_condition
+    main_condition[tsub]=main_condition0
+    
+    # CIS marker
+    cis_marker0=rep(NA,length(tsub))
+    cis_marker0[match(subep$id,idsub)]=subep$cis_marker
+    cis_marker[tsub]=cis_marker0
+    
+    # Time to first event
+    time_to_first_event0=rep(NA,length(tsub))
+    time_to_first_event[match(subep$id,all_pred$id)]=as.integer(subep$time-t0)/(24*3600)
+    time_to_first_event[tsub]=time_to_first_event0
+    
+    # Number of events
+    n_event0=rep(NA,length(tsub))
+    n_event0[match(as.numeric(names(tn)),idsub)]=tn
+    n_event[tsub]=n_event0
+    
+  }
+  
+  # Affix to all_pred
+  all_pred=cbind(all_pred,admission_type,main_condition,cis_marker,time_to_first_event,n_event)
+  all_pred=all_pred[which(!is.na(all_pred$cv)),]
+  
+  saveRDS(all_pred,file=all_pred_file)
 
-w1=which(episodes$id %in% nhs$id[wpos]) # individuals who had an AE
-w2=which(tdiff> -1 & tdiff<367)
-subep=episodes[intersect(w1,w2),] # all episodes in the right time frame, involving the right samples
-
-valid=event_func_v4(subep,list_of_data_tables)
-subep=subep[which(valid$event),] # now only valid events, as per v4
-
-# Number of admissions. Sometimes events are recorded more than once,
-#  and conditions etc are only recorded for one of them, so we have to 
-#  be careful. We can sort this out using 'order' since it puts NAs last
-subep=subep[order(subep$main_condition),]
-idt=paste0(subep$id,"_",as.integer(subep$time))
-subep=subep[match(unique(idt),idt),]
-tn=table(subep$id)
-
-# only consider first episode for each sample
-subep=subep[order(subep$time),]
-subep=subep[match(unique(subep$id),subep$id),]
-
-# Admission type. We can match IDs because subep only contains each ID once.
-admission_type=rep(NA,dim(all_pred)[1])
-admission_type[match(subep$id,all_pred$id)]=subep$admission_type
-
-# Main condition
-main_condition=rep(NA,dim(all_pred)[1])
-main_condition[match(subep$id,all_pred$id)]=subep$main_condition
-
-# CIS marker
-cis_marker=rep(NA,dim(all_pred)[1])
-cis_marker[match(subep$id,all_pred$id)]=subep$CIS_MARKER
-
-# Time to first event
-time_to_first_event=rep(NA,dim(all_pred)[1])
-time_to_first_event[match(subep$id,all_pred$id)]=as.integer(subep$time-t0)/(24*3600)
-
-# Number of events
-n_event=rep(NA,dim(all_pred)[1])
-n_event[match(as.numeric(names(tn)),all_pred$id)]=tn
-
-# Affix to all_pred
-all_pred=cbind(all_pred,admission_type,main_condition,cis_marker,time_to_first_event,n_event)
-all_pred=all_pred[which(!is.na(all_pred$cv)),]
-
-saveRDS(all_pred,file=all_pred_file)
 } else all_pred=readRDS(all_pred_file)
 
 if (exists("nhs")) rm(list=c("nhs"))
 if (exists("patients")) rm(list=c("patients","episodes","list_of_data_tables"))
 
 
+
+
+######################################################################################
+######################################################################################
+## Topic inclusion. The following scripts compare performance of models fitted to   ##
+##  design matrices which either contain or do not contain topic-model derived      ##
+##  features.                                                                       ##
+######################################################################################
+######################################################################################
+
+# Relevant data; subset of rows of all_pred corresponding to fold 1
+sub1=which(all_pred$cv==1)
+
+y=all_pred$target[sub1]
+yt=all_pred$super[sub1]
+ynt=all_pred$super_notopic[sub1]
+
+
+## Test of discrimination (difference in AUCs) and practical difference
+library(pROC)
+roc_topic=roc(y,yt)
+roc_notopic=roc(y,ynt)
+
+sink(paste0(plot_dir,"topics/topic_comparison.txt"))
+r0=roc.test(roc_topic,roc_notopic)
+r0$roc1=NULL; r0$roc2=NULL
+print(r0)
+cat("\n\n")
+cat("P-value: ", r0$p.value)
+cat("\n\n\n")
+
+# Practical difference: number of true positives amongst top-N
+topn=c(1000,2000,5000,1e4,5e4,1e5,5e5,1e6)
+out=c()
+ord_topic=order(-yt)
+ord_notopic=order(-ynt)
+for (i in 1:length(topn)) {
+  n_top=sum(y[ord_topic[1:topn[i]]])
+  n_notop=sum(y[ord_notopic[1:topn[i]]])
+  out=cbind(out,c(n_top,n_notop,n_top-n_notop))
+}
+out=rbind(topn,out)
+rownames(out)=c("TopN","N_adm_topics","N_adm_notopics","Difference")
+print(out)
+
+cat("\n\n")
+cat("")
+
+cat(sink_marker)
+cat("r0="); dput(r0); cat("\n\n")
+cat("out="); dput(out); cat("\n\n")
+
+sink()
+
+
+
+
+## ROC curves
+
+xrocT=getroc(y,yt) # Topics included
+xrocNT=getroc(y,ynt) # Topics not included
+
+pdf(paste0(plot_dir,"topics/topic_roc.pdf"),width=3,height=3.5)
+aucT=signif(xrocT$auc,digits=4); seT=signif(xrocT$se,digits=2);
+aucNT=signif(xrocNT$auc,digits=4); seNT=signif(xrocNT$se,digits=2);
+labs=c(paste0("Topics: ",aucT," (",seT,")"),
+       paste0("No topics: ",aucNT," (",seNT,")"))
+xcol=c("red","black")
+roc_2panel(list(xrocT,xrocNT),labels=labs,col=xcol,title="AUROC (SE)",text.col=xcol,title.col="black")
+dev.off()
+
+sink(paste0(plot_dir,"topics/topic_roc.txt"))
+cat("Topics","\n")
+cat("Sensitivity\n",xrocT$sens,"\n\nSpecificity\n",xrocT$spec,"\n\nAUROCs\n",xrocT$auc,"\n\nSE\n",xrocT$se,"\n\n\n")
+cat("\n\n")
+cat("NoTopics","\n")
+cat("Sensitivity\n",xrocNT$sens,"\n\nSpecificity\n",xrocNT$spec,"\n\nAUROCs\n",xrocNT$auc,"\n\nSE\n",xrocNT$se,"\n\n\n")
+cat("\n\n")
+cat(sink_marker)
+cat("xrocT="); dput(xrocT); cat("\n\n")
+cat("xrocNT="); dput(xrocNT); cat("\n\n")
+sink()
+
+
+
+
+
+
+
+
+
+
+
+
+### PR curves
+
+xprcT=getprc(y,yt)
+xprcNT=getprc(y,ynt) 
+
+pdf(paste0(plot_dir,"topics/topic_prc.pdf"),width=3,height=3.5)
+aucT=signif(xprcT$auc,digits=4); seT=signif(xprcT$se,digits=2);
+aucNT=signif(xprcNT$auc,digits=4); seNT=signif(xprcNT$se,digits=2);
+labs=c(paste0("Topics: ",aucT," (",seT,")"),
+       paste0("No topics: ",aucNT," (",seNT,")"))
+xcol=c("red","black")
+prc_2panel(list(xprcT,xprcNT),labels=labs,col=xcol,title="AUROC (SE)",text.col=xcol,title.col="black")
+dev.off()
+
+sink(paste0(plot_dir,"topics/topic_prc.txt"))
+cat("Topics","\n")
+cat("Sensitivity\n",xprcT$sens,"\n\nPPV\n",xprcT$ppv,"\n\nAUROCs\n",xprcT$auc,"\n\nSE\n",xprcT$se,"\n\n\n")
+cat("\n\n")
+cat("NoTopics","\n")
+cat("Sensitivity\n",xprcNT$sens,"\n\nPPV\n",xprcNT$ppv,"\n\nAUROCs\n",xprcNT$auc,"\n\nSE\n",xprcNT$se,"\n\n\n")
+cat("\n\n")
+cat(sink_marker)
+cat("xprcT="); dput(xprcT); cat("\n\n")
+cat("xprcNT="); dput(xprcNT); cat("\n\n")
+sink()
+
+
+
+
+### Calibration curves
+xcalT=plotcal(y,yt,plot=FALSE,kernel=TRUE)
+xcalNT=plotcal(y,ynt,plot=FALSE,kernel=TRUE)
+
+pdf(paste0(plot_dir,"topics/topic_cal.pdf"),width=3,height=3.5)
+labs=c("Topics","No topics")
+xcol=c("red","black")
+cci=rgb(0.5,0.5,0.5,alpha=0.5) # colour for confidence envelope
+cal_2panel(list(xcalT,xcalNT),labels=labs,col=xcol,text.col=xcol,ci_col=c(NA,cci))
+dev.off()
+
+sink(paste0(plot_dir,"topics/topic_cal.txt"))
+cat("Topics\n\n")
+cat("Obs\n",xcalT$x,"\n\nPred\n",xcalT$y,"\n\nLower\n",xcalT$lower,"\n\nUpper\n",xcalT$upper)
+cat("\n\n\nNoTopics\n\n")
+cat("Obs\n",xcalNT$x,"\n\nPred\n",xcalNT$y,"\n\nLower\n",xcalNT$lower,"\n\nUpper\n",xcalNT$upper)
+cat(sink_marker)
+cat("xcalT="); dput(xcalT); cat("\n\n")
+cat("xcalNT="); dput(xcalNT); cat("\n\n")
+sink()
+
+
+
+
+# Calibration at disagreement points
+
+pt=0.05; # Level of disagreement
+
+w_t=which(yt-ynt> pt); # Higher score for topics-included
+w_nt=which(yt-ynt< -pt); # Higher score for topics-not-included
+
+# True and predicted values for higher score with topics-included
+y_t=y[w_t]; 
+ypn_t=ynt[w_t]; yp_t=yt[w_t]
+
+# True and predicted values for higher score with topics-not-included
+y_nt=y[w_nt]; 
+ypn_nt=ynt[w_nt]; yp_nt=yt[w_nt]
+
+# Calibration for higher scores with topics-included
+cal_t=plotcal(y_t,yp_t,plot=F); # Calibration for topics-included
+caln_t=plotcal(y_t,ypn_t,plot=F); # Calibration for topics-not-included
+
+# Calibration for higher scores with topics-not-included
+cal_nt=plotcal(y_nt,yp_nt,plot=F); # Calibration for topics-included
+caln_nt=plotcal(y_nt,ypn_nt,plot=F); # Calibration for topics-not-included
+
+# Plot calibration curves
+pdf(paste0(plot_dir,"topics/topic_cal_dif.pdf"),width=3,height=3.5)
+
+labs=c("T, T higher","NT, T higher","T, NT higher","NT, NT higher")
+xcol=c("blue","black","blue","black")
+xlty=c(1,1,2,2)
+cci1=rgb(0,0,1,alpha=0.3) # colour for confidence envelope
+cci2=rgb(0.5,0.5,0.5,alpha=0.3) # colour for confidence envelope
+cal_2panel(list(cal_t,caln_t,cal_nt,caln_nt),labels=labs,col=xcol,lty=xlty,text.col=xcol,ci_col=c(cci1,cci2,cci1,cci2))
+dev.off()
+
+sink(paste0(plot_dir,"topics/topic_cal_dif.txt"))
+cat("topicsIncluded_topicsHigher\n\n")
+cat("Obs\n",cal_t$x,"\n\nPred\n",cal_t$y,"\n\nLower\n",cal_t$lower,"\n\nUpper\n",cal_t$upper)
+cat("\n\n\ntopicsNotIncluded_topicsHighers\n\n")
+cat("Obs\n",caln_t$x,"\n\nPred\n",caln_t$y,"\n\nLower\n",caln_t$lower,"\n\nUpper\n",caln_t$upper)
+cat("\n\n\ntopicsIncluded_NoTopicsHigher\n\n")
+cat("Obs\n",cal_t$x,"\n\nPred\n",cal_t$y,"\n\nLower\n",cal_t$lower,"\n\nUpper\n",cal_t$upper)
+cat("\n\n\ntopicsNotIncluded_NoTopicsHighers\n\n")
+cat("Obs\n",caln_nt$x,"\n\nPred\n",caln_nt$y,"\n\nLower\n",caln_nt$lower,"\n\nUpper\n",caln_nt$upper)
+cat("\n\n\n")
+cat(sink_marker)
+cat("cal_t="); dput(cal_t); cat("\n\n")
+cat("caln_t="); dput(caln_t); cat("\n\n")
+cat("cal_nt="); dput(cal_nt); cat("\n\n")
+cat("caln_nt="); dput(caln_nt); cat("\n\n")
+sink()
+
+
+sink(paste0(plot_dir,"topics/topic_cal_dif_test.txt"))
+
+# Test: are calibration differences closer to 0 for topic-included models?
+# Null hypothesis: calibration difference is equally poor in each bin for topics included/not included.
+caldif_t=abs(c(cal_t$y-cal_t$x,cal_nt$y-cal_nt$x))
+caldif_nt=abs(c(caln_t$y-caln_t$x,caln_nt$y-caln_nt$x))
+print(wilcox.test(caldif_t,caldif_nt))
+
+sink()
+
+
+######################################################################################
+######################################################################################
+## Admission causes. Proportion of 'admissions' which were actually deaths in each  ##
+##  age group                                                                       ##
+######################################################################################
+######################################################################################
+
+# 5-year age brackets 20-90, 10 SIMD deciles
+n_tot=matrix(0,14,10)
+n_d=n_tot
+n_b=n_tot
+
+for (a in 1:14) {
+  for (s in 1:10) {
+    sub=which((all_pred$age >= 20 + 5*(a-1)) & (all_pred$age < 20 + 5*a) & (all_pred$simd==s))
+    n_tot[a,s]=sum(all_pred$target[sub])
+    n_d[a,s]=length(which((all_pred$target[sub]==1) & (all_pred$reason[sub]=="D")))
+    n_b[a,s]=length(which((all_pred$target[sub]==1) & (all_pred$reason[sub]=="B")))
+  }
+  print(a)
+}
+
+# IMPORTANT: privacy
+n_tot[which(n_tot<5)]=0
+n_d[which(n_d<5)]=0
+n_b[which(n_b<5)]=0
+
+nt=rowSums(n_tot)
+nd=rowSums(n_d)
+nb=rowSums(n_b)
+x=22.5 + 5*(0:13)
+
+# General plot
+pdf(paste0(plot_dir,"Analytics/admission_type_by_age_cumulative.pdf"),width=5,height=5)
+plot(0,type="n",xlim=range(x),ylim=c(0,1),xlab="Age",ylab="Cumulative proportion",xaxs="i",yaxs="i")
+polygon(c(min(x),min(x),max(x),max(x)),c(0,1,1,0),col="gray",border=NA)
+polygon(c(x,max(x),min(x)),c((nd+nb)/nt,0,0),col="red",border=NA)
+polygon(c(x,max(x),min(x)),c((nd/nt),0,0),col="black",border=NA)
+legend("topleft",c("Adm.","Death","Both"),pch=16,col=c("gray","black","red"))
+dev.off()
+sink(paste0(plot_dir,"Analytics/admission_type_by_age_cumulative.txt"))
+cat("Number of total admissions by age and SIMD\n\n")
+print(n_tot)
+cat("\n\n\nDeaths prior to admission in target year by age and SIMD\n\n")
+print(n_d)
+cat("\n\n\nAdmission and death in target year by age and SIMD\n\n")
+print(n_b)
+cat("\n\n\n")
+cat(sink_marker)
+cat("n_tot="); dput(n_tot); cat("\n\n")
+cat("n_d="); dput(n_d); cat("\n\n")
+cat("n_b="); dput(n_b); cat("\n\n")
+sink()
+
+
+
+# Breakdown by low/high SIMD
+nt3=cbind(rowSums(n_tot[,1:3]),rowSums(n_tot[,4:7]),rowSums(n_tot[,8:10]))
+nd3=cbind(rowSums(n_d[,1:3]),rowSums(n_d[,4:7]),rowSums(n_d[,8:10]))
+nb3=cbind(rowSums(n_b[,1:3]),rowSums(n_b[,4:7]),rowSums(n_b[,8:10]))
+
+pdf(paste0(plot_dir,"Analytics/admission_type_by_age_simd.pdf"),width=5,height=5)
+plot(0,type="n",xlim=range(x),ylim=c(0,0.3),xlab="Age",ylab="Proportion",xaxs="i",yaxs="i")
+for (i in 1:3) {
+  lines(x,(nd3/nt3)[,i],col="black",lty=i)
+  lines(x,(nb3/nt3)[,i],col="red",lty=i)
+  #  lines(x,((nb3+nd3)/nt3)[,i],col="red",lty=i)
+}
+legend("topleft",c("SIMD 1-3","SIMD 4-7","SIMD 8-10",
+                    "Death","Both"),
+       ncol=1,col=c(rep("black",3),"black","red"),lty=c(1:3,NA,NA),pch=c(rep(NA,3),"|","|"))
+dev.off()
 
 
 ######################################################################################
@@ -639,7 +961,7 @@ qplot= ((1:1000)/1000)^(1/4) # Add q-q plots at these quantiles. >500 samples in
 library(matrixStats)
 
 
-pi=all_pred$super; pj=all_pred$v3; 
+pi=all_pred$v3; pj=all_pred$super;  
 
 w=which(pi<scmax/100 & pj<scmax/100)
 
@@ -648,6 +970,17 @@ x=round(nn*pi); y=round(nn*pj)
 xout=xtabs(~xi+xj,cbind(xi=c(x,1:scmax),xj=c(y,1:scmax)))
 xout[which(xout<4)]=0; xout[which(xout>3 & xout<7)]=6 # DO NOT DELETE: important for privacy
 xout0=xout
+
+# Marginals
+tab1=table(round(pj*100)/100); d1=list(x=c(0,as.numeric(names(tab1))),y=c(0,tab1/sum(tab1))); 
+tab2=table(round(pj*100)/100); d2=list(x=c(0,as.numeric(names(tab2))),y=c(0,tab2/sum(tab2)));
+
+# Medians
+q0=quantile(pi,qplot)
+q1=quantile(pj,qplot)
+q0a=1:scmax; q1a=q0a; for (ii in 1:scmax) q1a[ii]=median(y[which(x==ii)],na.rm=T); q0a=q0a/scmax; q1a=q1a/scmax
+q0b=1:scmax; q1b=q0b; for (ii in 1:scmax) q1b[ii]=median(x[which(y==ii)],na.rm=T); q0b=q0b/scmax; q1b=q1b/scmax
+
 
 
 pdf(paste0(plot_dir,"Performance/v4_final/v3_v4_density.pdf"),width=7,height=7)
@@ -658,20 +991,14 @@ for (ii in 1:dim(xout)[1]) xout[,ii]=xout[,ii]/sum(xout[,ii],na.rm=T);
 xmax=min(colMaxs(xout[,10:(scmax-15)],na.rm=T));
 xmin=min(xout[which(xout>0)],na.rm=T); ncol0=5
 
-# Marginals
-d1=density(pi); tab2=table(pj); d2=list(x=c(0,as.numeric(names(tab2))),y=c(0,tab2/sum(tab2)))
-
-image((1:scmax)/100,(1:scmax)/100,xout,xlab=paste0("SPARRA v4"),
-  ylab=paste0("SPARRA V3"),
+image((1:scmax)/100,(1:scmax)/100,xout,xlab=paste0("SPARRA v3"),
+  ylab=paste0("SPARRA v4"),
   col=xcol,breaks=c(0,rep(xmin/2,ncol0),seq(xmin,4*xmax/3,length=length(xcol)-ncol0-1),1+max(xout,na.rm=T)),
   xaxs="i",yaxs="i",xlim=c(-1/sp,scmax/100),ylim=c(-1/sp,scmax/100),bty="n")
 
 polygon(d1$x,d1$y/(sp*max(d1$y))-(1/sp),col="gray"); 
 polygon(d2$y/(sp*max(d2$y))-(1/sp),d2$x,col="gray")
 
-q0=quantile(pi,qplot)
-q1=quantile(pj,qplot)
-q0a=1:scmax; q1a=q0a; for (ii in 1:scmax) q1a[ii]=median(y[which(x==ii)],na.rm=T); q0a=q0a/scmax; q1a=q1a/scmax
 abline(0,1,col="black",lty=2,lwd=2)
 #abline(0,1,col="white",lty=1,lwd=2)
 
@@ -680,16 +1007,11 @@ lines(q0,q1,col="blue",lwd=2)
 
 #lines(q0a,q1a,col="black",lwd=4)
 lines(q0a,q1a,col="darkgreen",lwd=2)
+lines(q1b,q0b,col="darkgreen",lwd=2,lty=2)
 
-for (i in 0:5) {
-  abline(v=i*0.2,lty=2,lwd=0.5)
-  abline(h=i*0.2,lty=2,lwd=0.5)
-}
-
-legend("bottomright",c("Density (low)","", "Density (high)", "Marginal", "X-Y","Q-Q","Median"),
-  pch=c(16,16,16,NA,NA,NA,NA),lty=c(NA,NA,NA,1,2,1,1),lwd=c(NA,NA,NA,1,2,2,2),
-  col=c("darkgray","red","yellow","black","black","blue","darkgreen"),bg="white")
-
+legend("bottomright",c("Density (low)","", "Density (high)", "Marginal", "X-Y","Q-Q","Median (col)","Median (row)"),
+  pch=c(16,16,16,NA,NA,NA,NA,NA),lty=c(NA,NA,NA,1,2,1,1,2),lwd=c(NA,NA,NA,1,2,2,2,2),
+  col=c("darkgray","red","yellow","black","black","blue","darkgreen","darkgreen"))
 dev.off()
 
 sink(paste0(plot_dir,"Performance/v4_final/v3_v4_density.txt"))
@@ -719,6 +1041,8 @@ cat("q0="); dput(q0); cat("\n\n")
 cat("q1="); dput(q1); cat("\n\n")
 cat("q0a="); dput(q0a); cat("\n\n")
 cat("q1a="); dput(q1a); cat("\n\n")
+cat("q0b="); dput(q0b); cat("\n\n")
+cat("q1b="); dput(q1b); cat("\n\n")
 sink()
 
 
@@ -1039,9 +1363,9 @@ cv4h4=plotcal(target[h4],v4[h4],kernel=T,plot=F)
 
 
 pdf(paste0(plot_dir,"Performance/v3_vs_v4/v3_vs_v4_calibration_differential.pdf"),width=3,height=3.5)
-cic=c(rgb(0,0,1,alpha=0.5),rgb(0,0,1,alpha=0.5),rgb(1,0,0,alpha=0.5),rgb(1,0,0,alpha=0.5))
+cic=c(rgb(1,0,0,alpha=0.5),rgb(1,0,0,alpha=0.5),rgb(0.5,0.5,0.5,alpha=0.5),rgb(0.5,0.5,0.5,alpha=0.5))
 cal_2panel(list(cv3h3,cv3h4,cv4h3,cv4h4),labels=c("v3, v3>v4","v3, v4>v3","v4, v3>v4", "v4, v4>v3"),
-  title=paste0("|v3-v4| > ",del),xy_col="gray",xy_lty=2,col=c("blue","blue","red","red"),
+  title=paste0("|v3-v4| > ",del),xy_col="gray",xy_lty=2,col=c("red","red","black","black"),
   lty=c(1,2,1,2),ci_col=cic)
 dev.off()
 
@@ -2359,9 +2683,44 @@ names(vxt)=colnames(shapley)
 vxt=vxt[order(-vxt)] # descending order, including topics this time
 
 # Names and indices of topics in descending order of importance
-txo=names(vxt)[grep("topic",names(vxt))]
+txo=names(vxt)[grep("topic_",names(vxt))]
 ixo=as.numeric(gsub("_","",substring(txo,7,8)))
 
+
+
+
+
+# Privacy check - IMPORTANT
+
+nfile="James/Analysis/Data/full_model/topic_check.RData"
+
+if (!file.exists(nfile)) {
+
+T1M=readRDS("James/Analysis/Data/full_model/doc_term_sparsematrix.rds")
+T1M1=(T1M>0)
+
+for (f in 1:3) {
+  xf=c("23","13","12")[f]
+  T1=readRDS(paste0("James/Analysis/Data/full_model/topic_model_fit_fold_",xf,".rds"))
+  
+  B1=T1@beta
+  
+  n1=rep(0,30)
+  for (i in 1:30) {
+    w=which(exp(B1[i,])>0.01)
+    if (length(w)>1) {
+      T1A=rowSums(T1M1[,w])
+    } else T1A=T1M1[,w]
+    T1B=rowSums(T1M1[,-w])
+    n1[i]=length(which(T1A==length(w) & T1B==0))
+    print(i)
+  }
+  assign(paste0("N",f),n1)
+}
+
+save(N1,N2,N3,file=nfile)
+
+} else load(nfile)
 
 
 
@@ -2370,6 +2729,9 @@ for (f in 1:3) {
 
 # Get topic model
 TM=get(paste0("T",f))
+
+# Get numbers for fold f
+NN=get(paste0("N",f))
 
 # Order for topics
 if (f==1) ix=ixo else ix=1:30
@@ -2380,21 +2742,23 @@ beta=TM@beta
 
 topic_summary=list()
 for (i in 1:30) { # ten most important topics
-  w=which(exp(beta)[ix[i],]>pthresh)
-  beta_w=exp(beta)[ix[i],w]
-  xterms=TM@terms[w[order(-beta_w)]]
-  terms=c()
-  for (j in 1:length(xterms)) {
-    if (xterms[j] %in% icd_lookup$Code.1) {
-      term_j=paste0("(ICD10) ",
-        icd_lookup$Full.Description[which(icd_lookup$Code.1==xterms[j])])
-    } else if (xterms[j] %in% bnf_lookup$BNF_Section2) {
-      term_j=paste0("(BNF) ",
-        bnf_lookup$Description[which(bnf_lookup$BNF_Section2==xterms[j])])
-    } else term_j=xterms[j]
-    terms=c(terms,term_j)
-  }
-  topic_summary[[i]]=list(terms=terms,prob=sort(beta_w,dec=T))
+  if (NN[ix[i]]==0 | NN[ix[i]]>5) {
+    w=which(exp(beta)[ix[i],]>pthresh)
+    beta_w=exp(beta)[ix[i],w]
+    xterms=TM@terms[w[order(-beta_w)]]
+    terms=c()
+    for (j in 1:length(xterms)) {
+     if (xterms[j] %in% icd_lookup$Code.1) {
+       term_j=paste0("(ICD10) ",
+         icd_lookup$Full.Description[which(icd_lookup$Code.1==xterms[j])])
+     } else if (xterms[j] %in% bnf_lookup$BNF_Section2) {
+       term_j=paste0("(BNF) ",
+         bnf_lookup$Description[which(bnf_lookup$BNF_Section2==xterms[j])])
+     } else term_j=xterms[j]
+     terms=c(terms,term_j)
+    }
+  topic_summary[[i]]=list(terms=terms,prob=sort(beta_w,dec=T),N=NN[ix[i]])
+  }  else topic_summary[[i]]=list(terms=NULL,prob=NULL,N=NN[ix[i]])
 }
 
 assign(paste0("topic_summary",f),topic_summary)
@@ -2410,7 +2774,7 @@ sink()
 
 
 
-#######################################################################################
+######################################################################################
 ######################################################################################
 ## Miscellaneous                                                                    ##
 ######################################################################################
@@ -2419,8 +2783,7 @@ sink()
 if ("MASS" %in% (.packages())) detach("package:MASS",unload=TRUE)
 load_cleanData(partition = "all",
   subset_frac=1, subset_seed = 1234,
-  load_to_global=TRUE,
-  load_sparrav3_scores = FALSE)
+  load_to_global=TRUE)
 
 t0=as.Date("2may2016", "%d%b%Y")
 
@@ -2534,7 +2897,7 @@ sink()
 # Load training matrix for metadata
 fullmatrix=paste0("James/Analysis/Data/full_model/full_data_matrix.RDS")
 nhs=readRDS(fullmatrix)
-exclusions_file=paste0("James/Analysis/Data/full_model/exclusions.RData")
+exclusions_file=paste0("James/Analysis/Data/full_model/design_exclusions.RData")
 load(exclusions_file)
 
 # Generate table of demographics
@@ -2554,7 +2917,7 @@ for (i in 1:4) {
   for (ii in 1:amax) stat=c(stat,length(which(nhs$age[sub]>= 10*(ii-1) & nhs$age[sub]<10*ii))) # number in 10 year age brackets up to amax
   stat=c(stat,length(which(nhs$age[sub]>=10*amax))) # number older than amax*10
   for (ii in 1:10) stat=c(stat,length(which(nhs$SIMD_DECILE_2016_SCT[sub]==ii))) # number with an A&E admission in lookback period
-  stat=c(stat,length(which(nhs$ltc_rawdata_NUMBEROFLTCS[sub]>0))) # number with a long-term condition
+  stat=c(stat,length(which(nhs$ltc_total_count[sub]>0))) # number with a long-term condition
   stat=c(stat,length(which(nhs$target[sub]==TRUE))) # number with target positive
   for (ii in 1:length(varnames)) {
     X=nhs[[which(colnames(nhs)==varnames[ii])]][sub]

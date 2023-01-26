@@ -135,7 +135,7 @@ fit_model.rf2.h2o=function(...) fit.rf.h2o(max.depth=40,num.trees=50,...)
 ##' 
 ##' @name fit.xgb
 ##' @param X data matrix, assumed to contain column 'target'
-##' @param train_proportion proportion of samples to use for training set; defaults to 0.8
+##' @param hyp_proportion proportion of samples to use for hyperparameter tuning; defaults to 0.2
 ##' @param seed random seed; defaults to 215
 ##' @param max_depth maximum tree depth
 ##' @param eta scale for learning rate: scale contribution of new trees
@@ -143,12 +143,12 @@ fit_model.rf2.h2o=function(...) fit.rf.h2o(max.depth=40,num.trees=50,...)
 ##' @param return_hyp set to TRUE to additionally return an object detailing fit at each hyperparameter value. Returns 'null' here.
 ##' @param ... further parameters passed to function xgb.train
 ##' @return a list of four objects. 1. pred: a string defining a function taking a data-frame argument X (including target) and a model which predicts outcome - note this is returned as a CHARACTER STRING, NOT A CLOSURE. 2. model: a model which can be saved; makes fit work sometimes. 3. hyp_options: list containing options for hyperparameters. 4. hyp_performance: performance at each of these hyperparameter options.
-fit.xgb=function(X,train_proportion=0.8,seed=215,max_depth=4,eta=0.3,gamma=0,objective="binary:logistic",return_hyp=FALSE,...) {
+fit.xgb=function(X,hyp_proportion=0.2,seed=215,max_depth=4,eta=0.3,gamma=0,objective="binary:logistic",return_hyp=FALSE,...) {
 
 set.seed(seed)	
 
 # Training and hyperparameter (ntree) submatrices, converted to xgb form
-ntot=dim(X)[1]; nfit=round((1-train_proportion)*ntot);
+ntot=dim(X)[1]; nfit=round((1-hyp_proportion)*ntot);
 ind_fit=order(runif(ntot))[1:nfit]; ind_hyp=setdiff(1:ntot,ind_fit)
 
 ix=as.numeric(X %>% pull(target))
@@ -205,7 +205,7 @@ fit_model.xgb3.xgb=function(...) fit.xgb(...,max_depth=3,eta=0.3,gamma=0)
 fit.ann.h2o=function(X,
 n_nodes=c(128,256), n_layer=1:2, 
 input_dropout_ratio=0.2,
-seed=214,init=FALSE,return_hyp=FALSE,hyp_proportion=0.8,...) {
+seed=214,init=FALSE,return_hyp=FALSE,hyp_proportion=0.2,...) {
 	
 set.seed(seed)
 	
@@ -252,7 +252,7 @@ if (hyper) { 	## Optimise hyperparameters
       hyp_options_out[[ix]]=list(n_nodes=hyp_options[[ix]]$hidden[1],
         n_layer=length(hyp_options[[ix]]$hidden),
         input_dropout_ratio=hyp_options[[ix]]$input_dropout_ratio)
-    h2o.rm(fit); h2o.rm(hyp); h2o.removeAll(); rm(list=c("fit","hyp"))
+    h2o.rm(fit); h2o.rm(hyp); h2o.removeAll(); 
 } else {
   hyp_options=NULL
   hyp_options_out=NULL
@@ -309,7 +309,7 @@ fit_model.ann.h2o=function(...) fit.ann.h2o(...)
 ##' @return a list of four objects. 1. pred: a string defining a function taking a data-frame argument X (including target) and a model which predicts outcome - note this is returned as a CHARACTER STRING, NOT A CLOSURE. 2. model: a model which can be saved; makes fit work sometimes. 3. hyp_options: list containing options for hyperparameters. 4. hyp_performance: performance at each of these hyperparameter options.
 fit.svm.h2o=function(X,
 	hyper_param=c(0.1,0.5,0.8,1,1.2,2,10), gamma=c(0.1,0.5,0.8,1,1.2,2,10),
-	seed=214,init=FALSE,return_hyp=FALSE,hyp_proportion=0.8,...) {
+	seed=214,init=FALSE,return_hyp=FALSE,hyp_proportion=0.2,...) {
 	
 	set.seed(seed)
 	
@@ -387,7 +387,7 @@ fit.svm.h2o=function(X,
 ##' @return a list of four objects. 1. pred: a string defining a function taking a data-frame argument X (including target) and a model which predicts outcome - note this is returned as a CHARACTER STRING, NOT A CLOSURE. 2. model: a model which can be saved; makes fit work sometimes. 3. hyp_options: list containing options for hyperparameters. 4. hyp_performance: performance at each of these hyperparameter options.
 fit.nb.h2o=function(X,
 	laplace=0:4,
-	seed=214,init=FALSE,return_hyp=FALSE,hyp_proportion=0.8,...) {
+	seed=214,init=FALSE,return_hyp=FALSE,hyp_proportion=0.2,...) {
 	
 	set.seed(seed)
 	
@@ -465,7 +465,7 @@ fit_model.nb.h2o=function(...) fit.nb.h2o(...)
 ##' @return a list of four objects. 1. pred: a string defining a function taking a data-frame argument X (including target) and a model which predicts outcome - note this is returned as a CHARACTER STRING, NOT A CLOSURE. 2. model: a model which can be saved; makes fit work sometimes. 3. hyp_options: list containing options for hyperparameters. 4. hyp_performance: performance at each of these hyperparameter options.
 fit.glm.h2o=function(X,
 	lambda=c(0,10^-seq(5,1,length.out=5)), alpha=c(0,0.5,1),
-	seed=214,init=FALSE,return_hyp=FALSE,hyp_proportion=0.8,...) {
+	seed=214,init=FALSE,return_hyp=FALSE,hyp_proportion=0.2,...) {
 	
 	set.seed(seed)
 	

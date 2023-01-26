@@ -25,16 +25,14 @@ load_cleanData <- function(
   partition="train", 
   subset_frac=1, subset_seed=1234,
   load_to_global = TRUE,
-  load_sparrav3_scores = FALSE,
   dir_cleanData = "../Data/Data_clean", # Define the clean data folder
   load_tables = c("AE2", "deaths", "PIS", "SMR00", "SMR01", "SMR01E", "SMR04", 
-                  "SPARRALTC", "SystemWatch")
+                  "SPARRALTC", "SystemWatch", "SMR01M")
 ){
   # Call the actual function
   out = load_cleanData_internal(partition=partition, 
                                 subset_frac=subset_frac, subset_seed=subset_seed,
                                 load_to_global = load_to_global,
-                                load_sparrav3_scores =load_sparrav3_scores,
                                 dir_cleanData = dir_cleanData,
                                 load_tables = load_tables)
   
@@ -53,19 +51,13 @@ load_cleanData_internal <- function(
     partition="train", 
     subset_frac=1, subset_seed=1234,
     load_to_global = TRUE,
-    load_sparrav3_scores = FALSE,
     dir_cleanData = "//FARR-FS1/Study Data/1718-0370/Research/Data/Data_clean", # Define the clean data folder
     load_tables = c("AE2", "deaths", "PIS", "SMR00", "SMR01", "SMR01E", "SMR04", 
-                         "SPARRALTC", "SystemWatch")
+                         "SPARRALTC", "SystemWatch","SMR01M")
   ){
  
   
-  # If load_sparrav3_scores, add it to load_tables
-  if (load_sparrav3_scores){
-    load_tables <- c(load_tables, "SPARRA")
-  }
-  
-  
+
   # --------------------------------------------------------------------------------------
   # Load patients and episodes, and filter appropriately based on train/test and subsetting (for now only on patient level)
   patients <- as_tibble(read.fst(path = file.path(dir_cleanData, "patients.fst")))
@@ -77,10 +69,10 @@ load_cleanData_internal <- function(
   
   if (file.exists(file.path(
     dir_cleanData,
-    "episodes_lookup_by_datatable.fst"))){
+    "episodes_lookup.fst"))){
     episodes_lookup_by_datatable <- as_tibble(read_fst(file.path(
       dir_cleanData,
-      "episodes_lookup_by_datatable.fst")))
+      "episodes_lookup.fst")))
     
     episodes_lookup_by_datatable <- episodes_lookup_by_datatable %>% 
       filter(source_table %in% load_tables)
@@ -103,14 +95,7 @@ load_cleanData_internal <- function(
     
     
   } else {
-  
-    
-    if (load_sparrav3_scores){
-      episodes <- as_tibble(read.fst(path = file.path(dir_cleanData, "episodes.fst")))  
-    } else {
-      episodes <- as_tibble(read.fst(path = file.path(dir_cleanData, "episodes_no_sparrav3.fst")))
-    }
-  
+    episodes <- as_tibble(read.fst(path = file.path(dir_cleanData, "episodes.fst")))  
   }
   
   # Create the train-test split for use within this loading function
@@ -174,17 +159,18 @@ load_cleanData_internal <- function(
   
   # Define the table files to be used
   
-  cleanData_table_filenames = c("Final_AE2_extract_incl_UniqueStudyID.fst", 
-                          "Final_deaths_extract_incl_UniqueStudyID_v2.fst", 
-                          "Final_PIS_extract_incl_UniqueStudyID.fst", 
-                          "Final_SMR00_extract_incl_UniqueStudyID.fst", 
-                          "Final_SMR01_extract_incl_UniqueStudyID.fst", 
-                          "Final_SMR01E_extract_incl_UniqueStudyID.fst", 
-                          "Final_SMR04_extract_incl_UniqueStudyID.fst", 
-                          "Final_SPARRA_extract_incl_UniqueStudyID.fst", 
-                          "final_LTCs_using_new_ICD10codes_incl_uniquestudyid.fst", 
-                          "Final_SystemWatch_extract_incl_UniqueStudyID_v2.fst")
+  cleanData_table_filenames = c("AE2.fst", 
+                          "deaths.fst", 
+                          "PIS.fst", 
+                          "SMR00.fst", 
+                          "SMR01.fst", 
+                          "SMR01E.fst", 
+                          "SMR04.fst", 
+                          "SPARRALTC.fst", 
+                          "SystemWatch.fst",
+                          "SMR01M.RDS")
   
+    
   table_names = c("AE2",
                   "deaths",
                   "PIS",
@@ -192,9 +178,9 @@ load_cleanData_internal <- function(
                   "SMR01",
                   "SMR01E",
                   "SMR04",
-                  "SPARRA",
                   "SPARRALTC",
-                  "SystemWatch"
+                  "SystemWatch",
+                  "SMR01M"
   )
   
   names(cleanData_table_filenames) <- table_names
@@ -207,12 +193,15 @@ load_cleanData_internal <- function(
   list_of_data_tables = list()
   
   for (name in names(data_filenames)){
-    table_current <- as_tibble(read_fst(
-      path = file.path(
-        dir_cleanData,
-        data_filenames[name]
-      )
-    ))
+    if (grepl("fst", data_filenames[name])) {
+      table_current <- as_tibble(read_fst(
+        path = file.path(
+          dir_cleanData,
+          data_filenames[name]
+        ))) 
+    } else {
+      table_current=as_tibble(readRDS(file.path(dir_cleanData,data_filenames[name])))
+    }
     
     # Keep only the rows that are part of the filtered "episodes"
     table_current <- table_current[episodes %>% filter(source_table==name) %>% pull(source_row), ]
@@ -222,20 +211,8 @@ load_cleanData_internal <- function(
     
     rm(table_current)
   }
-  
-  
-  # # TEsting random access speed (not worth row-by-row, may be worth chunk-by-chunk but probably not, only if subset_frac << 1)
-  # tic(); tmp <- read.fst(path = file.path(dir_cleanData, "episodes.fst"), from = 1000000, to = 2000000); toc();
-  # 
-  # tmp <- tmp[1,]
-  # 
-  # tic()
-  # for (i in 1000000:1002000){
-  #   tmp <- tmp %>% rbind(read.fst(path = file.path(dir_cleanData, "episodes.fst"), from = i, to = i))
-  # }
-  # toc()
-  
-  
+
+
   if (load_to_global){
     assign("patients", patients, envir=.GlobalEnv) 
     assign("episodes", episodes, envir=.GlobalEnv) 
@@ -248,8 +225,6 @@ load_cleanData_internal <- function(
       list_of_data_tables = list_of_data_tables
     )
   }
-  
-  
   
   # Return value (either NULL or list of objects)
   out

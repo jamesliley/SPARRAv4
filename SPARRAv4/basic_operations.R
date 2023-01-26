@@ -93,7 +93,7 @@ collect_and_full_join_from_list_of_tables <- function(
     
     tmp2 <- list_of_data_tables[[cur_table_name]] %>% 
       filter(time< time_cutoff) %>%
-      filter(time> time_min) %>%
+      filter(time>= time_min) %>%
       select(table_key, 
         as.character(
           (column_names %>% 
@@ -101,8 +101,8 @@ collect_and_full_join_from_list_of_tables <- function(
          )$column_name)
         ) %>% 
       group_by_at(vars(one_of(table_key))) %>%
-      summarise_all(funs(list(.))) %>%
-      rename_at(vars(-one_of(table_key)), funs(paste0(cur_table_name, ".", .)))
+      summarise_all(~list(.)) %>% #funs(list(.))) %>%
+      rename_at(vars(-one_of(table_key)), ~ paste0(cur_table_name, ".", .)) #funs(paste0(cur_table_name, ".", .)))
     
     if (is.null(out)) {out <- tmp2
     } else {

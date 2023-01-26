@@ -1,21 +1,21 @@
 Total patient-time pairs under consideration
-16142279
+17488596
 
 Total patients recorded anywhere in data tables
 5829532
 
 Total patients excl. all those without records prior to final time cutoff
-5614732
+5829532
 
 Total patients in study
-4870488
+4835428
 
 Total records as above (patient,time pairs)
-16142279
+17488596
 
 Total records excl. individuals deceased prior to time cutoffs
-15638000
+16903274
 
 Total records excl. individuals with no v3 score
-12957648
+12866084
 

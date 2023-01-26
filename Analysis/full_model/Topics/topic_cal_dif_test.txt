@@ -1,0 +1,7 @@
+
+	Wilcoxon rank sum exact test
+
+data:  caldif_t and caldif_nt
+W = 64, p-value = 0.0004208
+alternative hypothesis: true location shift is not equal to 0
+

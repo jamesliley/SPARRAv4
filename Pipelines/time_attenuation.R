@@ -46,16 +46,17 @@ if (location=="Windows") {
 model_dir="James/Analysis/Data/time_attenuation/"
 plot_dir="James/Analysis/Output/time_attenuation/"
 data_dir="James/Analysis/Data/"
+dir_rawData = "../../Linked Data/"
 
 # File locations
-topicfile=paste0(model_dir,"topic_model_time.rds")
+topicfile_time=paste0(model_dir,"topic_model_time.rds")
 trainmatfile=paste0(model_dir,"training_matrix_time_attenuation.rds")
-
 
 # In text outputs, everything after this marker should be readable by R.
 sink_marker="\n\n\n***************\n\n"
 options(width=1e4)
 options(max.print=1e7)
+
 
 ######################################################
 ## Flags                                            ##
@@ -71,17 +72,45 @@ force_redo=FALSE
 # Training data uses this time cutoff
 time_train=dmy_hm("1-5-2014 00:00")
 
+# Lookbacks (in days)
+hardmax=366 # non-LTC
+hardmax_ltc=round(365.25*5000) # We have longer-term data for LTCs and can use no lookback.
+
 
 ######################################################
 ## Load data                                        ##
 ######################################################
 
-if (!(file.exists(topicfile) & file.exists(trainmatfile)) | force_redo) {
-load_cleanData(partition = "all",
-	subset_frac=1, subset_seed = 1234,
-	load_to_global=TRUE,
-	load_sparrav3_scores = FALSE)
+if (!(file.exists(topicfile_time) & file.exists(trainmatfile)) | force_redo) {
+  load_cleanData(partition = "all",
+                 subset_frac=1, subset_seed = 1234,
+                 load_to_global=TRUE)
 }
+
+
+
+######################################################
+## Sample exclusions for topic models               ##
+######################################################
+
+topic_exclusions_file_time=paste0(model_dir,"topic_exclusions_time.RData")
+
+if (!file.exists(topic_exclusions_file_time)) {
+  
+  # Individuals with no SIMD
+  exclude_simd_time=patients$id[which(is.na(patients$SIMD_DECILE_2016_SCT))]
+  
+  # Individuals who died before the time cutoff
+  exclude_death_time=patients$id[which(patients$date_of_death < time_train)]
+
+  # Individuals on exclusion list
+  exclude_list_time=read.csv(paste0(dir_rawData,"Unmatched_UPIs_without_UPI.csv.gz"))$UNIQUE_STUDY_ID
+  
+  save(exclude_simd_time,exclude_death_time,exclude_list_time,file=topic_exclusions_file_time)
+  
+} else load(topic_exclusions_file_time)
+
+
 
 
 ######################################################
@@ -89,28 +118,38 @@ load_cleanData(partition = "all",
 ##  collected before time_train                     ##
 ######################################################
 
-if ((!file.exists(topicfile) | force_redo) & (location=="Windows")) {
-
-library(topicmodels)
+if ((!file.exists(topicfile_time) | force_redo) & (location=="Windows")) {
   
-topic_train_time=topic_training_matrix(patients,episodes,list_of_data_tables,time_train,
-	save_file=paste0(model_dir,"doc_term_long_table_training"))
+  library(topicmodels)
+  
+  # Topic training matrix
+  topic_train_time=topic_training_matrix(patients,episodes,list_of_data_tables,
+                                         time_cutoff=time_train,
+                                         time_min=time_train - (hardmax*24*3600),
+                                         save_file=paste0(model_dir,"doc_term_long_table_training"))
+  
+  # Find associated v3 scores
+  sparraV3Scores=as_tibble(read.fst("../Results/Modeling/SPARRAv3_raw_scores/SPARRAv3_raw_scores_all.fst"))
+  tx=as.numeric(sparraV3Scores[[2]])
+  sw=which(tx %in% as.numeric(time_train))
+  xv3=sparraV3Scores[sw,]; rm(list=c("sparraV3Scores","tx","sw"))
+  xv3=xv3[which(!is.na(xv3[[3]])),]
+  id=xv3[[1]]; ix=as.numeric(xv3[[2]])
+  idt=paste0(id,"_",ix) # slow
 
-# Restrict to individuals with valid v3 score and nonzero rows
-sparraV3Scores=as_tibble(read.fst("../Results/Modeling/SPARRAv3_raw_scores/SPARRAv3_raw_scores_all.fst"))
-tx=as.numeric(sparraV3Scores[[2]])
-sw=which(tx %in% as.numeric(time_train))
-xv3=sparraV3Scores[sw,]; rm(list=c("sparraV3Scores","tx","sw"))
-xv3=xv3[which(!is.na(xv3[[3]])),]
-id=xv3[[1]]; ix=as.numeric(xv3[[2]])
-idt=paste0(id,"_",ix) # slow
-
-topic_train_time=topic_train_time[which(rownames(topic_train_time) %in% idt),]
-topic_train_time=topic_train_time[which(rowSums(topic_train_time)>0),]
-
-topic_model_time <- LDA(x = topic_train_time, k = 30)
-saveRDS(topic_model_time,file=topicfile)
-
+  # Restrict to individuals with valid v3 score and nonzero rows
+  topic_train_time=topic_train_time[which(rownames(topic_train_time) %in% idt),]
+  topic_train_time=topic_train_time[which(rowSums(topic_train_time)>0),]
+  
+  # Other exclusions for topic model
+  load(topic_exclusions_file_time)
+  topic_exclusions_time = c(exclude_simd_time,exclude_death_time,exclude_list_time)
+  topic_id_preremoval_time = unlist(lapply(strsplit(rownames(topic_train_time),"_"),function(x) x[1]))
+  topic_train_time=topic_train_time[which(!(topic_id_preremoval_time %in% topic_exclusions_time)),]
+  
+  topic_model_time = LDA(x = topic_train_time, k = 30, control=list(seed=225,verbose=1))
+  saveRDS(topic_model_time,file=topicfile_time)
+  
 }
 
 ######################################################
@@ -121,7 +160,7 @@ saveRDS(topic_model_time,file=topicfile)
 if ((!file.exists(trainmatfile) | force_redo) & (location=="Windows")) {
 
 library(topicmodels)  
-topic_model_time=readRDS(topicfile)
+topic_model_time=readRDS(topicfile_time)
   
 # Topics
 topic_features <- transformer(patients, episodes, list_of_data_tables,
@@ -129,120 +168,153 @@ topic_features <- transformer(patients, episodes, list_of_data_tables,
 		all_codes_topic = list(topic_model_fit = topic_model_time)
 	),
 	as.integer(time_train),
-	hard_max_lookback = 366)
+	hard_max_lookback = hardmax)
 topic_file=paste0(data_dir,"topic_temp.RDS")
 saveRDS(topic_features,file=topic_file)
 rm(topic_features)
 gc()
 
-# Long-term condition counts
-ltc_features <- transformer(patients, episodes, list_of_data_tables,
-	list(
-		ltcs = list(output_type = "rawdata_NUMBEROFLTCs")
-	),
-	as.integer(time_train),
-	hard_max_lookback = 366)
-ltc_file=paste0(data_dir,"ltc_temp.RDS")
-saveRDS(ltc_features,file=ltc_file)
-rm(ltc_features)
+
+
+# V3-like features
+v3_features=transformer_v3like(patients,episodes,list_of_data_tables,time_cutoff=time_train,force_one_year_lookback=TRUE)
+v3_features$time_cutoff=as.numeric(time_train)
+v3_file=paste0(data_dir,"v3_temp.RDS")
+saveRDS(v3_features,file=v3_file)
+rm(v3_features)
 gc()
 
-# Time-since-event features
-time_features <- transformer(patients, episodes, list_of_data_tables,
-	list(
-		last_episode_days_ago = list(source_table_names = c("AE2", "SMR00", "SMR01", "SMR01E", "SMR04")),
-		last_emergency_admission_days_ago = list(),
-		ltcs = list(output_type = "years_since_diag")
-	),
-	as.integer(time_train),
-	hard_max_lookback = 366)
+
+
+### Days since/years since type features; rename some
+time_features= transformer(patients, episodes, list_of_data_tables,
+                              list(
+                                last_episode_days_ago = list(
+                                  source_table_names = c("AE2", "SMR00", "SMR01M", "SMR04")),
+                                last_emergency_admission_days_ago = list(
+                                  source_table_names = c("SMR01M")
+                                ),
+                                last_elective_admission_days_ago = list(
+                                  source_table_names = c("SMR01M")
+                                )
+                              ),
+                              as.integer(time_train),hard_max_lookback = hardmax) %>%
+    mutate(days_since_last_acute=days_since_last_SMR01M,
+           days_since_last_emergency_admission=days_since_last_SMR01M_emergency_only,
+           days_since_last_elective_admission=days_since_last_SMR01M_elective_only) %>%
+    select(-c(days_since_last_SMR01M,
+              days_since_last_SMR01M_emergency_only,
+              days_since_last_SMR01M_elective_only))
+# Save time features
 time_file=paste0(data_dir,"time_temp.RDS")
 saveRDS(time_features,file=time_file)
 rm(time_features)
 gc()
 
 
-# Features from SPARRAv3. We can only use these with a one-year lookback
-v3_features <- transformer(patients, episodes, list_of_data_tables,
-	list(
-		sparrav3 = list()
-	),
-	as.integer(time_train),
-	hard_max_lookback = 366)
-v3_file=paste0(data_dir,"v3_temp.RDS")
-saveRDS(v3_features,file=v3_file)
-rm(v3_features)
+### Long term condition related features. Fill 40 years if no diagnosis.
+ltc_features = transformer(patients, episodes, list_of_data_tables,
+                              list(ltcs = list(output_type = "total_count"),
+                                   ltcs = list(output_type = "years_since_diag",
+                                               time_since_fill_value=40)),
+                              as.integer(time_train),hard_max_lookback = hardmax_ltc)
+ltc_file=paste0(data_dir,"ltc_temp.RDS")
+saveRDS(ltc_features,file=ltc_file)
+rm(ltc_features)
 gc()
 
-# Some memory cleanup
-#rm(list=c("list_of_data_tables","topic_model_time","patients","episodes"))
-gc()
 
 # Join
 train_matrix = combine_training_matrices(v3_file,topic_file,time_file,ltc_file,
   patients,episodes,list_of_data_tables,
   keep_id_and_time=TRUE) 
+train_matrix=train_matrix[which(train_matrix$id %in% patients$id),]
+
+
+## Post-processing
 
 ## Remove extraneous variables relating to time cutoff
-train_matrix = train_matrix %>% select(-c("topic_cutoff","ltc_cutoff"))
+if ("topic_cutoff" %in% colnames(train_matrix)) train_matrix = train_matrix %>% select(-c("topic_cutoff"))
+if ("ltc_cutoff" %in% colnames(train_matrix)) train_matrix = train_matrix %>% select(-c("ltc_cutoff"))
 
-## Processing
+## Shorten some very long variable names
+train_matrix = train_matrix %>% rename(
+  ltc_FIRST_DIS_BLOOD_EPISODE_yearssincediag=ltc_FIRST_DISEASES_OF_THE_BLOOD_AND_BLOOD_FORMING_ORGANS_EPISODE_yearssincediag,
+  ltc_FIRST_OTHER_DIGESTIVE_EPISODE_yearssincediag=ltc_FIRST_OTHER_DISEASES_OF_DIGESTIVE_SYSTEM_EPISODE_yearssincediag,
+  ltc_FIRST_ENDOCRINE_MET_EPISODE_yearssincediag=ltc_FIRST_OTHER_ENDOCRINE_METABOLIC_DISEASES_EPISODE_yearssincediag
+)
 
-# Add sex as predictor
-train_matrix$sexM=as.integer((patients$gender=="Male")[match(train_matrix$id,patients$id)])
 
+# Code 'days since...' type variables as high rather than low if the individual had no such episode
 dsince=colnames(train_matrix)[grep("days_since",colnames(train_matrix))]
 for (i in 1:length(dsince)) {
   x=train_matrix[[dsince[i]]]
   w=which(!is.finite(x)|(x==0))
-  x[w]=2*366 # If the person has never had an episode, set value to 2* hardmax
+  x[w]=2*hardmax # If the person has never had an episode, set value to 2* hardmax
   train_matrix[[dsince[i]]]=x
 }
 ysince=colnames(train_matrix)[grep("yearssince",colnames(train_matrix))]
 for (i in 1:length(ysince)) {
   x=train_matrix[[ysince[i]]]
-  w=which(!is.finite(x)|(x==0))
-  x[w]=100 # If the person has never had an episode, set value to 100
+  w=which(!is.finite(x)) # Years can realistically be 0
+  x[w]=rep(40,length(w)) # If the person has never had an episode, set value to 40
   train_matrix[[ysince[i]]]=x
 }
 
 
-
-
-
-# Adjoin v3 scores
+# Individual must have a valid v3 score
 sparraV3Scores=as_tibble(read.fst("../Results/Modeling/SPARRAv3_raw_scores/SPARRAv3_raw_scores_all.fst"))
 tx=as.numeric(sparraV3Scores[[2]])
 w3=which(tx %in% unique(as.numeric(train_matrix$time)))
 id3=paste0(sparraV3Scores$id[w3],"_",tx[w3])
 id4=paste0(train_matrix$id,"_",as.numeric(train_matrix$time))
-train_matrix$v3score=sparraV3Scores$SPARRAv3_score[w3][match(id4,id3)]
 
-rm(list=c("sparraV3Scores","tx","w3","id3","id4"))
-rm(list=c("v3_features","time_features","ltc_features","topic_features"))
-gc()
-
-# Need to reload to ensure all individuals are in patient list
-load_cleanData(partition = "all",
-  subset_frac=1, subset_seed = 1234,
-  load_to_global=TRUE,
-  load_sparrav3_scores = FALSE)
-
-train_matrix=train_matrix[which(train_matrix$id %in% patients$id),]
-train_matrix=train_matrix[which(!is.na(train_matrix$v3score)),]
-train_matrix=train_matrix[which(!is.na(train_matrix$target)),]
-
-# Memory cleanup
-rm(list=c("patients","episodes","list_of_data_tables"))
-gc()
+# Affix v3 scores
+train_matrix$v3score=sparraV3Scores$SPARRAv3_score[w3[match(id4,id3)]]
 
 
 # Save
 saveRDS(train_matrix,file=trainmatfile)
 
-rm(list=c("train_matrix"))
 
-}
+} # else train_matrix=readRDS(trainmatfile)
+
+
+######################################################
+## Exclusions for design matrix                     ##
+######################################################
+
+
+design_exclusions_file_time=paste0(model_dir,"design_exclusions_time.RData")
+
+if (!file.exists(design_exclusions_file_time)) {
+  train_matrix=readRDS(trainmatfile)
+  
+  load_cleanData(partition = "all",
+	  subset_frac=1, subset_seed = 1234,
+	  load_to_global=TRUE)
+    
+  # Individuals on exclusion list
+  exclude_list=read.csv(paste0(dir_rawData,"Unmatched_UPIs_without_UPI.csv.gz"))$UNIQUE_STUDY_ID
+  index_list=which(!(train_matrix$id %in% exclude_list))
+  
+  # Individuals with no SIMD - must be done with patients 
+  sub_simd=patients$id[which(is.na(patients$SIMD_DECILE_2016_SCT))]
+  index_simd=which(!(train_matrix$id %in% sub_simd))
+  #which(!is.na(train_matrix$SIMD_DECILE_2016_SCT))
+  
+  # Individual must be alive at time cutoff
+  index_death=which(is.finite(train_matrix$target))
+  
+  # Individual should have a valid v3 score
+  index_v3=which(is.finite(train_matrix$v3score))
+  
+  # All inclusions
+  index_include=intersect(intersect(index_list,index_simd),intersect(index_death,index_v3)) # Inclusions for training set
+
+  save(index_include,sub_simd,file=design_exclusions_file_time)
+  
+} else load(design_exclusions_file_time)
 
 
 ######################################################
@@ -254,28 +326,12 @@ time_model="James/Analysis/Data/time_attenuation/Model/time_model"
 
 if (length(list.files(dirname(time_model),pattern="time_model\\."))<11) {
  train_matrix=readRDS(trainmatfile)
+ train_matrix=train_matrix[index_include,]
  train_id=train_matrix$id
- mod=SPARRAv4.fit.split(train_matrix %>% select(-c("id","time")),
+ mod=SPARRAv4.fit.split(train_matrix %>% select(-c("id","time","reason")),
 	  seed=220,model_id=time_model,linux=(location=="Linux"))
 }
 
-
-
-######################################################
-## Fit model with no topic features                 ##
-######################################################
-
-
-# sparrav4.fit.split saves predictions for Xpred to this file
-time_model_notopics="James/Analysis/Data/time_attenuation/Model/time_model_notopics"
-
-
-if (length(list.files(dirname(time_model_notopics),pattern="time_model_notopics\\."))<11) {
- train_matrix=readRDS(trainmatfile)
- train_id=train_matrix$id
- mod_notopics=SPARRAv4.fit.split(train_matrix %>% select(-c("id","time",matches("topic*"))),
-    seed=220,model_id=time_model_notopics,linux=(location=="Linux"))
-}
 
 
 
@@ -292,22 +348,21 @@ test_times=c(
   dmy_hm("1-5-2017 00:00")
 )
 
-for (i in 1:length(test_times)) {
+for (itime in 1:length(test_times)) {
 
-time_test=test_times[i]
+time_test=test_times[itime]
 
-testmatfile=paste0(data_dir,"time_attenuation/training_matrix_time_attenuation_",gsub(" ","_",time_test),".R")
+testmatfile=paste0(data_dir,"time_attenuation/test_matrix_time_attenuation_",gsub(" ","_",time_test),".R")
 if ((!file.exists(testmatfile) | force_redo) & (location=="Windows")) {
   
   if (!exists("patients")) {
   load_cleanData(partition = "all",
     subset_frac=1, subset_seed = 1234,
-    load_to_global=TRUE,
-    load_sparrav3_scores = FALSE)
+    load_to_global=TRUE)
   }
   if (!exists("topic_model_time")) {
     library(topicmodels)
-    topic_model_time=readRDS(topicfile)
+    topic_model_time=readRDS(topicfile_time)
   }
   
   # Topics
@@ -315,110 +370,135 @@ if ((!file.exists(testmatfile) | force_redo) & (location=="Windows")) {
     list(
       all_codes_topic = list(topic_model_fit = topic_model_time)
     ),
-    as.integer(time_test),hard_max_lookback = 366)
+    as.integer(time_test),hard_max_lookback = hardmax)
   # Save: memory issues
   topic_file=paste0(data_dir,"topic_temp.RDS")
   saveRDS(topic_features,file=topic_file)
   rm(topic_features)
   gc()
-  
-  # Long-term condition counts
-  ltc_features <- transformer(patients, episodes, list_of_data_tables,
-    list(
-      ltcs = list(output_type = "rawdata_NUMBEROFLTCs")
-    ),
-    as.integer(time_test),
-    hard_max_lookback = 366)
-  # Save: memory issues
-  ltc_file=paste0(data_dir,"ltc_temp.RDS")
-  saveRDS(ltc_features,file=ltc_file)
-  rm(ltc_features)
-  gc()
+
   
   
-  # Time-since-event features
-  time_features <- transformer(patients, episodes, list_of_data_tables,
-    list(
-      last_episode_days_ago = list(source_table_names = c("AE2", "SMR00", "SMR01", "SMR01E", "SMR04")),
-      last_emergency_admission_days_ago = list(),
-      ltcs = list(output_type = "years_since_diag")
-    ),
-    as.integer(time_test),
-    hard_max_lookback = 366)
-  # Save: memory issues
-  time_file=paste0(data_dir,"time_temp.RDS")
-  saveRDS(time_features,file=time_file)
-  rm(time_features)
-  gc()
-  
-  
-  # Features from SPARRAv3. We can only use these with a one-year lookback
-  v3_features <- transformer(patients, episodes, list_of_data_tables,
-    list(sparrav3 = list()),
-    as.integer(time_test),
-    hard_max_lookback = 366)
+  # V3-like features
+  v3_features=transformer_v3like(patients,episodes,list_of_data_tables,
+                                 time_cutoff=time_test,force_one_year_lookback=TRUE)
+  v3_features$time_cutoff=as.numeric(time_test)
   # Save: memory issues
   v3_file=paste0(data_dir,"v3_temp.RDS")
   saveRDS(v3_features,file=v3_file)
   rm(v3_features)
   gc()
   
-  # Some memory cleanup
-  rm(list=c("topic_model_time"))
+  
+  ### Days since/years since type features; rename some
+  time_features= transformer(patients, episodes, list_of_data_tables,
+                             list(
+                               last_episode_days_ago = list(
+                                 source_table_names = c("AE2", "SMR00", "SMR01M", "SMR04")),
+                               last_emergency_admission_days_ago = list(
+                                 source_table_names = c("SMR01M")
+                               ),
+                               last_elective_admission_days_ago = list(
+                                 source_table_names = c("SMR01M")
+                               )
+                             ),
+                             as.integer(time_test),hard_max_lookback = hardmax) %>%
+    mutate(days_since_last_acute=days_since_last_SMR01M,
+           days_since_last_emergency_admission=days_since_last_SMR01M_emergency_only,
+           days_since_last_elective_admission=days_since_last_SMR01M_elective_only) %>%
+    select(-c(days_since_last_SMR01M,
+              days_since_last_SMR01M_emergency_only,
+              days_since_last_SMR01M_elective_only))
+  # Save time features
+  time_file=paste0(data_dir,"time_temp.RDS")
+  saveRDS(time_features,file=time_file)
+  rm(time_features)
+  gc()
+  
+  
+  ### Long term condition related features. Fill 40 years if no diagnosis.
+  ltc_features = transformer(patients, episodes, list_of_data_tables,
+                             list(ltcs = list(output_type = "total_count"),
+                                  ltcs = list(output_type = "years_since_diag",
+                                              time_since_fill_value=40)),
+                             as.integer(time_test),hard_max_lookback = hardmax_ltc)
+  ltc_file=paste0(data_dir,"ltc_temp.RDS")
+  saveRDS(ltc_features,file=ltc_file)
+  rm(ltc_features)
   gc()
   
   # Join
   test_matrix = combine_training_matrices(v3_file,topic_file,time_file,ltc_file,
-    patients,episodes,list_of_data_tables,
-    keep_id_and_time=TRUE) 
+                                          patients,episodes,list_of_data_tables,
+                                          keep_id_and_time=TRUE) 
+  test_matrix=test_matrix[which(test_matrix$id %in% patients$id),]
+  
+  print(paste0("Generated test matrix for time point ",time_test))
+    
+  ## Post-processing
   
   ## Remove extraneous variables relating to time cutoff
-  test_matrix = test_matrix %>% select(-c("topic_cutoff","ltc_cutoff"))
-
-  ## Processing
+  if ("topic_cutoff" %in% colnames(test_matrix)) test_matrix = test_matrix %>% select(-c("topic_cutoff"))
+  if ("ltc_cutoff" %in% colnames(test_matrix)) test_matrix = test_matrix %>% select(-c("ltc_cutoff"))
   
-  # Add sex as predictor
-  test_matrix$sexM=as.integer((patients$gender=="Male")[match(test_matrix$id,patients$id)])
+  ## Shorten some very long variable names
+  test_matrix = test_matrix %>% rename(
+    ltc_FIRST_DIS_BLOOD_EPISODE_yearssincediag=ltc_FIRST_DISEASES_OF_THE_BLOOD_AND_BLOOD_FORMING_ORGANS_EPISODE_yearssincediag,
+    ltc_FIRST_OTHER_DIGESTIVE_EPISODE_yearssincediag=ltc_FIRST_OTHER_DISEASES_OF_DIGESTIVE_SYSTEM_EPISODE_yearssincediag,
+    ltc_FIRST_ENDOCRINE_MET_EPISODE_yearssincediag=ltc_FIRST_OTHER_ENDOCRINE_METABOLIC_DISEASES_EPISODE_yearssincediag
+  )
   
+  
+  # Code 'days since...' type variables as high rather than low if the individual had no such episode
   dsince=colnames(test_matrix)[grep("days_since",colnames(test_matrix))]
-  for (ii in 1:length(dsince)) {
-    x=test_matrix[[dsince[ii]]]
+  for (i in 1:length(dsince)) {
+    x=test_matrix[[dsince[i]]]
     w=which(!is.finite(x)|(x==0))
-    x[w]=2*366 # If the person has never had an episode, set value to 2* hardmax
-    test_matrix[[dsince[ii]]]=x
+    x[w]=2*hardmax # If the person has never had an episode, set value to 2* hardmax
+    test_matrix[[dsince[i]]]=x
   }
   ysince=colnames(test_matrix)[grep("yearssince",colnames(test_matrix))]
-  for (ii in 1:length(ysince)) {
-    x=test_matrix[[ysince[ii]]]
-    w=which(!is.finite(x)|(x==0))
-    x[w]=100 # If the person has never had an episode, set value to 100
-    test_matrix[[ysince[ii]]]=x
+  for (i in 1:length(ysince)) {
+    x=test_matrix[[ysince[i]]]
+    w=which(!is.finite(x)) # Years can realistically be 0
+    x[w]=rep(40,length(w)) # If the person has never had an episode, set value to 40
+    test_matrix[[ysince[i]]]=x
   }
   
-    
-  # Adjoin v3 scores
+  
+  # Individual must have a valid v3 score
   sparraV3Scores=as_tibble(read.fst("../Results/Modeling/SPARRAv3_raw_scores/SPARRAv3_raw_scores_all.fst"))
   tx=as.numeric(sparraV3Scores[[2]])
   w3=which(tx %in% unique(as.numeric(test_matrix$time)))
   id3=paste0(sparraV3Scores$id[w3],"_",tx[w3])
   id4=paste0(test_matrix$id,"_",as.numeric(test_matrix$time))
-  test_matrix$v3score=sparraV3Scores$SPARRAv3_score[w3][match(id4,id3)]
   
-  rm(list=c("sparraV3Scores","tx","w3","id3","id4"))
-  gc()
+  # Affix v3 scores
+  test_matrix$v3score=sparraV3Scores$SPARRAv3_score[w3[match(id4,id3)]]
   
-  # Need to reload to ensure all individuals are in patient list
-  #load_cleanData(partition = "all",
-  #  subset_frac=1, subset_seed = 1234,
-  #  load_to_global=TRUE,
-  #  load_sparrav3_scores = FALSE)
+
+  #  Exclusions 
+  design_exclusions_file_time=paste0(model_dir,"design_exclusions_time_",gsub(" ","_",time_test),".RData")
   
-  test_matrix=test_matrix[which(test_matrix$id %in% patients$id),]
-  test_matrix=test_matrix[which(!is.na(test_matrix$v3score)),]
-  test_matrix=test_matrix[which(!is.na(test_matrix$target)),]
+  # Individuals on exclusion list
+  exclude_list=read.csv(paste0(dir_rawData,"Unmatched_UPIs_without_UPI.csv.gz"))$UNIQUE_STUDY_ID
+  index_list=which(!(test_matrix$id %in% exclude_list))
   
-  # Memory cleanup
-  #rm(list=c("patients","episodes","list_of_data_tables"))
+  # Individuals with no SIMD
+  load(design_exclusions_file_time)
+  index_simd=which(!(test_matrix$id %in% sub_simd))
+
+  # Individual must be alive at time cutoff
+  index_death=which(is.finite(test_matrix$target))
+  
+  # Individual should have a valid v3 score
+  index_v3=which(is.finite(test_matrix$v3score))
+  
+  # All inclusions
+  index_include_test=intersect(intersect(index_list,index_simd),intersect(index_death,index_v3)) # Inclusions for training set
+  
+  save(index_include_test,file=design_exclusions_file_time)
+  
   gc()
 
   # Save
@@ -428,18 +508,20 @@ if ((!file.exists(testmatfile) | force_redo) & (location=="Windows")) {
   
   #assign(paste0("test_id",i),test_matrix$id)
   #assign(paste0("test_matrix",i),test_matrix %>% select(-c("id")))
-  
-  print(paste0("Constructed test matrix for time ",test_times[i]))
+}
+  print(paste0("Constructed test matrix for time ",test_times[itime]))
 
-} 
+ 
 }
 
 for (i in 1:length(test_times)) {
   time_test=test_times[i]
-  testmatfile=paste0(data_dir,"time_attenuation/training_matrix_time_attenuation_",gsub(" ","_",time_test),".R")
+  testmatfile=paste0(data_dir,"time_attenuation/test_matrix_time_attenuation_",gsub(" ","_",time_test),".R")
   testx=readRDS(testmatfile)
-  assign(paste0("test_matrix",i),testx)
-  assign(paste0("test_id",i),testx$id)
+  design_exclusions_file_time=paste0(model_dir,"design_exclusions_time_",gsub(" ","_",time_test),".RData")
+  load(design_exclusions_file_time)
+  assign(paste0("test_matrix",i),testx[index_include_test,])
+  assign(paste0("test_id",i),testx$id[index_include_test])
   rm(list=c("testx"))
 }
 
@@ -471,18 +553,12 @@ gc()
 ######################################################
 
 pred_file="James/Analysis/Data/time_attenuation/Model/time_model.output.RDS"
-pred_file_notopics="James/Analysis/Data/time_attenuation/Model/time_model_notopics.output.RDS"
 
-if (!file.exists(paste0(plot_dir,"topics/topic_comparison.txt"))) {
+if (!file.exists(paste0(plot_dir,"recalculate/comparisons.txt"))) {
 
 output_name=paste0(time_model,".output")
-pred=predict.sparra(test_matrix_combined %>% select(-c("id","time")),
+pred=predict.sparra(test_matrix_combined %>% select(-c("id","time","reason")),
   time_model,save_id=output_name,verbose=T,
-  linux=(location=="Linux"))
-
-output_name_notopics=paste0(time_model_notopics,".output")
-  pred_notopics=predict.sparra(test_matrix_combined %>% select(-c("id","time",matches("topic*"))),
-    time_model_notopics,save_id=output_name_notopics,verbose=T,
   linux=(location=="Linux"))
 
 }
@@ -497,135 +573,6 @@ ypredtest=data.frame(Ypred)
 colnames(ypredtest)[dim(ypredtest)[2]]="super"
 ytest=test_matrix_combined$target
 rm(list=c("Ypred","test_matrix_combined"))
-
-Ypredn=readRDS(pred_file_notopics)
-ypredtestn=data.frame(Ypredn)
-colnames(ypredtestn)[dim(ypredtestn)[2]]="super"
-rm(list=c("Ypredn"))
-
-
-
-######################################################
-## Topics vs no topics                              ##
-######################################################
-
-## Use this subset of test matrix
-sub=which(test_matrix_index==1)
-
-
-## Test and practical difference
-library(pROC)
-roc_topic=roc(ytest[sub],ypredtest$super[sub])
-roc_notopic=roc(ytest[sub],ypredtestn$super[sub])
-
-sink(paste0(plot_dir,"topics/topic_comparison.txt"))
-r0=roc.test(roc_topic,roc_notopic)
-r0$roc1=NULL; r0$roc2=NULL
-print(r0)
-cat("\n\n")
-cat("P-value: ", r0$p.value)
-cat("\n\n\n")
-
-# Practical difference: number of true positives amongst top-N
-topn=c(1000,2000,5000,1e4,5e4,1e5,5e5,1e6)
-out=c()
-ord_topic=order(-ypredtest$super[sub])
-ord_notopic=order(-ypredtestn$super[sub])
-for (i in 1:length(topn)) {
-  n_top=sum(ytest[sub][which(ord_topic <= topn[i])])
-  n_notop=sum(ytest[sub][which(ord_notopic <= topn[i])])
-  out=cbind(out,c(n_top,n_notop,n_top-n_notop))
-}
-out=rbind(topn,out)
-rownames(out)=c("TopN","N_adm_topics","N_adm_notopics","Difference")
-print(out)
-
-cat(sink_marker)
-cat("r0="); dput(r0); cat("\n\n")
-cat("out="); dput(out); cat("\n\n")
-sink()
-
-
-## ROC curves
-
-xrocT=getroc(ytest[sub],ypredtest$super[sub])
-xrocNT=getroc(ytest[sub],ypredtestn$super[sub]) 
-
-pdf(paste0(plot_dir,"topics/topic_roc.pdf"),width=3,height=3.5)
-aucT=signif(xrocT$auc,digits=4); seT=signif(xrocT$se,digits=2);
-aucNT=signif(xrocNT$auc,digits=4); seNT=signif(xrocNT$se,digits=2);
-labs=c(paste0("Topics: ",aucT," (",seT,")"),
-  paste0("No topics: ",aucNT," (",seNT,")"))
-xcol=c("red","black")
-roc_2panel(list(xrocT,xrocNT),labels=labs,col=xcol,title="AUROC (SE)",text.col=xcol,title.col="black")
-dev.off()
-
-sink(paste0(plot_dir,"topics/topic_roc.txt"))
-cat("Topics","\n")
-cat("Sensitivity\n",xrocT$sens,"\n\nSpecificity\n",xrocT$spec,"\n\nAUROCs\n",xrocT$auc,"\n\nSE\n",xrocT$se,"\n\n\n")
-cat("\n\n")
-cat("NoTopics","\n")
-cat("Sensitivity\n",xrocNT$sens,"\n\nSpecificity\n",xrocNT$spec,"\n\nAUROCs\n",xrocNT$auc,"\n\nSE\n",xrocNT$se,"\n\n\n")
-cat("\n\n")
-cat(sink_marker)
-cat("xrocT="); dput(xrocT); cat("\n\n")
-cat("xrocNT="); dput(xrocNT); cat("\n\n")
-sink()
-
-
-
-
-### PR curves
-
-xprcT=getprc(ytest[sub],ypredtest$super[sub])
-xprcNT=getprc(ytest[sub],ypredtestn$super[sub]) 
-
-pdf(paste0(plot_dir,"topics/topic_prc.pdf"),width=3,height=3.5)
-aucT=signif(xprcT$auc,digits=4); seT=signif(xprcT$se,digits=2);
-aucNT=signif(xprcNT$auc,digits=4); seNT=signif(xprcNT$se,digits=2);
-labs=c(paste0("Topics: ",aucT," (",seT,")"),
-  paste0("No topics: ",aucNT," (",seNT,")"))
-xcol=c("red","black")
-prc_2panel(list(xprcT,xprcNT),labels=labs,col=xcol,title="AUROC (SE)",text.col=xcol,title.col="black")
-dev.off()
-
-sink(paste0(plot_dir,"topics/topic_prc.txt"))
-cat("Topics","\n")
-cat("Sensitivity\n",xprcT$sens,"\n\nPPV\n",xprcT$ppv,"\n\nAUROCs\n",xprcT$auc,"\n\nSE\n",xprcT$se,"\n\n\n")
-cat("\n\n")
-cat("NoTopics","\n")
-cat("Sensitivity\n",xprcNT$sens,"\n\nPPV\n",xprcNT$ppv,"\n\nAUROCs\n",xprcNT$auc,"\n\nSE\n",xprcNT$se,"\n\n\n")
-cat("\n\n")
-cat(sink_marker)
-cat("xprcT="); dput(xprcT); cat("\n\n")
-cat("xprcNT="); dput(xprcNT); cat("\n\n")
-sink()
-
-
-
-
-### Calibration curves
-xcalT=plotcal(ytest[sub],ypredtest$super[sub],plot=FALSE,kernel=TRUE)
-xcalNT=plotcal(ytest[sub],ypredtestn$super[sub],plot=FALSE,kernel=TRUE)
-
-pdf(paste0(plot_dir,"topics/topic_cal.pdf"),width=3,height=3.5)
-labs=c("Topics","No topics")
-xcol=c("red","black")
-cci=rgb(0.5,0.5,0.5,alpha=0.5) # colour for confidence envelope
-cal_2panel(list(xcalT,xcalNT),labels=labs,col=xcol,text.col=xcol,ci_col=c(NA,cci))
-dev.off()
-
-sink(paste0(plot_dir,"topics/topic_cal.txt"))
-cat("Topics\n\n")
-cat("Obs\n",xcalT$x,"\n\nPred\n",xcalT$y,"\n\nLower\n",xcalT$lower,"\n\nUpper\n",xcalT$upper)
-cat("\n\n\nNoTopics\n\n")
-cat("Obs\n",xcalNT$x,"\n\nPred\n",xcalNT$y,"\n\nLower\n",xcalNT$lower,"\n\nUpper\n",xcalNT$upper)
-cat(sink_marker)
-cat("xcalT="); dput(xcalT); cat("\n\n")
-cat("xcalNT="); dput(xcalNT); cat("\n\n")
-sink()
-
-
 
 
 
@@ -787,7 +734,7 @@ match_sub=function(age,target,agesub,targetsub) {
   return(sub)
 }
 
-# Age distribution across whole daaset (excluding very young and old). We will match to this.
+# Age distribution across whole dataset (excluding very young and old). We will match to this.
 age=test_age; target=ytest
 w=which(age>10 & age<90); age=age[w]; target=target[w]
 
@@ -1066,6 +1013,7 @@ for (i in 1:length(test_times)) {
      q0=quantile(pi,qplot)
      q1=quantile(pj,qplot)
      q0a=1:scmax; q1a=q0a; for (ii in 1:scmax) q1a[ii]=median(y[which(x==ii)],na.rm=T); q0a=q0a/scmax; q1a=q1a/scmax
+     q0b=1:scmax; q1b=q0b; for (ii in 1:scmax) q1b[ii]=median(x[which(y==ii)],na.rm=T); q0b=q0b/scmax; q1b=q1b/scmax
      abline(0,1,col="black",lty=2,lwd=2)
      #abline(0,1,col="white",lty=1,lwd=2)
      
@@ -1075,9 +1023,9 @@ for (i in 1:length(test_times)) {
      #lines(q0a,q1a,col="black",lwd=4)
      lines(q0a,q1a,col="darkgreen",lwd=2)
      
-     legend("bottomright",c("Density (low)","", "Density (high)", "Marginal", "X-Y","Q-Q","Median"),
-       pch=c(16,16,16,NA,NA,NA,NA),lty=c(NA,NA,NA,1,2,1,1),lwd=c(NA,NA,NA,1,2,2,2),
-       col=c("darkgray","red","yellow","black","black","blue","darkgreen"))
+     legend("bottomright",c("Density (low)","", "Density (high)", "Marginal", "X-Y","Q-Q","Median (col)","Median (row)"),
+       pch=c(16,16,16,NA,NA,NA,NA,NA),lty=c(NA,NA,NA,1,2,1,1,2),lwd=c(NA,NA,NA,1,2,2,2,2),
+       col=c("darkgray","red","yellow","black","black","blue","darkgreen","darkgreen"))
      dev.off()
      sink(paste0(plot_dir,"cohort/crosstime/time",i,"_vs_time",j,".txt"))
      options(width=2000)
@@ -1106,6 +1054,8 @@ for (i in 1:length(test_times)) {
      cat("q1="); dput(q1); cat("\n\n")
      cat("q0a="); dput(q0a); cat("\n\n")
      cat("q1a="); dput(q1a); cat("\n\n")
+     cat("q0b="); dput(q0b); cat("\n\n")
+     cat("q1b="); dput(q1b); cat("\n\n")
      sink()
    }
 }

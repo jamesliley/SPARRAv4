@@ -9,6 +9,85 @@ library(purrr)
 #source("James/Transformation/get_episodes_within_time.R")
 #source("James/Util/basic_operations.R")
 
+
+
+
+
+
+
+
+#' add_target
+#' This adds the target column to a long format tibble with "id" and "time" columns, based on information in an "episodes" table evaluated by an "event_func"
+#' 
+#' Input:
+#' @param data a tibble that have at least "id" <integer> and "time" <dttm> columns. The "time" column should be the same for all ids
+#' @param list_of_data_tables The list of data tables used as input to event_func
+#' @param period = 365, # days, length of the outcome aggregation (also: censors this much at the end of the dataset)
+#' @param include_reason Set to TRUE to include a column indicating if the target is TRUE due to death or admission
+#' 
+#' Output:
+#' @return The data tibble with an extra binary column named "target" <binary>. The value in "target":
+#'       It is TRUE if for a given id and time, the same id had a true "event" (event_func returns positive) within "prediction_period"
+#'       It is NA if the given time is within "prediction_period" to the last supplied time in "episodes", indicating we do not have data to determine the target,
+#'       It is FALSE otherwise
+#' 
+#' The function also saves this table to the disk within the intermediate data folder
+add_target=function(data,list_of_data_tables, period=365,include_reason=FALSE) {
+  times=unique(data$time)
+  target=rep(FALSE,dim(data)[1])
+  reason=rep(NA,dim(data)[1])
+  for (i in 1:length(times)) {
+    t=times[i]
+    w=which(data$time==t)
+    
+    # IDs who had an emergency admission
+    t1=list_of_data_tables$SMR01M$time
+    ea=list_of_data_tables$SMR01M$emergency_admin
+    sid=list_of_data_tables$SMR01M$id
+    wa=which((t1 >= t) &                   # Admission time after cutoff
+               (t1 <  t+ period*(24*3600)) & # Admission time before cutoff + period
+               (ea==1))
+    ida=sid[wa]
+    
+    # Deaths
+    dt=list_of_data_tables$deaths$time
+    idd=list_of_data_tables$deaths$id
+    w1=which(dt<t) # deaths before time cutoff 
+    w2=which((dt>= t) &                   # Deaths after time cutoff
+               (dt < t+ (period*24*3600)))  # Deaths before period after time cutoff
+    id1=idd[w1]
+    id2=idd[w2]
+    
+    idw=data$id[w]  # IDs in data
+    
+    xtarget=rep(FALSE,length(w))  # Initialise target to 0
+    xtarget[match(ida,idw)]=TRUE  # TRUE if emergency admission
+    xtarget[match(id1,idw)]=NA    # NA if death before time cutoff
+    xtarget[match(id2,idw)]=TRUE  # TRUE if died before period after time cutoff
+    target[w]=xtarget             # Target for time t
+    
+    if (include_reason) {
+      idb=intersect(ida,id2)        # IDs of individuals who had an EA and subsequently died
+      xreason=rep(NA,length(w))     # Initialise reason to NA
+      xreason[match(ida,idw)]="E"   # "E" if emergency admission
+      xreason[match(id1,idw)]=NA    # NA if death before time cutoff
+      xreason[match(id2,idw)]="D"   # "D" if died before period after time cutoff
+      xreason[match(idb,idw)]="B"   # "B" if emergency admission and died before period after time cutoff
+      reason[w]=xreason             # reason for time t
+    }
+  }
+  data$target=target
+  if (include_reason) data$reason=reason
+  return(data)
+}
+
+
+
+
+
+
+
+
 #' add_target
 #' This adds the target column to a long format tibble with "id" and "time" columns, based on information in an "episodes" table evaluated by an "event_func"
 #' 
@@ -28,7 +107,7 @@ library(purrr)
 #'       It is FALSE otherwise
 #' 
 #' The function also saves this table to the disk within the intermediate data folder
-add_target <- function(
+add_target_old <- function(
   data,
   episodes,
   list_of_data_tables,
@@ -43,15 +122,6 @@ add_target <- function(
     event_func=event_func_v4
     # Complicated event func, including "urgent" admissions and taking "ADMISSION_TRANSFER" into account
     # See complicated definition of emergency admission on sheet 1 of "\\Farr-FS1\Study Data\1718-0370\Linked Data\Upload to SH 4\admissions and prescribing (for Gergo) RP.xlsx"
-    
-    # # Simple event_func (according to online data dictionary)
-    # event_func <- function(ep){
-    #   ep %>% transmute(
-    #     id = id,
-    #     time = time,
-    #     event = (!is.na(admission_type) & admission_type >= 30 & admission_type < 40) 
-    #   )
-    # }
   }
   
   
@@ -253,6 +323,74 @@ event_func_v4 <- function(ep, list_of_data_tables){
   # Return
   ep_tmp
 }
+
+
+
+
+
+
+
+
+##' event_func_v4()
+##'
+##' Determines events as per SPARRAv4 definition
+##'
+##' @param ep episodes tibble; output from loadCleanData
+##' @param list_of_data_tables list of data tables; output from loadCleanData
+##' @return tibble with "id", "time", and "event" <binary>
+event_func_v4_test <- function(ep, list_of_data_tables){
+  ep_tmp <- ep %>% 
+    mutate(
+      event = ( (!is.na(admission_type) & admission_type %in% c(20,21,22,30,31,32,33,34,35,36,38,39)) | # get simple event definition first
+                  (source_table=="deaths")) # death in outcome period counts as an admission
+    )
+  
+  # Fix edge case events (admission type == 38),  we need to check ADMISSION_TRANSFER_FROM in SMR01 and SMR01E
+  ep_tmp_edgecases <- ep_tmp %>%
+    # We only need the edge-cases to fix (admission type is 38)
+    filter(admission_type == 38) %>%
+    select(id, source_table, source_row, event) %>%
+    
+    # First sort out SMR01 admission transfer
+    left_join(
+      list_of_data_tables$SMR01M %>% select(id, source_row, source_table, ADMISSION_TRANSFER_FROM),
+      by = c("id", "source_row", "source_table")
+    ) %>% 
+    mutate(
+      event = (event & !str_sub(ADMISSION_TRANSFER_FROM,1,1) %in% c("4","5"))
+    ) %>%
+    select(-c("ADMISSION_TRANSFER_FROM")) %>%
+    
+    # Now sort out SMR01E admission transfer
+    #  left_join(
+    #  list_of_data_tables$SMR01E %>% select(id, source_row, source_table, ADMISSION_TRANSFER_FROM),
+    #  by = c("id", "source_row", "source_table")
+    #) %>% 
+    #mutate(
+    #  event = (event & !str_sub(ADMISSION_TRANSFER_FROM,1,1) %in% c("4","5"))
+    #) %>%
+    #select(-c("ADMISSION_TRANSFER_FROM"))
+  
+  ep_tmp <- ep_tmp %>% 
+    left_join(ep_tmp_edgecases, by = c("id", "source_table", "source_row")) %>% 
+    transmute(
+      id = id,
+      time = time,
+      event= ifelse(!is.na(event.y), event.y, event.x)
+    )
+  
+  rm(ep_tmp_edgecases)
+  
+  # Return
+  ep_tmp
+}
+
+
+
+
+
+
+
 
 
 

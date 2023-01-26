@@ -1,5 +1,164 @@
 # Various useful auxiliary functions
 
+#' Correct SMR01M given an earliest-time-threshold. SMR01M, as created, may contain records
+#'  that start before a time threshold and finish afterwards, encompassing SMR01 records
+#'  which started after the threshold (and would otherwise not be present in a filtered SMR01M)
+#'  
+#' This function searches for such instances and adds the corresponding records to SMR01M.  
+#'  
+#' @param SMR01M merged SMR01, SMR01E, SystemWatch
+#' @param SMR01 SMR01 table
+#' @param time earliest time cutoff
+#' @param filtered indicate if already filtered
+affix_smr01=function(SMR01M,SMR01,time,filtered=FALSE) {
+
+  # Trim SMR01 and SMR01M to only records starting after earliest time and before max time
+  if (!filtered) {
+    SMR01=SMR01[which(SMR01$time>=time),]
+    SMR01M=SMR01M[which(SMR01M$time>=time),]  
+  }
+  
+  # ID-CIS pairs
+  idc=paste0(SMR01$id,"_",SMR01$CIS_MARKER)
+  idc_sw=paste0(SMR01M$id,"_",SMR01M$cis_marker)[which(is.finite(SMR01M$cis_marker))]
+  
+  # Find records in SMR01 table which have no corresponding entry in SMR01M
+  df=setdiff(idc,idc_sw)
+  mf=which(idc %in% df)
+  
+  if (length(mf)>0) {
+    # For each ID-CIS pair, find earliest record in SMR01
+    SMR01N=SMR01[mf,,drop=FALSE]
+    
+    # Merge with SMR01M
+    colnames(SMR01N)=tolower(colnames(SMR01N))
+    SMR01N=prepare_smr01(SMR01N) %>% select(-length_of_stay)
+    SMR01X=merge_tables(SMR01M[NULL,],final_smr01_indicators(SMR01N))
+    #SMR01M=rbind(SMR01M,SMR01X)
+    
+  } else SMR01X=NULL
+  
+  # Return
+  return(SMR01X)
+}
+
+
+
+
+
+
+#' Correct SMR01M given an earliest-time-threshold. SMR01M, as created, may contain records
+#'  that start before a time threshold and finish afterwards, encompassing SMR01E records
+#'  which started after the threshold (and would otherwise not be present in a filtered SMR01M)
+#'  
+#' This function searches for such instances and adds the corresponding records to SMR01M.  
+#'  
+#' @param SMR01M merged SMR01, SMR01E, SystemWatch
+#' @param SMR01E SMR01E table
+#' @param time earliest time cutoff
+#' @param filtered indicate if already filtered
+affix_smr01e=function(SMR01M,SMR01E,time,filtered=FALSE) {
+  
+  # Trim SMR01 and SMR01M to only records starting after earliest time and before max time
+  if (!filtered) {
+    SMR01E=SMR01E[which(SMR01E$time>= time),]
+    SMR01M=SMR01M[which(SMR01M$time>= time),]  
+  }
+  
+  # ID-CIS pairs
+  idc=paste0(SMR01E$id,"_",SMR01E$GLS_CIS_MARKER)
+  idc_sw=paste0(SMR01M$id,"_",SMR01M$gls_cis_marker)[which(is.finite(SMR01M$gls_cis_marker))]
+  
+  # Find records in SMR01 table which have no corresponding entry in SMR01M
+  df=setdiff(idc,idc_sw)
+  mf=which(idc %in% df)
+  
+  if (length(mf)>0) {
+    # For each ID-CIS pair, find earliest record in SMR01
+    SMR01N=SMR01E[mf,,drop=FALSE]
+    
+    # Merge with SMR01M
+    colnames(SMR01N)=tolower(colnames(SMR01N))
+    SMR01N=prepare_smr01e(SMR01N) %>% select(-length_of_stay)
+    SMR01X=merge_tables(SMR01M[NULL,],final_smr01_indicators(SMR01N))
+  } else SMR01X=NULL
+  
+  # Return
+  return(SMR01X)
+  
+}
+
+
+
+
+
+#' Find best value at which to truncate length_of_stay and assume that discharge date was unrecorded
+#' 
+#' @param SMR01M merged SMR01, SMR01E, SystemWatch
+#' @param time1 consider admissions after this date
+#' @param time2 consider admissions until this date
+#' @param min_cutoff earliest time cutoff: consider patients still in hospital at this date as having no recorded discharge
+#' @param mode one of "emergency", "elective", "other"
+#' @return time in days
+time_discharge_cutoff=function(SMR01M,
+                               time1=lubridate::ymd("2013-05-01"),
+                               time2=lubridate::ymd("2014-04-30"),
+                               min_cutoff=lubridate::ymd("2016-05-01"),
+                               mode="emergency"){
+  
+  if (mode=="emergency") {
+    admit=which((SMR01M$time >= time1 )	&
+              (SMR01M$time <= time2 ) &
+              (SMR01M$emergency_admin == 1))
+  }
+  if (mode=="elective") {
+    admit=which((SMR01M$time >= time1 )	&
+                  (SMR01M$time <= time2 ) &
+                  (SMR01M$elective_admin == 1))
+  }
+  if (mode=="other") {
+    admit=which((SMR01M$time >= time1 )	&
+                  (SMR01M$time <= time2 ) &
+                  (SMR01M$elective_admin == 0 & SMR01M$emergency_admin == 0))
+  }
+  
+  # Emergency (or elective) admissions between time1 and time2
+  sm=SMR01M[admit,]
+  
+  # Indices of admissions considered to have no discharge date
+  w1=which(!is.finite(sm$time_discharge) | (sm$time_discharge>=min_cutoff))
+  
+  # Indices of admissions with an OK discharge date
+  w2=which(sm$time_discharge<min_cutoff)
+  
+  # Proportion of admissions with no discharge date
+  q=length(w1)/dim(sm)[1]
+  
+  # Set of admission lengths with a discharge date, in days
+  xl=as.numeric((sm$time_discharge[w2]- sm$time[w2])/(24*3600))
+  
+  # Distribution
+  txl=table(xl)/length(xl)
+  
+  # Now we want the minimum stay length at which the posterior probability of 
+  #  having no discharge date is >0.5. For stay length xpost[i], post prob of 
+  #  having no discharge is ypost[i]
+  xpost=as.numeric(names(table(xl)))
+  ypost=q/(q+(1-q)*txl)
+  
+  # At this value, post prob of no discharge rises above 50%
+  k=min(xpost[which(ypost>0.5)])
+  
+  return(k)
+}
+
+
+
+
+
+
+
+
 ##' Function for evaluating hyperparameter performance.
 ##' @name hyp_evaluate
 ##' @param method function to fit model from h2o
@@ -459,7 +618,7 @@ cal_2panel=function(cals,labels,col,lty=rep(1,length(col)),xy_lty=2,xy_col="red"
   # Initialise bottom panel
   par(mar=c(4,4,0.1,0.1))
   xpred=seq(0,1,length=100)[2:99]
-  plot(0,xlim=c(0,1),ylim=range(xr),type="n",
+  plot(0,xlim=c(0,1),ylim=range(xr,na.rm=T),type="n",
     xlab="Predicted",ylab=expression(paste(Delta,"(cal.)")),
     yaxt="n")
   axis(2,at=pretty(range(xr),n=3))
@@ -467,9 +626,13 @@ cal_2panel=function(cals,labels,col,lty=rep(1,length(col)),xy_lty=2,xy_col="red"
   # Draw lines on bottom panel
   for (i in 1:length(cals)) {
     cx=cals[[i]]
-    if (!is.na(ci_col[i]))
-      polygon(c(cx$x,rev(cx$x)),c(cx$lower,rev(cx$upper))-c(cx$x,rev(cx$x)),
+    if (!is.na(ci_col[i])) {
+      xx=c(cx$x,rev(cx$x))
+      yy=c(cx$lower,rev(cx$upper))-c(cx$x,rev(cx$x))
+      wn=which(is.finite(xx+yy)); xx=xx[wn]; yy=yy[wn];
+      polygon(xx,yy,
         col=ci_col[i],border=NA)
+    }
     lines(cx$x,cx$y-cx$x,col=col[i],lty=lty[i])
   }
   abline(h=0,col=xy_col,lty=xy_lty)
@@ -650,11 +813,375 @@ mmt=function(x,y) {
 
 
 
-##' turn_data_into_sparrav3_factors() 
+##' turn_data_into_sparrav3_factors_old() 
 ##' Turn the SPARRAv3 columns into factor levels (as used by SPARRAv3). Written by  Gergo. 
 ##' @param df input matrix of type used in SPARRAv4
 ##' @return matrix for SPARRAv3 computation
-# Redacted for privacy -  not needed for pipeline
+turn_data_into_sparrav3_factors_old <- function(df){
+  df %>%
+    mutate(
+      #age = cut(age, breaks = c(-Inf, seq(75,90,by=5), Inf)),
+      age = cut(age, breaks = c(-Inf, seq(0,90,by=5), Inf)),
+      num_ae2_attendances = cut(num_ae2_attendances, breaks = c(-Inf, 0, 3, 6, 9, Inf)),
+      pis_Respiratory = cut(pis_Respiratory, breaks = c(-Inf, 0, 7, Inf)),
+      pis_CentralNervousSystem = cut(pis_CentralNervousSystem, breaks = c(-Inf, 0, 7, Inf)),
+      pis_Infections = cut(pis_Infections, breaks = c(-Inf, 0, 7, Inf)),
+      pis_EndocrineSystem = cut(pis_EndocrineSystem, breaks = c(-Inf, 0, 7, Inf)),
+      num_emergency_admissions = cut(num_emergency_admissions, breaks = c(-Inf, seq(0,5,by=1), Inf)), # This is the proper version, but it has 3-year lookback
+      num_elective_admissions = cut(num_elective_admissions, breaks = c(-Inf, 0, 2, 4, 6, Inf)),
+      emergency_bed_days = cut(emergency_bed_days, breaks = c(-Inf, 1, 7, 14, Inf)),
+      num_outpatient_appointment_general = cut(num_outpatient_appointment_general, breaks = c(-Inf, 0,2,4, Inf)),
+      pis_countBNFsections = cut(pis_countBNFsections, breaks = c(-Inf, 1,4,7,10,13,16,19, Inf)),
+      SIMD_DECILE_2016_SCT = factor(SIMD_DECILE_2016_SCT),
+      elective_bed_days = cut(elective_bed_days, breaks = c(-Inf, 28, Inf)),
+      emergency_drugAndalcohol_admin = cut(emergency_drugAndalcohol_admin, breaks = c(-Inf, 0, 1, 2, Inf))
+    ) %>%
+    mutate_if(is.numeric, function(x) factor(x>0, levels=c(FALSE, TRUE), labels = c("0", "1+"))) #All others is just YES/NO type features, including most prescriptions
+}
+
+
+
+
+
+##' turn_data_into_sparrav3_factors() 
+##' Turn the SPARRAv3 columns into factor levels (as used by SPARRAv3). Written by James with aid of v3 coefficients.
+##'  Also renames variables to those used in spreadsheet. 
+##' @param df input matrix of type used in SPARRAv4
+##' @param mode sPARRAv3 class: factor levels differ between classes
+##' @return matrix for SPARRAv3 computation
+turn_data_into_sparrav3_factors <- function(df,mode="fe"){
+  df0=df;
+  if (mode=="fe") {
+    df=df %>%
+    mutate(
+      
+      # Demographics
+      AGE = cut(age, breaks = c(-Inf, seq(75,89), Inf),labels=c(75:89,"90+")),
+      # GENDER=factor(2-sexM),
+      SIMD_QUINTILE=factor(floor((as.numeric(SIMD_DECILE_2016_SCT)+1)/2)),
+
+      # Attendances
+      ED_ATTENDANCES = cut(num_ae2_attendances, breaks = c(-Inf, 0:9, Inf),labels=c(0:9,"10+")),
+      EMERGENCY_ADMISSIONS = cut(num_emergency_admissions, breaks = c(-Inf, 0:5, Inf),labels=c(0:5,"6+")), # This is the proper version, but it has 3-year lookback
+      EMERGENCY_BEDDAYS = cut(emergency_bed_days, breaks = c(-Inf, 0:14, Inf),labels=c(0:14,"15+")),
+      #ELECTIVE_ADMISSIONS = cut(num_elective_admissions, breaks = c(-Inf, 0:2, Inf),labels=c(0:2,"3+")),
+      #ELECTIVE_BEDDAYS = cut(elective_bed_days, breaks = c(-Inf, 0:28, Inf),labels=c(0:28,"29+")),
+      OP_APPOINTMENTS = cut(num_outpatient_appointment_general, breaks = c(-Inf, 0:4, Inf),labels=c(0:4,"5+")),
+      #OP_PSYCHIATRIC_APPOINTMENTS = cut(num_outpatient_appointment_mental,c(-Inf,0,Inf),labels=c("0","1+")),
+      #DC_ADMISSIONS=cut(num_dc_elective_admissions+num_dc_emergency_admissions,c(-Inf,0:2,Inf),labels=c(0:2,"3+")),
+      ELECTIVE_DC_ADMISSIONS=cut(num_dc_elective_admissions,c(-Inf,0:6,Inf),labels=c(0:6,"7+")), 
+      #ALCOHOL_SUB_MISUSE_ADMISSIONS = cut(emergency_drugAndalcohol_admin,c(-Inf,0:2,Inf),labels=c(0:2,"3+")),
+      ALCOHOL_ADMISSIONS =  cut(alcohol_admin, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #PSYCHIATRIC_ADMISSIONS = cut(num_psych_admissions,c(-Inf,0,Inf),labels=c("0","1+")),
+      
+      # LTCs
+      LTC=cut(numLTCs_resulting_in_admin, breaks=c(-Inf,0:5,Inf),labels=c(0:5,"6+")),
+      PARKINSONS_DISEASE=cut(parkinsons_indicated,breaks=c(-Inf,0,Inf),labels=c(0:1)),
+      #MS=cut(MS_indicated,breaks=c(-Inf,0:1,Inf),labels=c(0:2)),
+      #EPILEPSY=cut(epilepsy_indicated,breaks=c(-Inf,0:1,Inf),labels=c(0:2)),
+      #DEMENTIA=cut(dementia_indicated,breaks=c(-Inf,0:1,Inf),labels=c(0:2)),
+      #DEMENTIA 
+      #ASTHMA 
+      #DIABETES 
+      #CANCER
+      #ENDOCRINE 
+      #DIGESTIVE 
+      #BLOOD 
+      #CONGENITAL 
+      #SELF_HARM 
+      
+      # BNF
+      BNF_SECTIONS = cut(pis_countBNFsections, breaks = c(-Inf, 0:19, Inf),labels=c(0:19,"20+")),
+      BNF_RESPIRATORY = cut(pis_Respiratory, breaks = c(-Inf, 0:7, Inf),labels=c(0:7,"8+")),
+      BNF_CNS = cut(pis_CentralNervousSystem, breaks = c(-Inf, 0:7, Inf),labels=c(0:7,"8+")),
+      BNF_INFECTIONS = cut(pis_Infections, breaks = c(-Inf, 0:7, Inf),labels=c(0:7,"8+")),
+      BNF_ENDOCRINE = cut(pis_EndocrineSystem, breaks = c(-Inf, 0:7, Inf),labels=c(0:7,"8+")),
+      #BNF_SUBSTANCE = cut(pis_Drugs_Used_In_Substance_Dependence, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_DEMENTIA = cut(pis_Dementia, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_CORTICOSTEROIDS = cut(pis_Corticosteroids_Respiratory, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_FLUIDS = cut(pis_Fluids_And_Electrolytes, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_NUTRITION = cut(pis_Oral_Nutrition, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_VITAMINS = cut(pis_Vitamins, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_BANDAGES = cut(pis_Arm_Sling_Bandages, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_CATHETERS = cut(pis_Catheters, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_STOMA = cut(pis_CombinedStomaDevices, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      BNF_INCONTINENCE = cut(pis_IncontinenceDevices, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_GUT_MOTILITY = cut(pis_Antispasmod_Other_Drgs_Alt_Gut_Motility, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_ANTISECRETORY = cut(pis_Antisecretory_Drugs_Mucosal_Protectants, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_INTESTINAL = cut(pis_Drugs_Affecting_Intestinal_Secretions, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_ANTICOAGULENT = cut(pis_Anticoagulants_And_Protamine, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_ANTIFIBRINOLYTIC = cut(`pis_Antifibrinolytic_Drugs _Haemostatics`, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_MUCOLYTICS = cut(pis_Mucolytics, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_DIABETES = cut(pis_Drugs_Used_In_Diabetes, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_GASTRO_INT = cut(pis_XXX, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_HEART = cut(v3t$pis, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_BRONCHO = cut(, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_CROMO = cut(v3t$, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_SUB_DEPEND = cut(pis_Drugs_Used_In_Substance_Dependence, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_ANTIBACTERIAL = cut(v3t$pi, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_RHEUMATIC = cut(v3t$pis_, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_NEUROMUSCULAR = cut(pis_Drugs_Used_In_Substance_Dependence, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      #BNF_NEUROMUSCULAR = cut(pis_Drugs_Used_In_Neuromuscular_Disorders, breaks = c(-Inf,0,Inf),labels=c("0","1+"))
+      #BNF_MYDRIATICS = cut(, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+    )
+    fecol=c("AGE", "ALCOHOL_ADMISSIONS", "BNF_CNS", "BNF_ENDOCRINE", "BNF_INCONTINENCE", 
+      "BNF_INFECTIONS", "BNF_RESPIRATORY", "BNF_SECTIONS", "ED_ATTENDANCES", 
+      "ELECTIVE_DC_ADMISSIONS", "EMERGENCY_ADMISSIONS", "EMERGENCY_BEDDAYS", 
+      "LTC", "OP_APPOINTMENTS", "PARKINSONS_DISEASE", "SIMD_QUINTILE")
+    df=df[,fecol]
+  }
+  if (mode=="ltc") {
+    df=df %>%
+      mutate(
+        
+        # Demographics
+        # AGE = cut(age, breaks = c(-Inf, seq(0,89), Inf),labels=c(0:89,"90+")),
+        #GENDER=factor(2-sexM),
+        SIMD_QUINTILE=factor(floor((as.numeric(SIMD_DECILE_2016_SCT)+1)/2)),
+        
+        # Attendances
+        ED_ATTENDANCES = cut(num_ae2_attendances, breaks = c(-Inf, 0:9, Inf),labels=c(0:9,"10+")),
+        EMERGENCY_ADMISSIONS = cut(num_emergency_admissions, breaks = c(-Inf, 0:5, Inf),labels=c(0:5,"6+")), # This is the proper version, but it has 3-year lookback
+        EMERGENCY_BEDDAYS = cut(emergency_bed_days, breaks = c(-Inf, 0:21, Inf),labels=c(0:21,"22+")),
+        ELECTIVE_ADMISSIONS = cut(num_elective_admissions, breaks = c(-Inf, 0:2, Inf),labels=c(0:2,"3+")),
+        ELECTIVE_BEDDAYS = cut(elective_bed_days, breaks = c(-Inf, 0:28, Inf),labels=c(0:28,"29+")),
+        OP_APPOINTMENTS = cut(num_outpatient_appointment_general, breaks = c(-Inf, 0:6, Inf),labels=c(0:6,"7+")),
+        # OP_PSYCHIATRIC_APPOINTMENTS = cut(num_outpatient_appointment_mental,c(-Inf,0,Inf),labels=c("0","1+")),
+        DC_ADMISSIONS=cut(num_dc_elective_admissions+num_dc_emergency_admissions,c(-Inf,0:2,Inf),labels=c(0:2,"3+")),
+        # ELECTIVE_DC_ADMISSIONS=cut(num_dc_elective_admissions,c(-Inf,0:6,Inf),labels=c(0:6,"7+")), 
+        ALCOHOL_SUB_MISUSE_ADMISSIONS = cut(emergency_drugAndalcohol_admin,c(-Inf,0:2,Inf),labels=c(0:2,"3+")),
+        # ALCOHOL_ADMISSIONS =  cut(alcohol_admin, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        PSYCHIATRIC_ADMISSIONS = cut(num_psych_admissions,c(-Inf,0,Inf),labels=c("0","1+")),
+        
+        # LTCs
+        LTC=cut(numLTCs_resulting_in_admin, breaks=c(-Inf,0:5,Inf),labels=c(0:5,"6+")),
+        PARKINSONS_DISEASE=cut(parkinsons_indicated,breaks=c(-Inf,0:1,Inf),labels=c(0:2)),
+        MS=cut(MS_indicated,breaks=c(-Inf,0:1,Inf),labels=c(0:2)),
+        EPILEPSY=cut(epilepsy_indicated,breaks=c(-Inf,0:1,Inf),labels=c(0:2)),
+        # DEMENTIA=cut(dementia_indicated,breaks=c(-Inf,0:1,Inf),labels=c(0:2)),
+        #DEMENTIA 
+        #ASTHMA 
+        #DIABETES 
+        #CANCER
+        #ENDOCRINE 
+        #DIGESTIVE 
+        #BLOOD 
+        #CONGENITAL 
+        #SELF_HARM 
+        
+        # BNF
+        BNF_SECTIONS = cut(pis_countBNFsections, breaks = c(-Inf, 0:13, Inf),labels=c(0:13,"14+")),
+        # BNF_RESPIRATORY = cut(pis_Respiratory, breaks = c(-Inf, 0:7, Inf),labels=c(0:7,"8+")),
+        # BNF_CNS = cut(pis_CentralNervousSystem, breaks = c(-Inf, 0:7, Inf),labels=c(0:7,"8+")),
+        BNF_INFECTIONS = cut(pis_Infections, breaks = c(-Inf, 0:7, Inf),labels=c(0:7,"8+")),
+        #BNF_ENDOCRINE = cut(pis_EndocrineSystem, breaks = c(-Inf, 0:7, Inf),labels=c(0:7,"8+")),
+        BNF_SUBSTANCE = cut(pis_Drugs_Used_In_Substance_Dependence, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_DEMENTIA = cut(pis_Dementia, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_CORTICOSTEROIDS = cut(pis_Corticosteroids_Respiratory, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_FLUIDS = cut(pis_Fluids_And_Electrolytes, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_NUTRITION = cut(pis_Oral_Nutrition, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_VITAMINS = cut(pis_Vitamins, breaks = c(-Inf,0:1,Inf),labels=c(0:1,"2+")),
+        BNF_BANDAGES = cut(pis_Arm_Sling_Bandages, breaks = c(-Inf,0:1,Inf),labels=c(0:1,"2+")),
+        BNF_CATHETERS = cut(pis_Catheters, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_STOMA = cut(pis_CombinedStomaDevices, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_INCONTINENCE = cut(pis_IncontinenceDevices, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_GUT_MOTILITY = cut(pis_Antispasmod_Other_Drgs_Alt_Gut_Motility, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_ANTISECRETORY = cut(pis_Antisecretory_Drugs_Mucosal_Protectants, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_INTESTINAL = cut(pis_Drugs_Affecting_Intestinal_Secretions, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_ANTICOAGULENT = cut(pis_Anticoagulants_And_Protamine, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_ANTIFIBRINOLYTIC = cut(`pis_Antifibrinolytic_Drugs _Haemostatics`, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_MUCOLYTICS = cut(pis_Mucolytics, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_DIABETES = cut(pis_Drugs_Used_In_Diabetes, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_GASTRO_INT = cut(pis_XXX, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_HEART = cut(v3t$pis, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_BRONCHO = cut(, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_CROMO = cut(v3t$, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_SUB_DEPEND = cut(pis_Drugs_Used_In_Substance_Dependence, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_ANTIBACTERIAL = cut(v3t$pi, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_RHEUMATIC = cut(v3t$pis_, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_NEUROMUSCULAR = cut(pis_Drugs_Used_In_Substance_Dependence, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_NEUROMUSCULAR = cut(pis_Drugs_Used_In_Neuromuscular_Disorders, breaks = c(-Inf,0,Inf),labels=c("0","1+"))
+        #BNF_MYDRIATICS = cut(, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+      )
+    ltccol=c("ALCOHOL_SUB_MISUSE_ADMISSIONS", "BNF_BANDAGES", "BNF_CATHETERS", 
+      "BNF_CORTICOSTEROIDS", "BNF_DEMENTIA", "BNF_FLUIDS", "BNF_INFECTIONS", 
+      "BNF_NUTRITION", "BNF_SECTIONS", "BNF_STOMA", "BNF_SUBSTANCE", 
+      "BNF_VITAMINS", "DC_ADMISSIONS", "ED_ATTENDANCES", "ELECTIVE_ADMISSIONS", 
+      "ELECTIVE_BEDDAYS", "EMERGENCY_ADMISSIONS", "EMERGENCY_BEDDAYS", 
+      "EPILEPSY", "LTC", "MS", "OP_APPOINTMENTS", "PARKINSONS_DISEASE", 
+      "PSYCHIATRIC_ADMISSIONS", "SIMD_QUINTILE")
+    df=df[,ltccol]
+  }
+  if (mode=="yed") {
+    df=df %>%
+      mutate(
+        
+        # Demographics
+        #AGE = cut(age, breaks = c(-Inf, seq(0,89), Inf),labels=c(0:89,"90+")),
+        #GENDER=factor(gender),
+        # SIMD_QUINTILE=factor(floor((as.numeric(SIMD_DECILE_2016_SCT)+1)/2)),
+        
+        # Attendances
+        ED_ATTENDANCES = cut(num_ae2_attendances, breaks = c(-Inf, 0:9, Inf),labels=c(0:9,"10+")),
+        EMERGENCY_ADMISSIONS = cut(num_emergency_admissions, breaks = c(-Inf, 0:5, Inf),labels=c(0:5,"6+")), # This is the proper version, but it has 3-year lookback
+         EMERGENCY_BEDDAYS = cut(emergency_bed_days, breaks = c(-Inf, 0:21, Inf),labels=c(0:21,"22+")),
+        #ELECTIVE_ADMISSIONS = cut(num_elective_admissions, breaks = c(-Inf, 0:2, Inf),labels=c(0:2,"3+")),
+        #ELECTIVE_BEDDAYS = cut(elective_bed_days, breaks = c(-Inf, 0:28, Inf),labels=c(0:28,"29+")),
+        OP_APPOINTMENTS = cut(num_outpatient_appointment_general, breaks = c(-Inf, 0:4, Inf),labels=c(0:4,"5+")),
+        OP_PSYCHIATRIC_APPOINTMENTS = cut(num_outpatient_appointment_mental,c(-Inf,0,Inf),labels=c("0","1+")),
+        # DC_ADMISSIONS=cut(num_dc_elective_admissions+num_dc_emergency_admissions,c(-Inf,0:2,Inf),labels=c(0:2,"3+")),
+         ELECTIVE_DC_ADMISSIONS=cut(num_dc_elective_admissions,c(-Inf,0:6,Inf),labels=c(0:6,"7+")),
+         ALCOHOL_SUB_MISUSE_ADMISSIONS = cut(emergency_drugAndalcohol_admin,c(-Inf,0:1,Inf),labels=c(0:1,"2+")),
+        # ALCOHOL_ADMISSIONS =  cut(alcohol_admin, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+         PSYCHIATRIC_ADMISSIONS = cut(num_psych_admissions,c(-Inf,0,Inf),labels=c("0","1+")),
+        
+        # LTCs
+         LTC=cut(numLTCs_resulting_in_admin, breaks=c(-Inf,0:2,Inf),labels=c(0:2,"3+")),
+        # PARKINSONS_DISEASE=cut(parkinsons_indicated,breaks=c(-Inf,0,Inf),labels=c(0:1)),
+        # MS=cut(MS_indicated,breaks=c(-Inf,0:1,Inf),labels=c(0:2)),
+        # EPILEPSY=cut(epilepsy_indicated,breaks=c(-Inf,0:1,Inf),labels=c(0:2)),
+         DEMENTIA=cut(dementia_indicated,breaks=c(-Inf,0,Inf),labels=c(0:1)),
+        #DEMENTIA
+        #ASTHMA=0,
+        #DIABETES
+        #CANCER=0,
+        #ENDOCRINE=0,
+        #DIGESTIVE
+        #BLOOD=0,
+        #CONGENITAL=0,
+        #SELF_HARM=0,
+        
+        # BNF
+        BNF_SECTIONS = cut(pis_countBNFsections, breaks = c(-Inf, 0:13, Inf),labels=c(0:13,"14+")),
+        # BNF_RESPIRATORY = cut(pis_Respiratory, breaks = c(-Inf, 0:7, Inf),labels=c(0:7,"8+")),
+        BNF_CNS = cut(pis_CentralNervousSystem, breaks = c(-Inf, 0:7, Inf),labels=c(0:7,"8+")),
+        # BNF_INFECTIONS = cut(pis_Infections, breaks = c(-Inf, 0:7, Inf),labels=c(0:7,"8+")),
+        # BNF_ENDOCRINE = cut(pis_EndocrineSystem, breaks = c(-Inf, 0:7, Inf),labels=c(0:7,"8+")),
+        # BNF_SUBSTANCE = cut(pis_Drugs_Used_In_Substance_Dependence, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_DEMENTIA = cut(pis_Dementia, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_CORTICOSTEROIDS = cut(pis_Corticosteroids_Endocrine, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_FLUIDS = cut(pis_Fluids_And_Electrolytes, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_NUTRITION = cut(pis_Oral_Nutrition, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_VITAMINS = cut(pis_Vitamins, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_BANDAGES = cut(pis_Arm_Sling_Bandages, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_CATHETERS = cut(pis_Catheters, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_STOMA = cut(pis_CombinedStomaDevices, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_INCONTINENCE = cut(pis_IncontinenceDevices, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_GUT_MOTILITY = cut(pis_Antispasmod_Other_Drgs_Alt_Gut_Motility, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_ANTISECRETORY = cut(pis_Antisecretory_Drugs_Mucosal_Protectants, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_INTESTINAL = cut(pis_Drugs_Affecting_Intestinal_Secretions, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_ANTICOAGULENT = cut(pis_Anticoagulants_And_Protamine, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_ANTIFIBRINOLYTIC = cut(`pis_Antifibrinolytic_Drugs _Haemostatics`, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_MUCOLYTICS = cut(pis_Mucolytics, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_DIABETES = cut(pis_Drugs_Used_In_Diabetes, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_GASTRO_INT = cut(0, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_HEART = cut(0, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_BRONCHO = cut(0, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_CROMO = cut(0, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_SUB_DEPEND = cut(pis_Drugs_Used_In_Substance_Dependence, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_ANTIBACTERIAL = cut(0, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_RHEUMATIC = cut(v3t$pis_, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_NEUROMUSCULAR = cut(pis_Drugs_Used_In_Substance_Dependence, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_NEUROMUSCULAR = cut(pis_Drugs_Used_In_Neuromuscular_Disorders, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_MYDRIATICS = cut(0, breaks = c(-Inf,0,Inf),labels=c("0","1+"))
+      )
+    yedcol=c("ALCOHOL_SUB_MISUSE_ADMISSIONS", "BNF_ANTICOAGULENT", "BNF_ANTIFIBRINOLYTIC", 
+      "BNF_ANTISECRETORY", "BNF_CNS", "BNF_CORTICOSTEROIDS", "BNF_DIABETES", 
+      "BNF_FLUIDS", "BNF_GUT_MOTILITY", "BNF_INTESTINAL", "BNF_MUCOLYTICS", 
+      "BNF_SECTIONS", "BNF_STOMA", "BNF_VITAMINS", "DEMENTIA", "ED_ATTENDANCES", 
+      "ELECTIVE_DC_ADMISSIONS", "EMERGENCY_ADMISSIONS", "EMERGENCY_BEDDAYS", 
+      "LTC", "OP_APPOINTMENTS", "OP_PSYCHIATRIC_APPOINTMENTS", "PSYCHIATRIC_ADMISSIONS")
+    df=df[,yedcol]
+    
+  }
+  if (mode=="u16") {
+    df=df %>%
+      mutate(
+        
+        # Demographics
+        AGE = cut(age, breaks = c(-Inf, seq(0,14), Inf),labels=c(0:14,"15+")),
+        GENDER=factor(gender),
+        # SIMD_QUINTILE=factor(floor((as.numeric(SIMD_DECILE_2016_SCT)+1)/2)),
+        
+        # Attendances
+        ED_ATTENDANCES = cut(num_ae2_attendances, breaks = c(-Inf, 0:3, Inf),labels=c(0:3,"4+")),
+        EMERGENCY_ADMISSIONS = cut(num_emergency_admissions, breaks = c(-Inf, 0:6, Inf),labels=c(0:6,"7+")), # This is the proper version, but it has 3-year lookback
+        # EMERGENCY_BEDDAYS = cut(emergency_bed_days, breaks = c(-Inf, 0:21, Inf),labels=c(0:21,"22+")),
+        ELECTIVE_ADMISSIONS = cut(num_elective_admissions, breaks = c(-Inf, 0:2, Inf),labels=c(0:2,"3+")),
+        #ELECTIVE_BEDDAYS = cut(elective_bed_days, breaks = c(-Inf, 0:28, Inf),labels=c(0:28,"29+")),
+        OP_APPOINTMENTS = cut(num_outpatient_appointment_general, breaks = c(-Inf, 0:3, Inf),labels=c(0:3,"4+")),
+        # OP_PSYCHIATRIC_APPOINTMENTS = cut(num_outpatient_appointment_mental,c(-Inf,0,Inf),labels=c("0","1+")),
+        # DC_ADMISSIONS=cut(num_dc_elective_admissions+num_dc_emergency_admissions,c(-Inf,0:2,Inf),labels=c(0:2,"3+")),
+        # ELECTIVE_DC_ADMISSIONS=cut(num_dc_elective_admissions,c(-Inf,0:6,Inf),labels=c(0:6,"7+")),
+        # ALCOHOL_SUB_MISUSE_ADMISSIONS = cut(emergency_drugAndalcohol_admin,c(-Inf,0:1,Inf),labels=c(0:1,"2+")),
+        # ALCOHOL_ADMISSIONS =  cut(alcohol_admin, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # PSYCHIATRIC_ADMISSIONS = cut(num_psych_admissions,c(-Inf,0,Inf),labels=c("0","1+")),
+        
+        # LTCs
+        # LTC=cut(numLTCs_resulting_in_admin, breaks=c(-Inf,0:2,Inf),labels=c(0:2,"3+")),
+        # PARKINSONS_DISEASE=cut(parkinsons_indicated,breaks=c(-Inf,0,Inf),labels=c(0:1)),
+        # MS=cut(MS_indicated,breaks=c(-Inf,0:1,Inf),labels=c(0:2)),
+        EPILEPSY=cut(epilepsy_indicated,breaks=c(-Inf,0,Inf),labels=c(0:1)),
+        # DEMENTIA=cut(dementia_indicated,breaks=c(-Inf,0:1,Inf),labels=c(0:2)),
+        ASTHMA=cut(ltc_asthma_admin,breaks=c(-Inf,0,Inf),labels=0:1),
+        DIABETES=cut(ltc_diabetes_admin,breaks=c(-Inf,0,Inf),labels=0:1),
+        CANCER=cut(ltc_cancer_admin,breaks=c(-Inf,0,Inf),labels=0:1),
+        ENDOCRINE=cut(ltc_other_endocrine_metabolic_disease_admin,breaks=c(-Inf,0,Inf),labels=0:1),
+        DIGESTIVE=cut(ltc_other_diseases_digestive_admin,breaks=c(-Inf,0,Inf),labels=0:1),
+        BLOOD=cut(ltc_diseases_of_blood_admin,breaks=c(-Inf,0,Inf),labels=0:1),
+        CONGENITAL=cut(ltc_congenital_problems_admin,breaks=c(-Inf,0,Inf),labels=0:1),
+        SELF_HARM=cut(ltc_self_harm_admin,breaks=c(-Inf,0,Inf),labels=0:1),
+        
+        # BNF
+        BNF_SECTIONS = cut(pis_countBNFsections, breaks = c(-Inf, 0:8, Inf),labels=c(0:8,"9+")),
+        # BNF_RESPIRATORY = cut(pis_Respiratory, breaks = c(-Inf, 0:7, Inf),labels=c(0:7,"8+")),
+        #BNF_CNS = cut(pis_CentralNervousSystem, breaks = c(-Inf, 0:7, Inf),labels=c(0:7,"8+")),
+        # BNF_INFECTIONS = cut(pis_Infections, breaks = c(-Inf, 0:7, Inf),labels=c(0:7,"8+")),
+        # BNF_ENDOCRINE = cut(pis_EndocrineSystem, breaks = c(-Inf, 0:7, Inf),labels=c(0:7,"8+")),
+        # BNF_SUBSTANCE = cut(pis_Drugs_Used_In_Substance_Dependence, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_DEMENTIA = cut(pis_Dementia, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_CORTICOSTEROIDS = cut(pis_Corticosteroids_Endocrine, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_FLUIDS = cut(pis_Fluids_And_Electrolytes, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_NUTRITION = cut(pis_Oral_Nutrition, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_VITAMINS = cut(pis_Vitamins, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_BANDAGES = cut(pis_Arm_Sling_Bandages, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_CATHETERS = cut(pis_Catheters, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_STOMA = cut(pis_CombinedStomaDevices, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        # BNF_INCONTINENCE = cut(pis_IncontinenceDevices, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_GUT_MOTILITY = cut(pis_Antispasmod_Other_Drgs_Alt_Gut_Motility, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_ANTISECRETORY = cut(pis_Antisecretory_Drugs_Mucosal_Protectants, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_INTESTINAL = cut(pis_Drugs_Affecting_Intestinal_Secretions, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_ANTICOAGULENT = cut(pis_Anticoagulants_And_Protamine, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_ANTIFIBRINOLYTIC = cut(`pis_Antifibrinolytic_Drugs _Haemostatics`, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_MUCOLYTICS = cut(pis_Mucolytics, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_DIABETES = cut(pis_Drugs_Used_In_Diabetes, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_GASTRO_INT = cut(pis_gastro_int, breaks = c(-Inf,0:9,Inf),labels=c(0:9,"10+")),
+        BNF_HEART = cut(pis_Hypertension_and_Heart_Failure, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_BRONCHO = cut(pis_Bronchodilators, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_CROMO = cut(pis_Cromoglycate_Rel_Leukotriene_Antagonists, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_SUB_DEPEND = cut(pis_Drugs_Used_In_Substance_Dependence, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_ANTIBACTERIAL = cut(pis_Antibacterial_Drugs, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_RHEUMATIC = cut(pis_Nonsteroidal_Antiinflammatory, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        #BNF_NEUROMUSCULAR = cut(pis_Drugs_Used_In_Substance_Dependence, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_NEUROMUSCULAR = cut(pis_Drugs_Used_In_Neuromuscular_Disorders, breaks = c(-Inf,0,Inf),labels=c("0","1+")),
+        BNF_MYDRIATICS = cut(pis_Mydriatics_And_Cycloplegics, breaks = c(-Inf,0,Inf),labels=c("0","1+"))
+      )
+    u16col=c("AGE", "ASTHMA", "BLOOD", "BNF_ANTIBACTERIAL", "BNF_BRONCHO", 
+      "BNF_CORTICOSTEROIDS", "BNF_CROMO", "BNF_GASTRO_INT", "BNF_HEART", 
+      "BNF_MYDRIATICS", "BNF_NEUROMUSCULAR", "BNF_RHEUMATIC", "BNF_SECTIONS", 
+      "BNF_SUB_DEPEND", "CANCER", "CONGENITAL", "DIABETES", "DIGESTIVE", 
+      "ED_ATTENDANCES", "ELECTIVE_ADMISSIONS", "EMERGENCY_ADMISSIONS", 
+      "ENDOCRINE", "EPILEPSY", "GENDER", "OP_APPOINTMENTS", "SELF_HARM")
+    df=df[,u16col]
+    
+  }
+  
+  df=df[,setdiff(colnames(df),colnames(df0))]
+  return(df)
+}
+
+
+
 
 
 
@@ -667,24 +1194,22 @@ mmt=function(x,y) {
 ##' @param ltc_matrix output from eg transformer(...,list(ltcs = list(output_type = "rawdata_NUMBEROFLTCs"))). This can be either a matrix or a filename.
 ##' @param patients,episodes,list_of_data_tables from loadCleanData. Reloaded if null.
 ##' @param keep_id_and_time set to TRUE to retain ID and time columns
+##' @param include_target set to FALSE to not calculate target, eg for prediction
 ##' @returns a training matrix with the above matrices left-joined
 combine_training_matrices=function(v3_matrix,topic_matrix,time_matrix,ltc_matrix,
-  patients=NULL,episodes=NULL,list_of_data_tables=NULL,keep_id_and_time=TRUE) {
+  patients=NULL,episodes=NULL,list_of_data_tables=NULL,keep_id_and_time=TRUE,include_target=TRUE) {
 
   ##### Begin with v3 matrix
   if (is.character(v3_matrix)) train_matrix=readRDS(v3_matrix) else train_matrix=v3_matrix
   print("Loaded v3 matrix")
-  w=which(colnames(train_matrix)=="time"); colnames(train_matrix)[w]="time_cutoff"
-  train_matrix$time_cutoff=as.numeric(train_matrix$time_cutoff)
-  
-  
-  
+  #w=which(colnames(train_matrix)=="time"); colnames(train_matrix)[w]="time_cutoff"
+  #train_matrix$time_cutoff=as.numeric(train_matrix$time_cutoff)
   
   
   ##### Join with time matrix
   if (is.character(time_matrix)) time_matrix=readRDS(time_matrix)
-  w=which(colnames(time_matrix)=="time"); colnames(time_matrix)[w]="time_cutoff"
-  time_matrix$time_cutoff=as.numeric(time_matrix$time_cutoff)
+  #w=which(colnames(time_matrix)=="time"); colnames(time_matrix)[w]="time_cutoff"
+  #time_matrix$time_cutoff=as.numeric(time_matrix$time_cutoff)
   train_matrix = train_matrix  %>% 
     left_join(time_matrix,by=c("id","time_cutoff"))
 
@@ -699,11 +1224,11 @@ combine_training_matrices=function(v3_matrix,topic_matrix,time_matrix,ltc_matrix
   
   ##### Join with LTC matrix
   if (is.character(ltc_matrix)) ltc_matrix=readRDS(ltc_matrix)
-  w=which(colnames(ltc_matrix)=="time"); colnames(ltc_matrix)[w]="time_cutoff"
-  ltc_matrix$ltc_cutoff=as.numeric(ltc_matrix$time_cutoff)
+  #w=which(colnames(ltc_matrix)=="time"); colnames(ltc_matrix)[w]="time_cutoff"
+  #ltc_matrix$ltc_cutoff=as.numeric(ltc_matrix$time_cutoff)
   train_matrix=train_matrix %>% 
     left_join(ltc_matrix,by=c("id","time_cutoff")) %>% 
-    replace_na(list(ltc_rawdata_NUMBEROFLTCS=0))
+    replace_na(list(ltc_total_count=0))
   
   print("Combined with LTC matrix")
   rm(ltc_matrix)
@@ -713,8 +1238,8 @@ combine_training_matrices=function(v3_matrix,topic_matrix,time_matrix,ltc_matrix
   
   ##### Join with topic matrix
   if (is.character(topic_matrix)) topic_matrix=readRDS(topic_matrix)
-  w=which(colnames(topic_matrix)=="time"); colnames(topic_matrix)[w]="time_cutoff"
-  topic_matrix$topic_cutoff=as.numeric(topic_matrix$time_cutoff)
+  #w=which(colnames(topic_matrix)=="time"); colnames(topic_matrix)[w]="time_cutoff"
+  #topic_matrix$topic_cutoff=as.numeric(topic_matrix$time_cutoff)
   
   # Remove some unnecessary variables
   if ("topics_missing_code_total" %in% colnames(topic_matrix)) topic_matrix = topic_matrix %>% select(-c("topics_missing_code_total","topics_missing_code_unique"))
@@ -724,6 +1249,23 @@ combine_training_matrices=function(v3_matrix,topic_matrix,time_matrix,ltc_matrix
   rm(topic_matrix)
   gc()
   
+  
+  # Further unnecessary variables
+  if ("ltc_cutoff" %in% colnames(train_matrix)) train_matrix=train_matrix %>% select(-"ltc_cutoff")
+  if ("topic_cutoff" %in% colnames(train_matrix)) train_matrix=train_matrix %>% select(-"topic_cutoff")
+
+  
+  # Fix column names
+  colnames(train_matrix) = make.names(colnames(train_matrix))
+  
+  # Convert times to datetime format rather than numeric
+  train_matrix = 	train_matrix %>% 
+    mutate(time=as_datetime(time_cutoff)) %>%
+    select(-c("time_cutoff")) %>% 
+    mutate(time = as_datetime(time))
+
+  # Add target  
+  if (include_target) {
   print("Combined matrices, adding target")
 
 
@@ -737,15 +1279,12 @@ combine_training_matrices=function(v3_matrix,topic_matrix,time_matrix,ltc_matrix
 
   print("Loaded data")
   
+
+  train_matrix = 	train_matrix %>% add_target(list_of_data_tables,include_reason=TRUE)
+
+  }
   
-  # Fix column names and add target
-  colnames(train_matrix) = make.names(colnames(train_matrix))
   
-  train_matrix = 	train_matrix %>% 
-    mutate(time=as_datetime(time_cutoff)) %>%
-    select(-c("time_cutoff")) %>% 
-    mutate(time = as_datetime(time)) %>%
-    add_target(episodes, list_of_data_tables, fill_times = FALSE)
   
   if (!keep_id_and_time) train_matrix=train_matrix %>% select(-c("id","time")) 
   
@@ -1018,7 +1557,6 @@ x=="num_ae2_attendances"~"Number of previous A&E attendances",
 x=="num_outpatient_appointment_general"~"Number of previous outpatient appointments",
 x=="num_outpatient_appointment_mental"~"Number of previous outpatient mental health appointments",
 x=="age"~"Age at time cutoff",
-x=="sexM"~"Sex",  
 x=="SIMD_DECILE_2016_SCT"~"SIMD decile",
 x=="parkinsons_indicated"~"Parkinsons disease",
 x=="MS_indicated"~"Multiple sclerosis",
@@ -1046,7 +1584,7 @@ x=="ltc_FIRST_MULTIPLE_SCLEROSIS_EPISODE_yearssincediag"~"Years since first mult
 x=="ltc_FIRST_PARKINSON_DISEASE_EPISODE_yearssincediag"~"Years since first Parkinsons disease diagnosis",
 x=="ltc_FIRST_RENAL_FAILURE_EPISODE_yearssincediag"~"Years since first renal failure diagnosis",
 x=="ltc_FIRST_CEREBROVASCULAR_DISEASE_EPISODE_yearssincediag"~"Years since first cerebrovascular disease diagnosis",
-x=="ltc_rawdata_NUMBEROFLTCS"~"Number of recorded long term conditions",
+x=="ltc_total_count"~"Number of recorded long term conditions",
 x=="target"~"Emergency admission in year following cutoff date",
 )
 
@@ -1076,4 +1614,10 @@ mkernm=function(xgrid,xx,yy,kern=0.5) {
   }
   return(cbind(xtrue,ytrue,yvar))
 }
+
+
+## Basic functions
+logistic=function(x) 1/(1+exp(-x))
+logit=function(x) -log(1/x - 1)
+
 

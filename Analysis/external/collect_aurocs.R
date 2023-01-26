@@ -29,7 +29,7 @@ aurocs=rbind(aurocs,xroc$auc); roc_se=rbind(roc_se,xroc$se)
 rnames=c(gsub("roc_pred.","",gsub(".txt","",basename(roc_list))),"final")
 cnames=c("fold1","fold2","fold3","avg")
 rownames(aurocs)=rnames; rownames(roc_se)=rnames
-colnames(aurocs)=cnames; colnames(roc_se)==cnames
+colnames(aurocs)=cnames; colnames(roc_se)=cnames
 aurocs=data.frame(aurocs)
 
 
@@ -50,7 +50,7 @@ auprcs=rbind(auprcs,xprc$auc); prc_se=rbind(prc_se,xprc$se)
 rnames=c(gsub("prc_pred.","",gsub(".txt","",basename(prc_list))),"final")
 cnames=c("fold1","fold2","fold3","avg")
 rownames(auprcs)=rnames; rownames(prc_se)=rnames
-colnames(auprcs)=cnames; colnames(prc_se)==cnames
+colnames(auprcs)=cnames; colnames(prc_se)=cnames
 auprcs=data.frame(auprcs)
 
 

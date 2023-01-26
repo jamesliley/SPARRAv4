@@ -43,7 +43,7 @@ if (location=="Windows") {
 dir_cleanData = "../Data/Data_clean/" # where raw data is 
 output_dir="James/Analysis/Data/full_model/" # models saved here
 fullmatrix=paste0(output_dir,"full_data_matrix.RDS") # full data matrix
-exclusions_file=paste0(output_dir,"exclusions.RData")
+exclusions_file=paste0(output_dir,"design_exclusions.RData")
 
 
 ####################################################################################
@@ -87,8 +87,8 @@ xsub=cv[[1]][isub] # Indices of chosen individuals in cv[[1]]: effectively rando
 ######################################################
 
 # Test matrix for fold 1
-nhs_tst1_id=nhs[intersect(cv[[1]],xsub),sort(c(gensub,sub23))]  %>% select(c("id","time","cv")); 
-nhs_tst1s=nhs[intersect(cv[[1]],xsub),sort(c(gensub,sub23))]  %>% select(-c("id","time","cv")); 
+nhs_tst1_id=nhs[intersect(cv[[1]],xsub),sort(c(gensub,sub23))]  %>% select(c("id","time","cv","reason")); 
+nhs_tst1s=nhs[intersect(cv[[1]],xsub),sort(c(gensub,sub23))]  %>% select(-c("id","time","cv","reason")); 
 
 # Clean up
 rm(list=c("nhs","v34"))
