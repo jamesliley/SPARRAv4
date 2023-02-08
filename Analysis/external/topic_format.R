@@ -2,7 +2,7 @@
 ## Run this from the directory containing subfolder 'Analysis'
 
 ## File with topic breakdown
-source("Analysis/full_model/Shapley_values/topic_breakdown.txt")
+source("Analysis/full_model/Performance/topic_breakdown.txt")
 
 ## Sink to output file
 sink("Analysis/external/topic_table.txt")

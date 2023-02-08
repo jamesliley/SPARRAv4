@@ -1,199 +1,170 @@
-Vitamins & \\
-Drugs Affecting Bone Metabolism & \\
-Corticosteroids (Endocrine) & \\
-
- & & \\ 
-Anaemias + Other Blood Disorders & \\
-Drugs Affecting Intestinal Secretions & \\
-
- & & \\ 
-Antibacterial Drugs & \\
-Wound Management \& Other Dressings & \\
-\emph{Essential (primary) hypertension} & \\
-\emph{Urinary tract infection, site not specified} & \\
-\emph{Type 2 diabetes mellitus without complications} & \\
-\emph{Acute renal failure, unspecified} & \\
-\emph{Unspecified acute lower respiratory infection} & \\
-\emph{Chronic ischaemic heart disease, unspecified} & \\
-\emph{Personal history of diseases of the circulatory system} & \\
-\emph{Old myocardial infarction} & \\
-\emph{Chronic obstructive pulmonary disease, unspecified} & \\
-\emph{Mental and behavioural disorders due to harmful use of tobacco} & \\
-
- & & \\ 
-Diuretics & \\
-
- & & \\ 
-Antidepressant Drugs & \\
-
- & & \\ 
-Bronchodilators & \\
-Corticosteroids (Respiratory) & \\
-Antibacterial Drugs & \\
-Corticosteroids (Endocrine) & \\
-Cromoglycate,Rel,Leukotriene Antagonists & \\
-Other Appliances & \\
-Mucolytics & \\
-
- & & \\ 
-Drugs Used In Psychoses \& Rel.Disorders & \\
-Minerals & \\
-\emph{Poisoning by 4-aminophenol derivatives} & \\
-
- & & \\ 
 Antihist, Hyposensit \& Allergic Emergen & \\
 Drugs Acting On The Nose & \\
 Corti'roids \& Other Anti-Inflamm.Preps. & \\
+Nasal Products & \\
 
- & & \\ 
-Antibacterial Drugs & \\
+ & \\ 
 Contraceptives & \\
-Treatment Of Vaginal \& Vulval Conditions & \\
-Acne and Rosacea & \\
-Antifungal Drugs & \\
+Miscellaneous Ophthalmic Preparations & \\
+Eye Products & \\
 Antiviral Drugs & \\
-Anti-Infective Skin Preparations & \\
-Antifibrinolytic Drugs \& Haemostatics & \\
-Hypothalamic\&Pituitary Hormones\&Antioest & \\
+Corti'roids \& Other Anti-Inflamm.Preps. & \\
+Anti-Infective Eye Preparations & \\
 
- & & \\ 
-Drugs Used In Nausea And Vertigo & \\
-Drugs Used In Neuromuscular Disorders & \\
-Anti-Arrhythmic Drugs & \\
-
- & & \\ 
-Hypnotics And Anxiolytics & \\
+ & \\ 
 Antidepressant Drugs & \\
+Antibacterial Drugs & \\
 
- & & \\ 
-Sex Hormones \& Antag In Malig Disease & \\
+ & \\ 
+(BNF) Unknown & \\
+
+ & \\ 
+Wound Management \& Other Dressings & \\
+Drugs Used In Neuromuscular Disorders & \\
+Antibacterial Drugs & \\
 Skin Fillers And Protectives & \\
-Local Anaesthesia & \\
 Night Drainage Bags & \\
 Catheters & \\
-Swabs & \\
-Ileostomy Bags & \\
-Antibacterial Drugs & \\
 Leg Bags & \\
-Wound Management \& Other Dressings & \\
-Adhesive Removers (Sprays/Liquids/Wipes) & \\
-Colostomy Bags & \\
-Vaginal Moisturisers & \\
-Two Piece Ostomy Systems & \\
+Stockinette & \\
+Arm Sling/Bandages & \\
+Surgical Adhesive Tape & \\
+Swabs & \\
+Irrigation Solutions & \\
+\emph{Urinary tract infection, site not specified} & \\
+\emph{Essential (primary) hypertension} & \\
+
+ & \\ 
+Hypnotics And Anxiolytics & \\
+Drugs Used In Substance Dependence & \\
+
+ & \\ 
+
+ & \\ 
+
+ & \\ 
+Acne and Rosacea & \\
+Sex Hormones \& Antag In Malig Disease & \\
+Hypothalamic\&Pituitary Hormones\&Antioest & \\
+Antibacterial Drugs & \\
 \emph{Chemotherapy session for neoplasm} & \\
-\emph{Other chemotherapy} & \\
 \emph{Malignant neoplasm, breast, unspecified} & \\
 
- & & \\ 
-(BNF) Unknown & \\
-Antibacterial Drugs & \\
+ & \\ 
 
- & & \\ 
-Laxatives & \\
-Oral Nutrition & \\
-Drugs Affecting The Immune Response & \\
-Local Prepn for Anal \& Rectal Disorders & \\
-Antibacterial Drugs & \\
-
- & & \\ 
-Hypertension and Heart Failure & \\
+ & \\ 
+Antiplatelet Drugs & \\
 Lipid-Regulating Drugs & \\
 
- & & \\ 
+ & \\ 
+
+ & \\ 
+Oral Nutrition & \\
+Preparations For Warts And Calluses & \\
+Top Local Anaesthetics \& Antipruritics & \\
+Vaccines And Antisera & \\
+Anti-Infective Skin Preparations & \\
+Other Appliances & \\
+Anthelmintics & \\
+Anti-Infective Eye Preparations & \\
+Cough Preparations & \\
+Drugs Acting On The Oropharynx & \\
+Antiperspirants & \\
+Base/Dil/Susp Agents/Stabilisers & \\
+\emph{Other chemotherapy} & \\
+\emph{Viral infection, unspecified} & \\
+
+ & \\ 
 Thyroid And Antithyroid Drugs & \\
-Miscellaneous Ophthalmic Preparations & \\
+CNS Stimulants and drugs used for ADHD & \\
 Antibacterial Drugs & \\
 
- & & \\ 
-Antisecretory Drugs+Mucosal Protectants & \\
-Antiprotozoal Drugs & \\
+ & \\ 
+Analgesics & \\
 
- & & \\ 
-Nit,Calc Block \& Other Antianginal Drugs & \\
+ & \\ 
+Antibacterial Drugs & \\
+Anti-Infective Skin Preparations & \\
+Drugs Acting On The Oropharynx & \\
+Treatment Of Vaginal \& Vulval Conditions & \\
+Antifungal Drugs & \\
+Drugs Acting On The Ear & \\
+Topical Corticosteroids & \\
+Cough Preparations & \\
+Anti-Infective Eye Preparations & \\
+
+ & \\ 
+
+ & \\ 
 Hypertension and Heart Failure & \\
 
- & & \\ 
-Drugs Used In Diabetes & \\
-Other Appliances & \\
-Dementia & \\
-\emph{Type 2 diabetes mellitus without complications} & \\
+ & \\ 
+Anaemias + Other Blood Disorders & \\
+Chronic Bowel Disorders & \\
+Antifibrinolytic Drugs \& Haemostatics & \\
+Cytotoxic Drugs & \\
 
- & & \\ 
-Beta-Adrenoceptor Blocking Drugs & \\
-Anticoagulants And Protamine & \\
-Positive Inotropic Drugs & \\
+ & \\ 
+Dyspep\&Gastro-Oesophageal Reflux Disease & \\
+Drugs Used In Psychoses \& Rel.Disorders & \\
+Drugs Used In Park'ism/Related Disorders & \\
+Acute Diarrhoea & \\
+Ileostomy Bags & \\
+Adhesive Removers (Sprays/Liquids/Wipes) & \\
+Colostomy Bags & \\
+Swabs & \\
+Skin Fillers And Protectives & \\
 
- & & \\ 
-Treatment Of Glaucoma & \\
-Sunscreens And Camouflagers & \\
-Vaccines And Antisera & \\
-Corti'roids \& Other Anti-Inflamm.Preps. & \\
-Mydriatics And Cycloplegics & \\
-\emph{Cataract, unspecified} & \\
-
- & & \\ 
+ & \\ 
 Emollient \& Barrier Preparations & \\
 Topical Corticosteroids & \\
 Emollients & \\
-Antibacterial Drugs & \\
-Anti-Infective Skin Preparations & \\
-
- & & \\ 
-Antibacterial Drugs & \\
-Soft-Tissue Disorders \& Topical Pain Rel & \\
-Anti-Infective Skin Preparations & \\
-Analgesics & \\
-Drugs Acting On The Oropharynx & \\
-Cough Preparations & \\
-Anti-Infective Eye Preparations & \\
-Drugs Acting On The Ear & \\
-Topical Corticosteroids & \\
-Fluids And Electrolytes & \\
-Preparations For Warts And Calluses & \\
-Antifungal Drugs & \\
-Top Local Anaesthetics \& Antipruritics & \\
-Anthelmintics & \\
-
- & & \\ 
-Drugs Acting On The Nose & \\
-Sex Hormones & \\
-Drugs Used In Substance Dependence & \\
-Antibacterial Drugs & \\
-Nasal Products & \\
-
- & & \\ 
-Lipid-Regulating Drugs & \\
-Antiplatelet Drugs & \\
-
- & & \\ 
-Analgesics & \\
-Antibacterial Drugs & \\
-Soft-Tissue Disorders \& Topical Pain Rel & \\
-
- & & \\ 
-Antiepileptic Drugs & \\
-Drugs Used In Park'ism/Related Disorders & \\
-CNS Stimulants and drugs used for ADHD & \\
-
- & & \\ 
-Antispasmod.\&Other Drgs Alt.Gut Motility & \\
-Eye Products & \\
-Acute Diarrhoea & \\
-Miscellaneous Ophthalmic Preparations & \\
-Dry Mouth Products & \\
-Antibacterial Drugs & \\
-
- & & \\ 
-Dyspep\&Gastro-Oesophageal Reflux Disease & \\
 Shampoo\&Other Preps For Scalp\&Hair Cond & \\
 Preparations For Eczema And Psoriasis & \\
-Selective Preparations & \\
-Topical Corticosteroids & \\
+Anti-Infective Skin Preparations & \\
 
- & & \\ 
-Drugs For Genito-Urinary Disorders & \\
-Chronic Bowel Disorders & \\
+ & \\ 
+Corticosteroids (Endocrine) & \\
+Drugs Affecting The Immune Response & \\
+Fluids And Electrolytes & \\
+Minerals & \\
+Sunscreens And Camouflagers & \\
 Antibacterial Drugs & \\
-Cytotoxic Drugs & \\
+Acute Diarrhoea & \\
 
- & & \\ 
+ & \\ 
+Antisecretory Drugs+Mucosal Protectants & \\
+Antibacterial Drugs & \\
+
+ & \\ 
+Lipid-Regulating Drugs & \\
+
+ & \\ 
+Beta-Adrenoceptor Blocking Drugs & \\
+
+ & \\ 
+
+ & \\ 
+Drugs For Genito-Urinary Disorders & \\
+Sex Hormones & \\
+Antibacterial Drugs & \\
+
+ & \\ 
+Anticoagulants And Protamine & \\
+Treatment Of Glaucoma & \\
+Positive Inotropic Drugs & \\
+Anti-Arrhythmic Drugs & \\
+\emph{Atrial fibrillation and flutter} & \\
+
+ & \\ 
+Nit,Calc Block \& Other Antianginal Drugs & \\
+
+ & \\ 
+Soft-Tissue Disorders \& Topical Pain Rel & \\
+Local Anaesthesia & \\
+Analgesics & \\
+Elastic Hosiery & \\
+Dry Mouth Products & \\
+Acute Diarrhoea & \\
+
+ & \\ 
