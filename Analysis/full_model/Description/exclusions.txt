@@ -19,3 +19,54 @@ Total records excl. individuals deceased prior to time cutoffs
 Total records excl. individuals with no v3 score
 12866084
 
+Total records for which indivudual was admitted and survived through predicion year
+977159
+
+Total records for which indivudual was admitted and later died in predicion year
+107827
+
+Total records for which indivudual died in prediction year prior to any admission
+57183
+
+A: Number of records for which individual died before time cutoff
+585322
+
+B: Number of records for which individual had NA v3 score
+4528514
+
+C: Number of records for which individual had NA SIMD
+199746
+
+D: Number of records for which individual was on exclusion list
+13524
+
+A and B
+585089
+
+A and C
+1258
+
+A and D
+0
+
+B and C
+112992
+
+B and D
+6468
+
+C and D
+303
+
+ABC
+1258
+
+ABD
+0
+
+ACD
+0
+
+BCD
+258
+
