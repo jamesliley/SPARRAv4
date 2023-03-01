@@ -484,7 +484,7 @@ colnames(n_b)=paste0("SIMD",1:10)
 nt=rowSums(n_tot)[1:amax]
 nd=rowSums(n_d)[1:amax]
 nb=rowSums(n_b)[1:amax]
-x=2.5 + 5*(0:(amax-1))
+x=(c(age_cuts,100)+c(0,age_cuts))[2:(amax+1)]/2
 
 # General plot
 pdf(paste0(plot_dir,"Analytics/admission_type_by_age_cumulative.pdf"),width=5,height=5)
