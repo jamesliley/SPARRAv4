@@ -31,13 +31,13 @@ simd <- list.files("Analysis/full_model/Description",
 ## Set the labels to be used in the figure
 simd.names <- gsub("Analysis/full_model/Description/simd_|.txt","", simd)
 simd.names <- recode(simd.names,
-                     "AE2_A_E" = "A&E",
+                     "AE2_A_E" = "Accidents and emergency",
                      "all" = "All",
-                     "PIS_Prescr" = "Prescriptions",
+                     "PIS_Prescr" = "GP prescribing",
                      "SMR00_Outpt" = "Outpatients",
-                     "SMR01_Inp_day" = "Inpatients",
+                     "SMR01_Inp_day" = "Acute inpatients and day cases",
                      "SMR01E_SystemWatch_Ger_systwatch" = "Other",
-                     "SMR04_MH_inp_day" = "Mental health inpatients")
+                     "SMR04_MH_inp_day" = "Mental health inpatient and day cases")
 names(simd) <- simd.names
 simd <- cbind(simd, simd.names)
 
@@ -91,13 +91,13 @@ age <- list.files("Analysis/full_model/Description",
 ## Set the labels to be used in the figure
 age.names <- gsub("Analysis/full_model/Description/age_|_fix.txt","", age)
 age.names <- recode(age.names,
-                     "AE2_A_E" = "A&E",
-                     "all" = "All",
-                     "PIS_Prescr" = "Prescriptions",
-                     "SMR00_Outpt" = "Outpatients",
-                     "SMR01_Inp_day" = "Inpatients",
-                     "SMR01E_SystemWatch_Ger_systwatch" = "Other",
-                     "SMR04_MH_inp_day" = "Mental health inpatients")
+                    "AE2_A_E" = "Accidents and emergency",
+                    "all" = "All",
+                    "PIS_Prescr" = "GP prescribing",
+                    "SMR00_Outpt" = "Outpatients",
+                    "SMR01_Inp_day" = "Acute inpatients and day cases",
+                    "SMR01E_SystemWatch_Ger_systwatch" = "Other",
+                    "SMR04_MH_inp_day" = "Mental health inpatient and day cases")
 names(age) <- age.names
 age <- cbind(age, age.names)
 
@@ -121,12 +121,12 @@ all.plots <- lapply(names(age.plots), persource.plot,
                     age.plots = age.plots, simd.plots = simd.plots)
 names(all.plots) <- gsub("&| ","", names(age.plots))
 
-for(i in seq_len(length(all.plots))) {
-  ggsave(paste0("Figures/pdfs/Fig_1b_", names(all.plots)[i] ,".pdf"),
-         plot = all.plots[[i]],
-         width = 10, height = 5, units = "cm",
-         device = cairo_pdf)
-}
+#for(i in seq_len(length(all.plots))) {
+#  ggsave(paste0("Figures/pdfs/Fig_1b_", names(all.plots)[i] ,".pdf"),
+#         plot = all.plots[[i]],
+#         width = 10, height = 5, units = "cm",
+#         device = cairo_pdf)
+#}
 
 # Final plots
 
@@ -142,6 +142,6 @@ ggsave("Figures/pdfs/Fig_1b.pdf",
 all.plots$All <- NULL
 wrap_plots(all.plots, nrow = 3)
 
-ggsave("Figures/pdfs/SupFig_TBC.pdf",
+ggsave("Figures/pdfs/SupFig_1.pdf",
        width = 24, height = 18, units = "cm",
        device = cairo_pdf)
