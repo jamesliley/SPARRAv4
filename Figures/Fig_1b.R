@@ -6,7 +6,8 @@ source("Figures/util.R") # for import_sparra_expr()
 # SIMD panels
 
 ## Function used to generate SIMD plots per data source
-simd_plot <- function(x, ylim.max = 0.2, title = TRUE) {
+simd_plot <- function(x, ylim.max = 0.2, title = TRUE,
+                      base_size = 9) {
   # Load the data
   xsimd <- eval(import_sparra_expr(x[1]))
   df <- data.frame(
@@ -17,9 +18,9 @@ simd_plot <- function(x, ylim.max = 0.2, title = TRUE) {
     geom_bar(stat="identity", width = 0.3) +
     xlab("SIMD decile") + ylab("Frequency") +
     ylim(0, ylim.max) +
-    theme_minimal(base_size = 9)
+    theme_minimal(base_size = base_size)
   if(title == TRUE)
-    p <- p + ggtitle(x[2])
+    p <- p + ggtitle("") #ggtitle(x[2])
   return(p)
 }
 
@@ -41,7 +42,7 @@ names(simd) <- simd.names
 simd <- cbind(simd, simd.names)
 
 ## Create the plots
-simd.plots <- apply(simd, 1, simd_plot, title = FALSE)
+simd.plots <- apply(simd, 1, simd_plot, title = TRUE)
 
 ## Place-holder to see how the plots look like
 (simd.plots[[1]] + simd.plots[[2]]) /
@@ -54,7 +55,9 @@ simd.plots <- apply(simd, 1, simd_plot, title = FALSE)
 
 ## Function used to generate age/sex plots per data source
 ## DSH extract had to be modified due to missing object
-age_plot <- function(x, ylim.max = 0.0225, title = TRUE, withlegend = TRUE) {
+age_plot <- function(x, ylim.max = 0.0225,
+                     title = TRUE, withlegend = TRUE,
+                     base_size = 9) {
   # Load the data
   eval(import_sparra_expr(x[1]))
   mydf <- age <- data.frame(age.f = df$x, dens.f = df$y,
@@ -66,11 +69,18 @@ age_plot <- function(x, ylim.max = 0.0225, title = TRUE, withlegend = TRUE) {
                         labels = c('F','M')) +
     xlab("Age") + ylab("Density") +
     ylim(0, ylim.max) +
-    theme_minimal(base_size = 9)
+    theme_minimal(base_size = base_size)
   if(title == TRUE)
     p <- p + ggtitle(x[2])
-  if(withlegend == FALSE)
+  if(withlegend == TRUE) {
+    p <- p + theme(legend.position = c(0.9, 0.9),
+                   legend.key.size = unit(0.2, 'cm'),
+                   legend.background = element_rect(fill="white",
+                                                    size=0.5, linetype="solid",
+                                                    colour ="darkgrey"))
+  } else {
     p <- p + theme(legend.position="none")
+  }
   return(p)
 }
 
@@ -92,7 +102,7 @@ names(age) <- age.names
 age <- cbind(age, age.names)
 
 ## Create the plots
-age.plots <- apply(age, 1, age_plot, title = FALSE, withlegend = FALSE)
+age.plots <- apply(age, 1, age_plot, title = TRUE, withlegend = TRUE)
 
 # Place-holder to see how the plots look like
 (age.plots[[1]] + age.plots[[2]]) /
@@ -102,7 +112,7 @@ age.plots <- apply(age, 1, age_plot, title = FALSE, withlegend = FALSE)
 
 # Combine plots based on the source table
 persource.plot <- function(datasource, age.plots, simd.plots) {
-  simd.plots[[datasource]] + age.plots[[datasource]] +
+  age.plots[[datasource]] + simd.plots[[datasource]] +
     plot_annotation(title = datasource,
                     theme = theme(plot.title = element_text(hjust = 0.5)))
 }
@@ -118,3 +128,20 @@ for(i in seq_len(length(all.plots))) {
          device = cairo_pdf)
 }
 
+# Final plots
+
+## Figure 1b
+age_plot(age["All",], title = FALSE, base_size = 10) +
+  simd_plot(simd["All",], title = FALSE, base_size = 10)
+
+ggsave("Figures/pdfs/Fig_1b.pdf",
+       width = 12, height = 6, units = "cm",
+       device = cairo_pdf)
+
+## Supplementary
+all.plots$All <- NULL
+wrap_plots(all.plots, nrow = 3)
+
+ggsave("Figures/pdfs/SupFig_TBC.pdf",
+       width = 24, height = 18, units = "cm",
+       device = cairo_pdf)
