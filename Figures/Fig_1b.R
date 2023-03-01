@@ -53,6 +53,7 @@ simd.plots <- apply(simd, 1, simd_plot, title = FALSE)
 # Age/sex panels
 
 ## Function used to generate age/sex plots per data source
+## DSH extract had to be modified due to missing object
 age_plot <- function(x, ylim.max = 0.0225, title = TRUE, withlegend = TRUE) {
   # Load the data
   eval(import_sparra_expr(x[1]))
@@ -100,7 +101,6 @@ age.plots <- apply(age, 1, age_plot, title = FALSE, withlegend = FALSE)
   (age.plots[[7]] + plot_spacer())
 
 # Combine plots based on the source table
-
 persource.plot <- function(datasource, age.plots, simd.plots) {
   simd.plots[[datasource]] + age.plots[[datasource]] +
     plot_annotation(title = datasource,
@@ -109,20 +109,12 @@ persource.plot <- function(datasource, age.plots, simd.plots) {
 
 all.plots <- lapply(names(age.plots), persource.plot,
                     age.plots = age.plots, simd.plots = simd.plots)
-names(all.plots) <- names(age.plots)
+names(all.plots) <- gsub("&| ","", names(age.plots))
 
 for(i in seq_len(length(all.plots))) {
-  ggsave(file.path("Figures/pdfs/Fig_1b_",all,".pdf"),
-         plot = all.plots[[i]], width = 10, height = 5, units = "cm",
+  ggsave(paste0("Figures/pdfs/Fig_1b_", names(all.plots)[i] ,".pdf"),
+         plot = all.plots[[i]],
+         width = 10, height = 5, units = "cm",
          device = cairo_pdf)
 }
 
-save.plots <- function(all.plots) {
-
-}
-
-
-
-
-
-all.plots$`A&E`
