@@ -438,30 +438,53 @@ sink()
 ######################################################################################
 ######################################################################################
 
+# Age cutoffs: aggregate groups
+age_cuts=c(0,5,20 + 5*(0:14))
+
 # 5-year age brackets 20-90, 10 SIMD deciles
-n_tot=matrix(0,14,10)
+n_tot=matrix(0,length(age_cuts),10)
 n_d=n_tot
 n_b=n_tot
 
-for (a in 1:14) {
-  for (s in 1:10) {
-    sub=which((all_pred$age >= 20 + 5*(a-1)) & (all_pred$age < 20 + 5*a) & (all_pred$simd==s))
+
+for (a in 1:(dim(n_tot)[1]-1)) {
+  for (s in 1:dim(n_tot)[2]) {
+    sub=which((all_pred$age >= age_cuts[a]) & (all_pred$age < age_cuts[a+1]) & (all_pred$simd==s))
     n_tot[a,s]=sum(all_pred$target[sub])
     n_d[a,s]=length(which((all_pred$target[sub]==1) & (all_pred$reason[sub]=="D")))
     n_b[a,s]=length(which((all_pred$target[sub]==1) & (all_pred$reason[sub]=="B")))
   }
   print(a)
 }
+# >=90
+amax=dim(n_tot)[1]
+for (s in 1:dim(n_tot)[2]) {
+  sub=which((all_pred$age >= age_cuts[amax]) & (all_pred$simd==s))
+  n_tot[amax,s]=sum(all_pred$target[sub])
+  n_d[amax,s]=length(which((all_pred$target[sub]==1) & (all_pred$reason[sub]=="D")))
+  n_b[amax,s]=length(which((all_pred$target[sub]==1) & (all_pred$reason[sub]=="B")))
+}
+
 
 # IMPORTANT: privacy
 n_tot[which(n_tot<5)]=0
 n_d[which(n_d<5)]=0
 n_b[which(n_b<5)]=0
 
-nt=rowSums(n_tot)
-nd=rowSums(n_d)
-nb=rowSums(n_b)
-x=22.5 + 5*(0:13)
+
+# Column and row names
+rownames(n_tot)=c(paste0(age_cuts[1:(dim(n_tot)[1]-1)],"_",age_cuts[2:dim(n_tot)[1]]),">90"); 
+colnames(n_tot)=paste0("SIMD",1:10)
+rownames(n_b)=c(paste0(age_cuts[1:(dim(n_tot)[1]-1)],"_",age_cuts[2:dim(n_tot)[1]]),">90"); 
+colnames(n_d)=paste0("SIMD",1:10)
+rownames(n_d)=c(paste0(age_cuts[1:(dim(n_tot)[1]-1)],"_",age_cuts[2:dim(n_tot)[1]]),">90"); 
+colnames(n_b)=paste0("SIMD",1:10)
+
+
+nt=rowSums(n_tot)[1:amax]
+nd=rowSums(n_d)[1:amax]
+nb=rowSums(n_b)[1:amax]
+x=2.5 + 5*(0:(amax-1))
 
 # General plot
 pdf(paste0(plot_dir,"Analytics/admission_type_by_age_cumulative.pdf"),width=5,height=5)
@@ -487,10 +510,12 @@ sink()
 
 
 
+
+
 # Breakdown by low/high SIMD
-nt3=cbind(rowSums(n_tot[,1:3]),rowSums(n_tot[,4:7]),rowSums(n_tot[,8:10]))
-nd3=cbind(rowSums(n_d[,1:3]),rowSums(n_d[,4:7]),rowSums(n_d[,8:10]))
-nb3=cbind(rowSums(n_b[,1:3]),rowSums(n_b[,4:7]),rowSums(n_b[,8:10]))
+nt3=cbind(rowSums(n_tot[,1:3]),rowSums(n_tot[,4:7]),rowSums(n_tot[,8:10]))[1:amax,]
+nd3=cbind(rowSums(n_d[,1:3]),rowSums(n_d[,4:7]),rowSums(n_d[,8:10]))[1:amax,]
+nb3=cbind(rowSums(n_b[,1:3]),rowSums(n_b[,4:7]),rowSums(n_b[,8:10]))[1:amax,]
 
 pdf(paste0(plot_dir,"Analytics/admission_type_by_age_simd.pdf"),width=5,height=5)
 plot(0,type="n",xlim=range(x),ylim=c(0,0.3),xlab="Age",ylab="Proportion",xaxs="i",yaxs="i")
@@ -500,9 +525,10 @@ for (i in 1:3) {
   #  lines(x,((nb3+nd3)/nt3)[,i],col="red",lty=i)
 }
 legend("topleft",c("SIMD 1-3","SIMD 4-7","SIMD 8-10",
-                    "Death","Both"),
+                   "Death","Both"),
        ncol=1,col=c(rep("black",3),"black","red"),lty=c(1:3,NA,NA),pch=c(rep(NA,3),"|","|"))
 dev.off()
+
 
 
 ######################################################################################
@@ -1976,6 +2002,7 @@ v3c[which(all_pred$age >= 75  & is.finite(all_pred$super+all_pred$v3))] = "FEC"
 v3c[which(all_pred$age >= 16 & all_pred$age <= 74  & is.finite(all_pred$super+all_pred$v3))] = "LTC"
 v3c[which(all_pred$age >= 16 & all_pred$age <= 55 & all_pred$ae2 >= 1  & is.finite(all_pred$super+all_pred$v3))] = "YED"
 v3c[which(all_pred$age >= 16 & all_pred$age <= 55  & is.finite(all_pred$super+all_pred$v3))] = "LTC_YED"
+v3c[which(all_pred$age < 16)] = "U16"
 
 perf=c(); labs=c(); xrate=c()
 sub=which(v3c=="FEC")
@@ -1996,6 +2023,14 @@ p3=getroc(all_pred$target[sub],all_pred$v3[sub])
 perf=cbind(perf,c(psp$auc,p3$auc,psp$se,p3$se))
 xrate=c(xrate,sum(all_pred$target[sub])/length(sub))
 
+sub=which(v3c %in% c("U16"))
+psp=getroc(all_pred$target[sub],all_pred$super[sub])
+p3=getroc(all_pred$target[sub],all_pred$v3[sub])
+perf=cbind(perf,c(psp$auc,p3$auc,psp$se,p3$se))
+xrate=c(xrate,sum(all_pred$target[sub])/length(sub))
+
+
+
 ## All of YED are in LTC_YED so this is unnecessary
 #sub=which(v3c == "LTC_YED")
 #psp=getroc(all_pred$target[sub],all_pred$super[sub])
@@ -2003,11 +2038,15 @@ xrate=c(xrate,sum(all_pred$target[sub])/length(sub))
 #perf=cbind(perf,c(psp$auc,p3$auc,psp$se,p3$se))
 #xrate=c(xrate,sum(all_pred$target[sub])/length(sub))
 
+# Row and column names
+colnames(perf)=c("FEC","LTC","YED","U16")
+rownames(perf)=c("v4_auc","v3_auc","v4_se","v3_se")
+names(xrate)=colnames(perf)
 
 
 # 
 pdf(paste0(plot_dir,"Analytics/performance_by_v3_cohort.pdf"),width=6,height=5)
-labs=c("FEC","LTC","YED") #,"LTC,YED")
+labs=c("FEC","LTC","YED","U16") #,"LTC,YED")
 
 par(mar=c(5.1,4.1,4.1,4.1))
 
@@ -2962,6 +3001,61 @@ cat(length(which(!is.na(nhs$target))))
 cat("\n\n")
 cat("Total records excl. individuals with no v3 score\n")
 cat(length(v34))
+cat("\n\n")
+cat("Total records for which indivudual was admitted and survived through predicion year\n")
+cat(length(which(all_pred$reason=="E")))
+cat("\n\n")
+cat("Total records for which indivudual was admitted and later died in predicion year\n")
+cat(length(which(all_pred$reason=="B")))
+cat("\n\n")
+cat("Total records for which indivudual died in prediction year prior to any admission\n")
+cat(length(which(all_pred$reason=="D")))
+cat("\n\n")
+exclude_death=which(is.na(nhs$target))
+exclude_v3=which(is.na(nhs$v3score))
+exclude_simd=which(!(nhs$SIMD_DECILE_2016_SCT %in% 1:10))
+exclude_list=which(nhs$id %in% read.csv(paste0("../../Linked Data/Unmatched_UPIs_without_UPI.csv.gz"))$UNIQUE_STUDY_ID)
+cat("A: Number of records for which individual died before time cutoff\n")
+cat(length(exclude_death))
+cat("\n\n")
+cat("B: Number of records for which individual had NA v3 score\n")
+cat(length(exclude_v3))
+cat("\n\n")
+cat("C: Number of records for which individual had NA SIMD\n")
+cat(length(exclude_simd))
+cat("\n\n")
+cat("D: Number of records for which individual was on exclusion list\n")
+cat(length(exclude_list))
+cat("\n\n")
+cat("A and B\n")
+cat(length(intersect(exclude_death,exclude_v3)))
+cat("\n\n")
+cat("A and C\n")
+cat(length(intersect(exclude_death,exclude_simd)))
+cat("\n\n")
+cat("A and D\n")
+cat(length(intersect(exclude_death,exclude_list)))
+cat("\n\n")
+cat("B and C\n")
+cat(length(intersect(exclude_v3,exclude_simd)))
+cat("\n\n")
+cat("B and D\n")
+cat(length(intersect(exclude_v3,exclude_list)))
+cat("\n\n")
+cat("C and D\n")
+cat(length(intersect(exclude_simd,exclude_list)))
+cat("\n\n")
+cat("ABC\n")
+cat(length(intersect(exclude_death,intersect(exclude_v3,exclude_simd))))
+cat("\n\n")
+cat("ABD\n")
+cat(length(intersect(exclude_death,intersect(exclude_v3,exclude_list))))
+cat("\n\n")
+cat("ACD\n")
+cat(length(intersect(exclude_death,intersect(exclude_simd,exclude_list))))
+cat("\n\n")
+cat("BCD\n")
+cat(length(intersect(exclude_v3,intersect(exclude_simd,exclude_list))))
 cat("\n\n")
 
 sink()
