@@ -37,7 +37,10 @@ p1 <- ggplot(df) +
   xlim(0, 1) + ylim(0, 1) +
   xlab("") + ylab("Precision") +
   theme_minimal(base_size = 8) + theme(legend.justification = c(1,1),
-                                       legend.position = c(1,1))
+                                       legend.position = c(1,1),
+                                       legend.spacing = unit(0, "npc"),
+                                       legend.margin = unit(0, "npc"),
+                                       legend.background = element_rect(fill = "white", size = 0, colour = "white"))
 
 p2 <- ggplot(df2 |>
                mutate(v4 = v4 - v3,

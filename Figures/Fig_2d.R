@@ -57,10 +57,13 @@ p1 <- ggplot(df) +
   geom_line(aes(x = pred, y = obs, linetype = Model, col = Order), linewidth = 0.4) +
   xlim(0, 1) + ylim(0, 1) +
   xlab("") + ylab("Observed") +
-  guides(linetype = guide_legend(title = glue("|v3 - v4| > {del}\n\nModel"), order = 1), col = guide_legend(order = 2)) +
+  guides(linetype = guide_legend(title = "", direction = "horizontal", order = 1, label.position = "top"),
+         col = guide_legend(title = "", direction = "horizontal", order = 2, label.position = "top")) +
   theme_minimal(base_size = 8) + theme(legend.justification = c(0,1),
                                        legend.position = c(0,1),
-                                       legend.background = element_rect(fill = "white", size = 0))
+                                       legend.spacing = unit(0, "npc"),
+                                       legend.margin = unit(0, "npc"),
+                                       legend.background = element_rect(fill = "white", size = 0, colour = "white"))
 
 p2 <- ggplot(df) +
   geom_ribbon(aes(x = pred, ymin = dell, ymax = delu, linetype = Model, fill = Order), alpha = 0.5) +
