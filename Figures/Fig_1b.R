@@ -145,3 +145,28 @@ wrap_plots(all.plots, nrow = 3)
 ggsave("Figures/pdfs/SupFig_1.pdf",
        width = 24, height = 18, units = "cm",
        device = cairo_pdf)
+
+# Table S2
+
+PaperTotal <- 478243585
+
+AE2 <- c(7539454, 3031773)
+deaths <- c(283554, 283554)
+PIS <- c(393573549, 5589772)
+SMR00 <- c(27463987, 3753240)
+SMR01 <- c(26326889, 2205606)
+SMR01E <- c(137340, 25015)
+SMR04 <- c(111487, 51635)
+SPARRALTC <- c(3286987, 1978171)
+SystemWatch <- c(12890591, 1750009)
+SMR01M <- c(6629747, 2311727)
+
+AE2 + PIS + SMR00 + SMR01 + SMR01E + SMR04 + SystemWatch
+
+AE2 + PIS + SMR00 + SMR01 + SMR01E + SMR04 + SystemWatch + SPARRALTC
+
+AE2 + PIS + SMR00 + SMR01 + SMR01E + SMR04 + SystemWatch + SPARRALTC + SMR01M
+
+AE2 + PIS + SMR00 + SMR01 + SMR01E + SMR04 + SystemWatch + SPARRALTC + SMR01M + deaths
+
+# LTCs reconstructed
