@@ -178,4 +178,46 @@ ggsave("Figures/pdfs/SupFig_1a.pdf",
        width = 24, height = 18, units = "cm",
        device = cairo_pdf)
 
+##############################################################
+######################### Figure S1b #########################
+##############################################################
+
+# Outcome decomposition (EA vs death) by age - cumulative
+eval(import_sparra_expr("Analysis/full_model/Analytics/admission_type_by_age_cumulative.txt"))
+
+# The line above loads 3 objects detailed as follows:
+# n_tot: total number of samples with an event per age and SIMD group
+# n_d: total number of samples with a deaths without a prior EA per age and SIMD group
+# n_b: total number of samples with a death & EA (both) per age and SIMD group
+
+# Total number of samples with an event (composite outcome)
+sum(n_tot)
+# Total number of samples with EA (with our without death)
+sum(n_tot) - sum(n_d)
+# Total number of samples with a death without a prior EA
+sum(n_d)
+# Total number of samples with with EA and death
+sum(n_b)
+
+# Code source: Pipelines/main_pipeline.R
+
+# Age cutoffs: aggregate groups
+age_cuts=c(0,5,20 + 5*(0:14))
+nt=rowSums(n_tot)[1:amax]
+nd=rowSums(n_d)[1:amax]
+nb=rowSums(n_b)[1:amax]
+x=(c(age_cuts,100)+c(0,age_cuts))[2:(amax+1)]/2
+
+# General plot
+pdf("Figures/pdfs/SupFig_1b.pdf",width=5,height=5)
+plot(0,type="n",xlim=range(x),ylim=c(0,1),xlab="Age",
+     ylab="Cumulative proportion of events",xaxs="i",yaxs="i")
+polygon(c(min(x),min(x),max(x),max(x)),c(0,1,1,0),col="gray",border=NA)
+polygon(c(x,max(x),min(x)),c((nd+nb)/nt,0,0),col="red",border=NA)
+polygon(c(x,max(x),min(x)),c((nd/nt),0,0),col="black",border=NA)
+legend("topleft",
+       c("EA","Death (without prior EA)","EA and subsequent death"),
+       pch = 16, col = c("gray","black","red"), bg = "white")
+dev.off()
+
 
