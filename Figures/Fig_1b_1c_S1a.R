@@ -1,9 +1,17 @@
+################################################################
+# Code used to generate Fig 1b, 1c (Venn diagram only) and S1a #
+################################################################
+
 library("tidyverse")
 library("patchwork")
 
 source("Figures/util.R") # for import_sparra_expr()
 
-# SIMD panels
+###############################################################
+# Load and plot the distribution of records across EHR tables #
+###############################################################
+
+# SIMD
 
 ## Function used to generate SIMD plots per data source
 simd_plot <- function(x, ylim.max = 0.2, title = TRUE,
@@ -44,14 +52,7 @@ simd <- cbind(simd, simd.names)
 ## Create the plots
 simd.plots <- apply(simd, 1, simd_plot, title = TRUE)
 
-## Place-holder to see how the plots look like
-(simd.plots[[1]] + simd.plots[[2]]) /
-  (simd.plots[[3]] + simd.plots[[4]]) /
-  (simd.plots[[5]] + simd.plots[[6]]) /
-  (simd.plots[[7]] + plot_spacer())
-
-
-# Age/sex panels
+# Age/sex
 
 ## Function used to generate age/sex plots per data source
 ## DSH extract had to be modified due to missing object
@@ -104,12 +105,6 @@ age <- cbind(age, age.names)
 ## Create the plots
 age.plots <- apply(age, 1, age_plot, title = TRUE, withlegend = TRUE)
 
-# Place-holder to see how the plots look like
-(age.plots[[1]] + age.plots[[2]]) /
-  (age.plots[[3]] + age.plots[[4]]) /
-  (age.plots[[5]] + age.plots[[6]]) /
-  (age.plots[[7]] + plot_spacer())
-
 # Combine plots based on the source table
 persource.plot <- function(datasource, age.plots, simd.plots) {
   age.plots[[datasource]] + simd.plots[[datasource]] +
@@ -121,16 +116,10 @@ all.plots <- lapply(names(age.plots), persource.plot,
                     age.plots = age.plots, simd.plots = simd.plots)
 names(all.plots) <- gsub("&| ","", names(age.plots))
 
-#for(i in seq_len(length(all.plots))) {
-#  ggsave(paste0("Figures/pdfs/Fig_1b_", names(all.plots)[i] ,".pdf"),
-#         plot = all.plots[[i]],
-#         width = 10, height = 5, units = "cm",
-#         device = cairo_pdf)
-#}
+###############################################################
+########################## Figure 1b ##########################
+###############################################################
 
-# Final plots
-
-## Figure 1b
 age_plot(age["All",], title = FALSE, base_size = 10) +
   simd_plot(simd["All",], title = FALSE, base_size = 10)
 
@@ -138,35 +127,55 @@ ggsave("Figures/pdfs/Fig_1b.pdf",
        width = 12, height = 6, units = "cm",
        device = cairo_pdf)
 
-## Supplementary
+###############################################################
+########################## Figure 1c ##########################
+###############################################################
+
+## Read the DSH extract
+ex <- readLines("Analysis/full_model/Description/exclusions.txt")
+
+### Total individuals
+as.numeric(ex[which(ex == "Total patients recorded anywhere in data tables")+1])
+
+### Total samples (individual-time pairs)
+as.numeric(ex[which(ex == "Total patient-time pairs under consideration")+1])
+
+## VennDiagram summarising exclusions
+## Code source: Analysis/external/draw_exclusions_plot.R
+
+library(VennDiagram)
+
+wA=which(ex=="A: Number of records for which individual died before time cutoff")
+all=c(as.numeric(ex[wA+3*(0:13)+1]),0)
+names(all)=c("A","B","C","D","AB","AC","AD","BC","BD","CD","ABC","ABD","ACD","BCD","ABCD")
+for (i in 1:length(all)) assign(names(all)[i],all[i])
+
+pdf("Figures/pdfs/Fig_1c_venn.pdf",width=4,height=4)
+grid.newpage()
+draw.quad.venn(area1=A, area2=B, area3=C,
+               area4 =D, n12=AB, n23=BC, n13=AC,
+               n14= AD,n24=BD, n34=CD, n123=ABC,
+               n124=ABD, n234=BCD, n134=ACD, n1234=ABCD,
+               category=c("Died","No v3","No SIMD","Unmatched"),
+               col="Green",fill=c("Red","Pink","Blue","Orange"),lty="dashed")
+dev.off()
+
+### Total samples (individual-time pairs) after exclusions
+### Matches total pre-exclusions minus all numbers in Venn Diagram
+as.numeric(ex[which(ex == "Total records excl. individuals with no v3 score")+1])
+
+### Total individuals after exclusions
+as.numeric(ex[which(ex == "Total patients in study")+1])
+
+##############################################################
+######################### Figure S1a #########################
+##############################################################
+
 all.plots$All <- NULL
 wrap_plots(all.plots, nrow = 3)
 
-ggsave("Figures/pdfs/SupFig_1.pdf",
+ggsave("Figures/pdfs/SupFig_1a.pdf",
        width = 24, height = 18, units = "cm",
        device = cairo_pdf)
 
-# Table S2
 
-PaperTotal <- 478243585
-
-AE2 <- c(7539454, 3031773)
-deaths <- c(283554, 283554)
-PIS <- c(393573549, 5589772)
-SMR00 <- c(27463987, 3753240)
-SMR01 <- c(26326889, 2205606)
-SMR01E <- c(137340, 25015)
-SMR04 <- c(111487, 51635)
-SPARRALTC <- c(3286987, 1978171)
-SystemWatch <- c(12890591, 1750009)
-SMR01M <- c(6629747, 2311727)
-
-AE2 + PIS + SMR00 + SMR01 + SMR01E + SMR04 + SystemWatch
-
-AE2 + PIS + SMR00 + SMR01 + SMR01E + SMR04 + SystemWatch + SPARRALTC
-
-AE2 + PIS + SMR00 + SMR01 + SMR01E + SMR04 + SystemWatch + SPARRALTC + SMR01M
-
-AE2 + PIS + SMR00 + SMR01 + SMR01E + SMR04 + SystemWatch + SPARRALTC + SMR01M + deaths
-
-# LTCs reconstructed

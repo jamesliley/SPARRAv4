@@ -16,11 +16,11 @@ inputs=inputs[p_order]
 input_names=input_names[p_order]
 
 if (!exists("panel6a")) {
-  
+
   # General images
-  panel0a = image_read_pdf("Description/age_all.pdf")
-  panel0b = image_read_pdf("Description/simd_all.pdf")
-  
+  panel0a = image_read_pdf("Analysis/full_model/Description/age_all.pdf")
+  panel0b = image_read_pdf("Analysis/full_model/Description/simd_all.pdf")
+
   for (i in 1:6) {
     l1=list.files("Description",pattern=paste0("age_",inputs[i],"_."),full=T); f1=grep("pdf",l1,val=T)
     l2=list.files("Description",pattern=paste0("simd_",inputs[i],"_."),full=T); f2=grep("pdf",l2,val=T)
@@ -29,7 +29,7 @@ if (!exists("panel6a")) {
     assign(paste0("panel",i,"a"),panela)
     assign(paste0("panel",i,"b"),panelb)
     print(paste0("Loaded images for ",input_names[i]))
-  }    
+  }
 }
 
 # Read numbers
@@ -93,15 +93,15 @@ for (i in 1:6) {
   angle=2*(i+0.5)*pi/6
   xcentre=ocent*sin(angle)
   ycentre=ocent*cos(angle)
-  
+
   # Get figures
   panela=get(paste0("panel",i,"a"))
   panelb=get(paste0("panel",i,"b"))
-  
+
   # Plots
   rasterImage(panela,xcentre-2*osc,ycentre-osc,xcentre,ycentre+osc)
   rasterImage(panelb,xcentre,ycentre-osc,xcentre+2*osc,ycentre+osc)
-  
+
   # Text
   if (input_names[i]!="Other") xtext=paste0("R = ",Rs[i]," \n I = ",Is[i]) else {
     xtext=paste0("R = ",Rs[i]," (Ger.); ",Rsw," (Sys.)\nI = ",Is[i]," (Ger.); ",Isw," (Sys.)")
