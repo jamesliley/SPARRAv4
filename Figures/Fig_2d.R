@@ -77,5 +77,5 @@ p <- p1 / p2 + plot_layout(heights = c(3,1))
 print(p)
 
 ggsave("Figures/pdfs/Fig_2d.pdf",
-       width = 7.5, height = 7.5, units = "cm",
+       width = 7.5, height = 7.25, units = "cm",
        device = cairo_pdf)
