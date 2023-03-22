@@ -32,7 +32,8 @@ df <- rbind(
 ) |> mutate(Model = fct_relevel(Model, "v3", "v4", "Max"))
 df2 <- build_diff(df, sens, ppv)
 
-p1 <- ggplot(df) +
+p1 <- ggplot(df |>
+               filter(Model != "Max")) +
   geom_line(aes(x = sens, y = ppv, col = Model), linewidth = 0.4) +
   xlim(0, 1) + ylim(0, 1) +
   xlab("") + ylab("Precision") +
@@ -47,7 +48,8 @@ p2 <- ggplot(df2 |>
                       Max = Max - v3,
                       v3 = v3 - v3) |>
                pivot_longer(v3:Max, names_to = "Model", values_to = "delta_sens") |>
-               mutate(Model = fct_relevel(Model, "v3", "v4", "Max"))) +
+               mutate(Model = fct_relevel(Model, "v3", "v4", "Max")) |>
+               filter(Model != "Max")) +
   geom_line(aes(x = sens, y = delta_sens, col = Model), linewidth = 0.4) +
   xlim(0, 1) +
   xlab("Recall") + ylab("Δ Precision") +

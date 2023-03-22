@@ -37,7 +37,8 @@ df <- rbind(
                                   delu = xcalm$upper[,1] - xcalm$x))
 ) |> mutate(Model = fct_relevel(Model, "v3", "v4", "Max"))
 
-p1 <- ggplot(df) +
+p1 <- ggplot(df |>
+               filter(Model != "Max")) +
   geom_line(aes(x = pred, y = obs, col = Model), linewidth = 0.4) +
   xlim(0, 1) + ylim(0, 1) +
   xlab("") + ylab("Observed") +
@@ -47,7 +48,8 @@ p1 <- ggplot(df) +
                                        legend.margin = unit(0, "npc"),
                                        legend.background = element_rect(fill = "white", size = 0, colour = "white"))
 
-p2 <- ggplot(df) +
+p2 <- ggplot(df |>
+               filter(Model != "Max")) +
   geom_ribbon(aes(x = pred, ymin = dell, ymax = delu, fill = Model), alpha = 0.5) +
   geom_line(aes(x = pred, y = del, col = Model), linewidth = 0.4) +
   xlim(0, 1) +
