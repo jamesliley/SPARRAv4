@@ -21,7 +21,8 @@ par(mar=c(5.1,4.1,4.1,4.1))
 
 xcol=c("black","red"); xsc=12; swidth=0.1
 m0=dim(perf)[1]/2; n0=dim(perf)[2]
-perfmin=min(perf[1:m0,])-0.02
+#perfmin=min(perf[1:m0,])-0.02
+perfmin = 0
 plot(0,type="n",xlim=c(0,n0*(m0+2)),ylim=c(perfmin,max(perf)),xaxt="n",
      xlab="",ylab="AUROC") #,main="ROC and EA frequency by age band")
 for (i in 1:n0) {
@@ -44,6 +45,13 @@ mtext("EA frequency",side=4,line=3)
 legend("bottomright",lty=c(1,1,2),col=c(xcol,"black"),c("V4","V3","Freq."),bg="white")
 
 dev.off()
+
+# CAV: Louis and I discussed that the y-axis can be a bit misleading
+# as it visually suggest a large difference, when it's not if we consider
+# the scale starting from zero. One potential solution would be to start
+# the y-axis at zero, and then generate a bottom sub-panel that shows the
+# difference in AUROC (similar to what was done in Figure 2).
+# Perhaps you could work on that?
 
 # new code
 
