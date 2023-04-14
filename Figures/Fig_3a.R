@@ -1,7 +1,6 @@
+# Load the required libraries
 library("tidyverse")
 library("patchwork")
-
-# Load the ggplot2 library
 library(ggplot2)
 
 setwd("~/SPARRAv4")
@@ -17,6 +16,15 @@ plot_dir="Analysis/full_model/"
 eval(import_sparra_expr(paste0(plot_dir, "Analytics/performance_by_age.txt")))
 
 # old code
+perf=c(); xrate=c()
+for (i in 1:(length(age_split)-1)) {
+  sub=which(all_pred$age>age_split[i] & all_pred$age <= age_split[i+1] & is.finite(all_pred$super+all_pred$v3))
+  psp=getroc(all_pred$target[sub],all_pred$super[sub])
+  p3=getroc(all_pred$target[sub],all_pred$v3[sub])
+  perf=cbind(perf,c(psp$auc,p3$auc,psp$se,p3$se))
+  xrate=c(xrate,sum(all_pred$target[sub])/length(sub))
+}
+
 age_split=c(0,20,30,40,50,60,70,80,120)
 for (i in 1:(length(age_split)-1)) labs=c(labs,paste0("(",age_split[i],",",age_split[i+1],"]"))
 
@@ -46,98 +54,52 @@ dev.off()
 
 # new code
 
-# Create data for the plot
+# Define the age split values
 age_split <- c(0, 20, 30, 40, 50, 60, 70, 80, 120)
-xcol <- c("black", "red")
-xsc <- 12
-swidth <- 0.1
-m0 <- dim(perf)[1]/2
-n0 <- dim(perf)[2]
-perfmin <- min(perf[1:m0,]) - 0.02
+
+# Initialize empty vectors to store performance values
+perf <- c()
+xrate <- c()
+
+# Loop through age split values
+for (i in 1:(length(age_split)-1)) {
+  # Subset data based on age split values
+  sub <- which(all_pred$age > age_split[i] & all_pred$age <= age_split[i+1] & is.finite(all_pred$super+all_pred$v3))
+
+  # Compute ROC metrics
+  psp <- getroc(all_pred$target[sub], all_pred$super[sub])
+  p3 <- getroc(all_pred$target[sub], all_pred$v3[sub])
+
+  # Store performance values
+  perf <- cbind(perf, c(psp$auc, p3$auc, psp$se, p3$se))
+
+  # Compute EA frequency
+  xrate <- c(xrate, sum(all_pred$target[sub]) / length(sub))
+}
+
+# Create a data frame for plotting
+df <- data.frame(perf)
+df$xrate <- xrate
+
+# Define labels for x-axis
 labs <- c()
 for (i in 1:(length(age_split)-1)) {
   labs <- c(labs, paste0("(", age_split[i], ",", age_split[i+1], "]"))
 }
-data <- data.frame(x = rep((m0+2)*(-0.5 + 1:n0), each = m0),
-                   y = c(perf[1:m0,]) + xrate/(xsc*max(xrate)),
-                   col = rep(xcol, each = m0))
 
-# Create the plot using ggplot2
-ggplot(data, aes(x = x, y = y, col = col)) +
-  geom_line() +
-  geom_segment(aes(xend = x, yend = y - perf[m0 + (1:m0),], col = col),
-               linetype = "dashed", size = 1) +
-  geom_segment(aes(xend = x, yend = y + perf[m0 + (1:m0),], col = col),
-               linetype = "dashed", size = 1) +
-  scale_color_manual(values = xcol) +
-  labs(title = "ROC and EA Frequency by Age Band", x = "X Axis Label", y = "AUROC") +
+# Plot the data using ggplot2
+ggplot(df, aes(x = 1:nrow(df))) +
+  geom_segment(aes(y = perf[,1], yend = perf[,2], color = "V4"), size = 1) +
+  geom_segment(aes(y = perf[,1] - perf[,3], yend = perf[,1] + perf[,3], color = "V4"), size = 1) +
+  geom_segment(aes(y = perf[,2] - perf[,4], yend = perf[,2] + perf[,4], color = "V4"), size = 1) +
+  geom_segment(aes(y = xrate / max(xrate), yend = xrate / max(xrate), color = "Freq."), linetype = "dashed", size = 1) +
+  scale_x_continuous(breaks = 1:nrow(df), labels = labs) +
+  scale_y_continuous(limits = c(min(perf) - 0.02, max(perf)), expand = c(0, 0)) +
+  scale_color_manual(values = c("V4" = "black", "Freq." = "black", "V3" = "red")) +
+  labs(x = "", y = "AUROC", title = "ROC and EA frequency by age band") +
   theme_minimal() +
-  theme(legend.position = "bottomright") +
-  scale_x_continuous(breaks = (m0+2)*(1:n0) - floor(m0/2) - 1, labels = labs) +
-  scale_y_continuous(sec.axis = sec_axis(~., name = "EA Frequency",
-                                         breaks = perfmin + seq(0, 1/xsc, length = 4),
-                                         labels = signif(seq(0, max(xrate), length = 4), digits = 2))) +
-  guides(col = guide_legend(title = "Legend Title"))
-
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 
 ###
-# New Figure 'age by simd effect'
-
-df <- rbind(
-  cbind(Model = "v3", data.frame(sens = xroc3b$sens[1,],
-                                 spec = xroc3b$spec[1,])),
-  cbind(Model = "v4", data.frame(sens = xroc4b$sens[1,],
-                                 spec = xroc4b$spec[1,])),
-  cbind(Model = "Max", data.frame(sens = xrocmb$sens[1,],
-                                  spec = xrocmb$spec[1,]))
-) |> mutate(Model = fct_relevel(Model, "v3", "v4", "Max"))
-df2 <- build_diff(df, spec, sens)
-
-p1 <- ggplot(df |>
-               mutate(spec = 1-spec) |>
-               filter(Model != "Max")) +
-  geom_line(aes(x = spec, y = sens, col = Model), linewidth = 0.4) +
-  xlim(0, 1) + ylim(0, 1) +
-  xlab("") + ylab("Sensitivity") +
-  theme_minimal(base_size = 8) + theme(legend.justification = c(1,0),
-                                       legend.position = c(1,0),
-                                       legend.spacing = unit(0, "npc"),
-                                       legend.margin = unit(0, "npc"),
-                                       legend.background = element_rect(fill = "white", size = 0, colour = "white"))
-
-p2 <- ggplot(df2 |>
-               mutate(spec = 1-spec,
-                      v4 = v4 - v3,
-                      Max = Max - v3,
-                      v3 = v3 - v3) |>
-               pivot_longer(v3:Max, names_to = "Model", values_to = "delta_sens") |>
-               mutate(Model = fct_relevel(Model, "v3", "v4", "Max")) |>
-               filter(Model != "Max")) +
-  geom_line(aes(x = spec, y = delta_sens, col = Model), linewidth = 0.4) +
-  xlim(0, 1) +
-  xlab("Recall") + ylab("Δ Sensitivity") +
-  theme_minimal(base_size = 8) + theme(legend.position = "none")
-
-p <- p1 / p2 + plot_layout(heights = c(3,1))
-
-print(p)
-
-ggsave("Figures/pdfs/Fig_2a.pdf",
-       width = 7.5, height = 7.25, units = "cm",
-       device = cairo_pdf)
-
-
-
-
-# Old Figure 'age by simd effect'
-
-plot(0,type="n",xlim=range(x0),ylim=yvar,main=longvarnames(colnames(shapley)[ii]),xaxt="n",
-     xlab="",ylab="Shapley value") # note fixed ylim
-lines(x0,mx,lty=2,col="red")
-segments(x0,mx-sdx,x0,mx+sdx,col="red")
-points(x0,mx,pch=16,col="red")
-axis(1,at=x0,labels=lab,las=2)
-abline(h=0,lty=2)
-dev.off()
 
