@@ -1,32 +1,21 @@
 # Load the required libraries
 library("tidyverse")
 library("patchwork")
-library(ggplot2)
+#library(ggplot2) # CAV: not needed if loading tidyverse
 
-setwd("~/SPARRAv4")
+#setwd("~/SPARRAv4") # CAV: If you are using a project, this is not needed
 source("Figures/util.R") # for import_sparra_expr()
-source("SPARRAv4/auxiliary.R") # for roc_2panel()
+#source("SPARRAv4/auxiliary.R") # for roc_2panel()
 
+# CAV: commented out as this is about a diff figure
 # conversion of this figure is pending
-eval(import_sparra_expr("Analysis/full_model/Shapley_values/age_by_simd_effect.txt"))
-
+#eval(import_sparra_expr("Analysis/full_model/Shapley_values/age_by_simd_effect.txt"))
 
 # conversion of figure 3a performance_by_age
 plot_dir="Analysis/full_model/"
 eval(import_sparra_expr(paste0(plot_dir, "Analytics/performance_by_age.txt")))
 
-# old code
-perf=c(); xrate=c()
-for (i in 1:(length(age_split)-1)) {
-  sub=which(all_pred$age>age_split[i] & all_pred$age <= age_split[i+1] & is.finite(all_pred$super+all_pred$v3))
-  psp=getroc(all_pred$target[sub],all_pred$super[sub])
-  p3=getroc(all_pred$target[sub],all_pred$v3[sub])
-  perf=cbind(perf,c(psp$auc,p3$auc,psp$se,p3$se))
-  xrate=c(xrate,sum(all_pred$target[sub])/length(sub))
-}
-
-age_split=c(0,20,30,40,50,60,70,80,120)
-for (i in 1:(length(age_split)-1)) labs=c(labs,paste0("(",age_split[i],",",age_split[i+1],"]"))
+# The code above loads perf and xrate, which is what you need to recreate the figure
 
 par(mar=c(5.1,4.1,4.1,4.1))
 
@@ -44,6 +33,10 @@ for (i in 1:n0) {
 }
 lines((m0+2)*(-0.5 + 1:n0),perfmin + xrate/(xsc*max(xrate)),lty=2)
 
+# CAV: The next line fails because of "labs". However, this can be fixed
+# by manually generating values for it (you can take it from the paper)
+# Note that it would be best to change the name to e.g. "age.labs" as
+# labs() is a function within ggplot2
 axis(1,at=(m0+2)*(1:n0)- floor(m0/2)-1,labels=labs,cex.axis=1,las=2)
 axis(4,at=perfmin+seq(0,1/xsc,length=4),labels=signif(seq(0,max(xrate),length=4),digits=2))
 mtext("EA frequency",side=4,line=3)
@@ -57,6 +50,8 @@ dev.off()
 # Define the age split values
 age_split <- c(0, 20, 30, 40, 50, 60, 70, 80, 120)
 
+
+# CAV: you don't need this. The DSH extract already has pre-calculated values for perf.
 # Initialize empty vectors to store performance values
 perf <- c()
 xrate <- c()
