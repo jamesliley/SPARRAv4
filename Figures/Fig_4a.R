@@ -26,7 +26,8 @@ dev.off()
 # code converted to use ggplot2 for creating ROC curves for a predictor at various time points:
 
 library(ggplot2)
-
+library(viridis)
+library(ggdist)
 # Combine ROC data into a single data frame
 df <- data.frame(
   Model = rep(as.character(test_times), each = length(xy1$sens)),
@@ -37,17 +38,18 @@ df <- data.frame(
 # Convert test_times to character
 test_times <- as.character(test_times)
 
-
-# Define custom colors
-custom_colors <- c("red", "blue", "green", "purple", "orange")
+# Define custom colours
+# viridis colour palette is known to be colour-blind friendly
+# Define a custom gradient color scale centered on blue
+colors <- viridis(5, begin = 0.3, end = 0.7, direction = -1)
 
 # Create ggplot object
 p <- ggplot(df, aes(x = 1 - Specificity, y = Sensitivity, color = Model, linetype = Model)) +
-  geom_line() +
-  geom_point() +
-  scale_color_manual(values = custom_colors) +  # Set custom colors
+  geom_line(linetype = "solid") +
+  scale_color_manual(values = colors) +  # manually specify colours
   labs(x = "1 - Specificity", y = "Sensitivity") +
-  theme_minimal()
+  theme_minimal() +
+  geom_abline(slope = -1, intercept = 1, linetype = "dashed", color = "gray")  # Add dashed gray line
 
 # Print the ggplot object
 print(p)
