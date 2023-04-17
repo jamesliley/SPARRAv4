@@ -1,3 +1,9 @@
+# Load the required libraries
+library("tidyverse")
+library("patchwork")
+
+source("Figures/util.R") # for import_sparra_expr()
+
 plot_dir = "Analysis/time_attenuation/"
 eval(import_sparra_expr(paste0(plot_dir, "cohort/drift/drift_roc.txt")))
 
