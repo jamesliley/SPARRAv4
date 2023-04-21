@@ -65,18 +65,18 @@ df <- data.frame(
 test_times <- as.character(test_times)
 
 # Create the ROC plot
-roc_plot <- ggplot(df, aes(x = 1 - Specificity, y = Sensitivity, color = Time, linetype = Time)) +
+roc_plot <- ggplot(df, aes(x = Specificity, y = Sensitivity, color = Time, linetype = Time)) +
   geom_line(linetype = "solid") +
   scale_color_manual(values = colors) +
   labs(x = "1 - Specificity", y = "Sensitivity") +
   theme_minimal(base_size = 8) +
-  geom_abline(slope = -1, intercept = 1, linetype = "dashed", color = "gray")
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray")
 
 # extract spec column from each roc object
 spec_list <- lapply(rocs, function(x) x$spec)
 
 # subtract the first roc's spec from each other roc's spec
-diffs_list <- lapply(spec_list[-1], function(x) rocs[[1]]$spec - x)
+diffs_list <- lapply(spec_list[-1], function(x) x - rocs[[1]]$spec)
 
 # combine the diffs and add a Time column
 Time <- rep.int(rep(test_times[2:5], each = 100), length(diffs_list))
