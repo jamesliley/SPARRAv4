@@ -1,6 +1,23 @@
-# Load the required libraries
-library("tidyverse")
-library("patchwork")
+# List of libraries to check and install
+libs <- c("tidyverse", "patchwork", "viridis", "ggdist")
+
+# Create an empty list to store the missing libraries
+missing_libs <- list()
+
+# Loop through each library and check if it's installed
+for (lib in libs) {
+  if (!requireNamespace(lib, quietly = TRUE)) {
+    missing_libs[[lib]] <- TRUE
+  }
+}
+
+# Install and load the missing libraries
+if (length(missing_libs) > 0) {
+  install.packages(names(missing_libs))
+}
+
+# Load all libraries
+lapply(libs, require, character.only = TRUE)
 
 source("Figures/util.R") # for import_sparra_expr()
 
@@ -25,9 +42,6 @@ dev.off()
 
 # code converted to use ggplot2 for creating ROC curves for a predictor at various time points:
 
-library(ggplot2)
-library(viridis)
-library(ggdist)
 # Combine ROC data into a single data frame
 df <- data.frame(
   Model = rep(as.character(test_times), each = length(xy1$sens)),
@@ -46,10 +60,10 @@ colors <- viridis(5, begin = 0.3, end = 0.7, direction = -1)
 # Create ggplot object
 p <- ggplot(df, aes(x = 1 - Specificity, y = Sensitivity, color = Model, linetype = Model)) +
   geom_line(linetype = "solid") +
-  scale_color_manual(values = colors) +  # manually specify colours
+  scale_color_manual(values = colors) + # manually specify colours
   labs(x = "1 - Specificity", y = "Sensitivity") +
   theme_minimal() +
-  geom_abline(slope = -1, intercept = 1, linetype = "dashed", color = "gray")  # Add dashed gray line
+  geom_abline(slope = -1, intercept = 1, linetype = "dashed", color = "gray") # Add dashed gray line
 
 # Print the ggplot object
 print(p)
