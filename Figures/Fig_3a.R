@@ -1,22 +1,16 @@
 # Load the required libraries
 library("tidyverse")
 library("patchwork")
-#library(ggplot2) # CAV: not needed if loading tidyverse
 
 #setwd("~/SPARRAv4") # CAV: If you are using a project, this is not needed
 source("Figures/util.R") # for import_sparra_expr()
 #source("SPARRAv4/auxiliary.R") # for roc_2panel()
 
-# CAV: commented out as this is about a diff figure
-# conversion of this figure is pending
-#eval(import_sparra_expr("Analysis/full_model/Shapley_values/age_by_simd_effect.txt"))
-
 # conversion of figure 3a performance_by_age
 plot_dir="Analysis/full_model/"
 eval(import_sparra_expr(paste0(plot_dir, "Analytics/performance_by_age.txt")))
 
-# The code above loads perf and xrate, which is what you need to recreate the figure
-
+# old code
 par(mar=c(5.1,4.1,4.1,4.1))
 
 xcol=c("black","red"); xsc=12; swidth=0.1
@@ -58,12 +52,6 @@ dev.off()
 # Define the age split values
 age_split <- c(0, 20, 30, 40, 50, 60, 70, 80, 120)
 
-
-# CAV: you don't need this. The DSH extract already has pre-calculated values for perf.
-# Initialize empty vectors to store performance values
-perf <- c()
-xrate <- c()
-
 # Loop through age split values
 for (i in 1:(length(age_split)-1)) {
   # Subset data based on age split values
@@ -85,9 +73,9 @@ df <- data.frame(perf)
 df$xrate <- xrate
 
 # Define labels for x-axis
-labs <- c()
+age.labs <- c()
 for (i in 1:(length(age_split)-1)) {
-  labs <- c(labs, paste0("(", age_split[i], ",", age_split[i+1], "]"))
+  age.labs <- c(age.labs, paste0("(", age_split[i], ",", age_split[i+1], "]"))
 }
 
 # Plot the data using ggplot2
@@ -96,13 +84,10 @@ ggplot(df, aes(x = 1:nrow(df))) +
   geom_segment(aes(y = perf[,1] - perf[,3], yend = perf[,1] + perf[,3], color = "V4"), size = 1) +
   geom_segment(aes(y = perf[,2] - perf[,4], yend = perf[,2] + perf[,4], color = "V4"), size = 1) +
   geom_segment(aes(y = xrate / max(xrate), yend = xrate / max(xrate), color = "Freq."), linetype = "dashed", size = 1) +
-  scale_x_continuous(breaks = 1:nrow(df), labels = labs) +
+  scale_x_continuous(breaks = 1:nrow(df), labels = age.labs) +
   scale_y_continuous(limits = c(min(perf) - 0.02, max(perf)), expand = c(0, 0)) +
   scale_color_manual(values = c("V4" = "black", "Freq." = "black", "V3" = "red")) +
   labs(x = "", y = "AUROC", title = "ROC and EA frequency by age band") +
   theme_minimal() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-
-
-###
 
