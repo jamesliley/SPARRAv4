@@ -11,12 +11,16 @@ plot_dir="Analysis/full_model/"
 eval(import_sparra_expr(paste0(plot_dir, "Analytics/performance_by_age.txt")))
 
 # old code
+pdf(paste0(plot_dir,"Analytics/performance_by_age-new.pdf"),width=6,height=5)
+labs=c();
+age_split=c(0,20,30,40,50,60,70,80,120)
+for (i in 1:(length(age_split)-1)) labs=c(labs,paste0("(",age_split[i],",",age_split[i+1],"]"))
+
 par(mar=c(5.1,4.1,4.1,4.1))
 
 xcol=c("black","red"); xsc=12; swidth=0.1
 m0=dim(perf)[1]/2; n0=dim(perf)[2]
-#perfmin=min(perf[1:m0,])-0.02
-perfmin = 0
+perfmin=min(perf[1:m0,])-0.02
 plot(0,type="n",xlim=c(0,n0*(m0+2)),ylim=c(perfmin,max(perf)),xaxt="n",
      xlab="",ylab="AUROC") #,main="ROC and EA frequency by age band")
 for (i in 1:n0) {
@@ -28,10 +32,6 @@ for (i in 1:n0) {
 }
 lines((m0+2)*(-0.5 + 1:n0),perfmin + xrate/(xsc*max(xrate)),lty=2)
 
-# CAV: The next line fails because of "labs". However, this can be fixed
-# by manually generating values for it (you can take it from the paper)
-# Note that it would be best to change the name to e.g. "age.labs" as
-# labs() is a function within ggplot2
 axis(1,at=(m0+2)*(1:n0)- floor(m0/2)-1,labels=labs,cex.axis=1,las=2)
 axis(4,at=perfmin+seq(0,1/xsc,length=4),labels=signif(seq(0,max(xrate),length=4),digits=2))
 mtext("EA frequency",side=4,line=3)
@@ -49,45 +49,170 @@ dev.off()
 
 # new code
 
-# Define the age split values
-age_split <- c(0, 20, 30, 40, 50, 60, 70, 80, 120)
+library(ggplot2)
 
-# Loop through age split values
-for (i in 1:(length(age_split)-1)) {
-  # Subset data based on age split values
-  sub <- which(all_pred$age > age_split[i] & all_pred$age <= age_split[i+1] & is.finite(all_pred$super+all_pred$v3))
+labs = c()
+age_split = c(0, 20, 30, 40, 50, 60, 70, 80, 120)
 
-  # Compute ROC metrics
-  psp <- getroc(all_pred$target[sub], all_pred$super[sub])
-  p3 <- getroc(all_pred$target[sub], all_pred$v3[sub])
-
-  # Store performance values
-  perf <- cbind(perf, c(psp$auc, p3$auc, psp$se, p3$se))
-
-  # Compute EA frequency
-  xrate <- c(xrate, sum(all_pred$target[sub]) / length(sub))
+for (i in 1:(length(age_split) - 1)) {
+  labs = c(labs, paste0("(", age_split[i], ",", age_split[i+1], "]"))
 }
 
-# Create a data frame for plotting
-df <- data.frame(perf)
-df$xrate <- xrate
+xcol = c("black", "red")
+xsc = 12
+swidth = 0.1
 
-# Define labels for x-axis
-age.labs <- c()
-for (i in 1:(length(age_split)-1)) {
-  age.labs <- c(age.labs, paste0("(", age_split[i], ",", age_split[i+1], "]"))
-}
+m0 = dim(perf)[1]/2
+n0 = dim(perf)[2]
+perfmin = min(perf[1:m0, ]) - 0.02
 
-# Plot the data using ggplot2
-ggplot(df, aes(x = 1:nrow(df))) +
-  geom_segment(aes(y = perf[,1], yend = perf[,2], color = "V4"), size = 1) +
-  geom_segment(aes(y = perf[,1] - perf[,3], yend = perf[,1] + perf[,3], color = "V4"), size = 1) +
-  geom_segment(aes(y = perf[,2] - perf[,4], yend = perf[,2] + perf[,4], color = "V4"), size = 1) +
-  geom_segment(aes(y = xrate / max(xrate), yend = xrate / max(xrate), color = "Freq."), linetype = "dashed", size = 1) +
-  scale_x_continuous(breaks = 1:nrow(df), labels = age.labs) +
-  scale_y_continuous(limits = c(min(perf) - 0.02, max(perf)), expand = c(0, 0)) +
-  scale_color_manual(values = c("V4" = "black", "Freq." = "black", "V3" = "red")) +
+df <- data.frame(
+  x = rep((m0 + 2)*(-0.5 + 1:n0), each = m0),
+  y = c(perf[1:m0, ] + perf[m0 + (1:m0), ]),
+  group = factor(rep(1:n0, each = m0))
+)
+
+df2 <- data.frame(
+  x = rep((m0 + 2)*(-0.5 + 1:n0), each = m0),
+  y = c(perf[1:m0, ] - perf[m0 + (1:m0), ]),
+  group = factor(rep(1:n0, each = m0))
+)
+
+p <- ggplot() +
+  geom_line(data = df, aes(x = x, y = y, group = group), color = "black") +
+  geom_line(data = df2, aes(x = x, y = y, group = group), color = "black") +
+  geom_line(aes(x = (m0 + 2)*(-0.5 + 1:n0), y = perfmin + xrate/(xsc*max(xrate))), linetype = "dashed") +
+  scale_x_continuous(limits = c(0, n0*(m0 + 2)),
+                     breaks = (m0 + 2)*(1:n0) - floor(m0/2) - 1,
+                     labels = labs) +
+  scale_y_continuous(limits = c(perfmin, max(perf)),
+                     breaks = perfmin + seq(0, 1/xsc, length = 4),
+                     labels = signif(seq(0, max(xrate), length = 4), digits = 2)) +
   labs(x = "", y = "AUROC", title = "ROC and EA frequency by age band") +
-  theme_minimal() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14, face = "bold"),
+        legend.position = "bottomright") +
+  guides(linetype = FALSE, color = FALSE, fill = FALSE) +
+  annotate(geom = "text", x = n0*(m0 + 2) - floor(m0/2) - 1, y = perfmin,
+           label = "EA frequency", hjust = 1, vjust = -1.5, size = 5)
+
+p + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+####
+library(ggplot2)
+
+labs = c()
+age_split = c(0, 20, 30, 40, 50, 60, 70, 80, 120)
+
+for (i in 1:(length(age_split) - 1)) {
+  labs = c(labs, paste0("(", age_split[i], ",", age_split[i+1], "]"))
+}
+
+xcol = c("black", "red")
+xsc = 12
+swidth = 0.1
+
+m0 = dim(perf)[1]/2
+n0 = dim(perf)[2]
+perfmin = min(perf[1:m0, ]) - 0.02
+
+df <- data.frame(
+  x = rep((m0 + 2)*(-0.5 + 1:n0), each = m0),
+  y = c(perf[1:m0, ] + perf[m0 + (1:m0), ]),
+  group = factor(rep(1:n0, each = m0))
+)
+
+df2 <- data.frame(
+  x = rep((m0 + 2)*(-0.5 + 1:n0), each = m0),
+  y = c(perf[1:m0, ] - perf[m0 + (1:m0), ]),
+  group = factor(rep(1:n0, each = m0))
+)
+
+diffs <- data.frame(
+  x = (m0 + 2)*(-0.5 + 1:n0) - 0.5*(m0 + 2)/n0,
+  y = xrate,
+  group = factor(rep(1, n0))
+)
+
+# attempt to reproduce the combined plot
+p <- ggplot() +
+  geom_line(data = df, aes(x = x, y = y, group = group), color = "black") +
+  geom_line(data = df2, aes(x = x, y = y, group = group), color = "black") +
+  geom_line(aes(x = (m0 + 2)*(-0.5 + 1:n0), y = perfmin + xrate/(xsc*max(xrate))), linetype = "dashed") +
+  scale_x_continuous(limits = c(0, n0*(m0 + 2)),
+                     breaks = (m0 + 2)*(1:n0) - floor(m0/2) - 1,
+                     labels = labs) +
+  scale_y_continuous(limits = c(0, max(perf)),
+                     breaks = seq(0, max(perf), length = 4)) + # start y-axis at zero
+  labs(x = "", y = "AUROC", title = "ROC and EA frequency by age band") +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14, face = "bold"),
+        legend.position = "bottomright") +
+  guides(linetype = FALSE, color = FALSE, fill = FALSE) +
+  # annotate(geom = "text", x = n0*(m0 + 2) - floor(m0/2) - 1, y = perfmin,
+  #          label = "EA frequency", hjust = 1, vjust = -0.5, size = 5) +
+  geom_col(data = diffs, aes(x = x, y = y, group = group), fill = "blue") + # add bottom sub-panel
+  labs(subtitle = "Difference in AUROC")  # label the sub-panel
+
+p + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+# plot 1: AUC plot
+p1 <- ggplot() +
+  geom_line(data = df, aes(x = x, y = y, group = group), color = "black") +
+  geom_line(data = df2, aes(x = x, y = y, group = group), color = "black") +
+  scale_x_continuous(limits = c(0, n0*(m0 + 2)),
+                     breaks = (m0 + 2)*(1:n0) - floor(m0/2) - 1,
+                     labels = labs) +
+  scale_y_continuous(limits = c(0, max(perf)),
+                     breaks = seq(0, max(perf), length = 4)) + # start y-axis at zero
+  labs(x = "", y = "AUROC", title = "ROC and EA frequency by \nage band") +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_text(size = 8),
+        axis.title = element_text(size = 8, face = "bold"),
+        legend.position = "bottomright") +
+  labs(subtitle = "Difference in AUROC")
+
+# plot 2: frequency plot
+p2 <- ggplot(diffs, aes(x = x, y = y, group = group)) +
+  geom_col(color = "black", fill = "blue") +
+  scale_x_continuous(limits = c(0, n0*(m0 + 2)),
+                     breaks = (m0 + 2)*(1:n0) - floor(m0/2) - 1,
+                     labels = labs) +
+  scale_y_continuous(limits = c(0, max(diffs$y)),
+                     breaks = seq(0, max(diffs$y), length.out = 5),
+                     expand = expansion(mult = c(0.0000005, 0.00000005))) +
+  labs(x = "", y = "Frequency", title = "EA frequency by age band") +
+  theme_classic() +
+  theme(
+    axis.line = element_line(size = 1),
+    axis.text = element_text(size = 8),
+    axis.title = element_text(size = 8, face = "bold"),
+    axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
+    legend.position = "none",
+    panel.border = element_rect(colour = "black", fill = NA, size = 1),
+    panel.grid.major = element_line(colour = "grey", size = 0.5, linetype = "dotted"),
+    panel.grid.minor = element_line(colour = "grey", size = 0.5, linetype = "dotted"),
+    plot.background = element_rect(fill = "white"),
+    panel.background = element_rect(fill = "white"),
+    plot.title = element_text(hjust = 0.35)
+  )
+
+# combine the plots vertically
+library(gridExtra)
+p3a <- grid.arrange(p1 + theme(axis.text.x = element_text(angle = 45, hjust = 1)),
+             p2 + theme(axis.text.x = element_text(angle = 45, hjust = 1)),
+             ncol = 1, heights = c(0.6, 0.4))
+
+ggsave("Figures/pdfs/Fig_3a.pdf", p3a,
+       width = 8.5, height = 9, units = "cm",
+       device = cairo_pdf)
 
