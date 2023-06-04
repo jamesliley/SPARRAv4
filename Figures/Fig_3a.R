@@ -56,7 +56,7 @@ plot_data <- data.frame(
 
 # Set up the main plot
 ggplot(plot_data, aes(x = x, y = auroc, group = version)) +
-  geom_point(shape = 18, size = 2, aes(col = version)) +  # Use versions as points
+  geom_point(shape = 18, size = 3, aes(col = version)) +  # Use versions as points
   xlab("Age Group") +
   ylab("AUROC") +
   scale_x_continuous(breaks = 1:(length(age_labels)), labels = age_labels) +  # Set custom x-axis labels
@@ -68,7 +68,7 @@ ggplot(plot_data, aes(x = x, y = auroc, group = version)) +
     axis.text.x = element_text(angle = 45, hjust = 1)  # Display x-axis labels diagonally
   )
 
-# Set up the subpanel
+# Set up subpanel
 
 
 ####
