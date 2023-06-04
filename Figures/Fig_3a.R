@@ -55,11 +55,12 @@ plot_data <- data.frame(
 )
 
 # Set up the main plot
-p3a <-
+p3aa <-
   ggplot(plot_data, aes(x = x, y = auroc, group = version)) +
   geom_point(shape = 18, size = 3, aes(col = version)) +  # Use versions as points
   xlab("Age Group") +
   ylab("AUROC") +
+  scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
   scale_x_continuous(breaks = 1:(length(age_labels)), labels = age_labels) +  # Set custom x-axis labels
   # Set y-axis to start from 0/Comment it out for the original plot
   scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +
@@ -74,11 +75,61 @@ p3a <-
 
 
 # Set up subpanel
+plot_data$difference <- plot_data$auroc[plot_data$version == "V4"] -
+  plot_data$auroc[plot_data$version == "V3"]
 
-ggsave("Figures/pdfs/Fig_3a.pdf", p3a,
+# Create the plot
+p3ab <-
+  ggplot(plot_data, aes(x = age_group, y = difference, color = version)) +
+  geom_point(size = 3) +
+  xlab("Age Group") +
+  ylab("Difference in AUC") +
+  scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
+  scale_x_discrete(labels = age_labels) +
+  theme_bw() +
+  theme(
+    legend.position = "bottom",
+    legend.title = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+###
+
+# Calculate percentage increase in AUC between V4 and V3
+plot_data$percentage_increase <- ((plot_data$auroc[plot_data$version == "V4"] / plot_data$auroc[plot_data$version == "V3"]) - 1) * 100
+
+# Create the plot
+p3ac <-
+  ggplot(plot_data, aes(x = age_group, y = percentage_increase, fill = version)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  xlab("Age Group") +
+  ylab("Percentage Increase") +
+  scale_fill_manual(values = c("V4" = "black", "V3" = "red")) +
+  scale_x_discrete(labels = age_labels) +
+  theme_bw() +
+  theme(
+    legend.position = "bottom",
+    legend.title = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+
+# combine the plots vertically
+library(gridExtra)
+# p3a <- grid.arrange(p3aa, p3ab, p3ac,
+#                     ncol = 1, heights = c(0.6, 0.4))
+
+ggsave("Figures/pdfs/Fig_3a1.pdf", p3aa,
        width = 8.5, height = 9, units = "cm",
        device = cairo_pdf)
 
+ggsave("Figures/pdfs/Fig_3a2.pdf", p3ab,
+       width = 8.5, height = 9, units = "cm",
+       device = cairo_pdf)
+
+ggsave("Figures/pdfs/Fig_3a3.pdf", p3ac,
+       width = 8.5, height = 9, units = "cm",
+       device = cairo_pdf)
 ####
 
 
