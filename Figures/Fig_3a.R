@@ -40,6 +40,41 @@ legend("bottomright",lty=c(1,1,2),col=c(xcol,"black"),c("V4","V3","Freq."),bg="w
 
 dev.off()
 
+#### new version of the figure
+library(ggplot2)
+
+# Define the age group labels
+age_labels <- c("(0, 20]", "(20, 30]", "(30, 40]", "(40, 50]", "(50, 60]", "(60, 70]", "(70, 80]", "(80, 120]")
+
+# Create a data frame for plotting
+plot_data <- data.frame(
+  age_group = factor(rep(1:(length(age_split)-1), each = 2)),  # Repeat each age group twice
+  version = rep(c("V4", "V3"), times = length(age_split)-1),  # Specify the versions
+  auroc = c(perf[1:m0, ], perf[1:m0, ]),  # Repeat the AUROC values for each version
+  x = rep(1:(length(age_split)-1), each = 2)  # x-axis values for positioning each version
+)
+
+# Set up the main plot
+ggplot(plot_data, aes(x = x, y = auroc, group = version)) +
+  geom_point(shape = 18, size = 2, aes(col = version)) +  # Use versions as points
+  xlab("Age Group") +
+  ylab("AUROC") +
+  scale_x_continuous(breaks = 1:(length(age_labels)), labels = age_labels) +  # Set custom x-axis labels
+  coord_cartesian(ylim = c(0, max(plot_data$auroc))) +  # Set y-axis to start from 0/Comment it out for the original plot
+  theme_bw() +
+  theme(
+    legend.position = "bottom",
+    legend.title = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Display x-axis labels diagonally
+  )
+
+# Set up the subpanel
+
+
+####
+
+
+
 # CAV: Louis and I discussed that the y-axis can be a bit misleading
 # as it visually suggest a large difference, when it's not if we consider
 # the scale starting from zero. One potential solution would be to start
@@ -47,10 +82,7 @@ dev.off()
 # difference in AUROC (similar to what was done in Figure 2).
 # Perhaps you could work on that?
 
-# new code
-
-library(ggplot2)
-
+# past attempts
 labs = c()
 age_split = c(0, 20, 30, 40, 50, 60, 70, 80, 120)
 
@@ -100,7 +132,8 @@ p <- ggplot() +
 
 p + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-
+# the difference and frequency in two different sub-figures below the main one,
+# with the latter showing the AUC of each version in different colours
 
 ####
 library(ggplot2)
@@ -215,4 +248,3 @@ p3a <- grid.arrange(p1 + theme(axis.text.x = element_text(angle = 45, hjust = 1)
 ggsave("Figures/pdfs/Fig_3a.pdf", p3a,
        width = 8.5, height = 9, units = "cm",
        device = cairo_pdf)
-
