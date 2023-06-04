@@ -61,16 +61,19 @@ p3a <-
   xlab("Age Group") +
   ylab("AUROC") +
   scale_x_continuous(breaks = 1:(length(age_labels)), labels = age_labels) +  # Set custom x-axis labels
-  coord_cartesian(ylim = c(0, max(plot_data$auroc))) +  # Set y-axis to start from 0/Comment it out for the original plot
+  # Set y-axis to start from 0/Comment it out for the original plot
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +
   theme_bw() +
   theme(
     legend.position = "bottom",
     legend.title = element_blank(),
-    axis.text.x = element_text(angle = 45, hjust = 1)  # Display x-axis labels diagonally
+    axis.text.x = element_text(angle = 45, hjust = 1),  # Display x-axis labels diagonally
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank()
   )
 
-# Set up subpanel
 
+# Set up subpanel
 
 ggsave("Figures/pdfs/Fig_3a.pdf", p3a,
        width = 8.5, height = 9, units = "cm",
