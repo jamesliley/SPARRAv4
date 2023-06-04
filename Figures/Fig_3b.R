@@ -31,3 +31,36 @@ mtext("EA frequency",side=4,line=3)
 legend("bottomright",lty=c(1,1,2),col=c(xcol,"black"),c("V4","V3","Freq."),bg="white")
 
 dev.off()
+
+#### new version of the figure
+library(ggplot2)
+
+labs <- 1:10
+
+xsc <- 25
+swidth <- 0.1
+m0 <- dim(perf)[1] / 2
+n0 <- dim(perf)[2]
+perfmin <- min(perf[1:m0, ]) - 0.02
+
+# Create a data frame for plotting
+plot_data <- data.frame(
+  x = factor(rep((m0 + 2) * (1:n0) - floor(m0 / 2) - 1, each = m0)),
+  y = c(t(perf[1:m0, ])),
+  group = factor(rep(1:n0, each = m0)),
+  version = rep(c("V4", "V3"), times = n0)
+)
+
+# Set up the plot
+ggplot(plot_data, aes(x = x, y = y, group = group, color = version)) +
+  geom_point(shape = 18, size = 3) +
+  scale_x_discrete(breaks = (m0 + 2) * (1:n0) - floor(m0 / 2) - 1, labels = labs) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +
+  labs(x = "SIMD", y = "AUROC") +
+  theme_bw() +
+  theme(
+    legend.position = "bottom",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank()
+  )
