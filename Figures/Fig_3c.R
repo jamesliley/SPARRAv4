@@ -52,7 +52,8 @@ plot_data <- data.frame(
 )
 
 # Set up the plot
-ggplot(plot_data, aes(x = x, y = y, group = group)) +
+p3c <-
+  ggplot(plot_data, aes(x = x, y = y, group = group)) +
   geom_point(aes(color = version), shape = 18, size = 3) +
   scale_x_continuous(
     breaks = (m0 + 2) * (1:n0) - floor(m0 / 2) - 1,
@@ -69,3 +70,8 @@ ggplot(plot_data, aes(x = x, y = y, group = group)) +
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank()
   )
+
+
+ggsave("Figures/pdfs/Fig_3c.pdf", p3c,
+       width = 8.5, height = 9, units = "cm",
+       device = cairo_pdf)

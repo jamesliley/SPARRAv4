@@ -55,7 +55,8 @@ plot_data <- data.frame(
 )
 
 # Set up the main plot
-ggplot(plot_data, aes(x = x, y = auroc, group = version)) +
+p3a <-
+  ggplot(plot_data, aes(x = x, y = auroc, group = version)) +
   geom_point(shape = 18, size = 3, aes(col = version)) +  # Use versions as points
   xlab("Age Group") +
   ylab("AUROC") +
@@ -70,6 +71,10 @@ ggplot(plot_data, aes(x = x, y = auroc, group = version)) +
 
 # Set up subpanel
 
+
+ggsave("Figures/pdfs/Fig_3a.pdf", p3a,
+       width = 8.5, height = 9, units = "cm",
+       device = cairo_pdf)
 
 ####
 
@@ -244,7 +249,3 @@ library(gridExtra)
 p3a <- grid.arrange(p1 + theme(axis.text.x = element_text(angle = 45, hjust = 1)),
              p2 + theme(axis.text.x = element_text(angle = 45, hjust = 1)),
              ncol = 1, heights = c(0.6, 0.4))
-
-ggsave("Figures/pdfs/Fig_3a.pdf", p3a,
-       width = 8.5, height = 9, units = "cm",
-       device = cairo_pdf)
