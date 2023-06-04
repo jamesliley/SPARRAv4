@@ -32,3 +32,40 @@ mtext("EA frequency",side=4,line=3)
 legend("bottomleft",lty=c(1,1,2),col=c(xcol,"black"),c("V4","V3","Freq."),bg="white")
 
 dev.off()
+
+### new version
+labs <- c("FEC", "LTC", "YED", "U16")
+
+xcol <- c("black", "red")
+xsc <- 20
+swidth <- 0.1
+m0 <- dim(perf)[1] / 2
+n0 <- dim(perf)[2]
+perfmin <- min(perf[1:m0, ]) - 0.02
+
+# Create a data frame for plotting
+plot_data <- data.frame(
+  x = rep((m0 + 2) * (1:n0) - floor(m0 / 2) - 1, each = m0),
+  y = c(t(perf[1:m0, ])),
+  group = factor(rep(1:n0, each = m0)),
+  version = rep(c("V4", "V3"), times = n0)
+)
+
+# Set up the plot
+ggplot(plot_data, aes(x = x, y = y, group = group)) +
+  geom_point(aes(color = version), shape = 18, size = 3) +
+  scale_x_continuous(
+    breaks = (m0 + 2) * (1:n0) - floor(m0 / 2) - 1,
+    labels = labs,
+    expand = c(0, 0), limits = c(0, 15),  # Adjust the expand argument to extend the x-axis limits
+    position = "bottom"
+  ) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +  # Extend the y-axis to 1
+  labs(x = "Cohort", y = "AUROC") +
+  theme_bw() +
+  theme(
+    legend.position = "bottom",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank()
+  )
