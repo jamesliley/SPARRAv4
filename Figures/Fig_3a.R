@@ -48,22 +48,22 @@ age_labels <- c("(0, 20]", "(20, 30]", "(30, 40]", "(40, 50]", "(50, 60]", "(60,
 
 # Create a data frame for plotting
 plot_data <- data.frame(
-  age_group = factor(rep(1:(length(age_split)-1), each = 2)),  # Repeat each age group twice
+  age_group = factor(rep(1:(length(age_split)-1), each = 1)),
   version = rep(c("V4", "V3"), times = length(age_split)-1),  # Specify the versions
   auroc = c(perf[1:m0, ], perf[1:m0, ]),  # Repeat the AUROC values for each version
   x = rep(1:(length(age_split)-1), each = 2)  # x-axis values for positioning each version
 )
 
 # Set up the main plot
-p3aa <-
+p3aa_min <-
   ggplot(plot_data, aes(x = x, y = auroc, group = version)) +
   geom_point(shape = 18, size = 3, aes(col = version)) +  # Use versions as points
   xlab("Age Group") +
   ylab("AUROC") +
   scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
   scale_x_continuous(breaks = 1:(length(age_labels)), labels = age_labels) +  # Set custom x-axis labels
-  # Set y-axis to start from 0/Comment it out for the original plot
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +
+  # Set y-axis to start from 0/for the original plot, use   scale_y_continuous(expand = c(0, 0), limits = c(min(plot_data$y)-0.1, 0.9)) +
+  #scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +
   theme_bw() +
   theme(
     legend.position = "bottom",
@@ -80,11 +80,11 @@ plot_data$difference <- plot_data$auroc[plot_data$version == "V4"] -
 
 # Create the plot
 p3ab <-
-  ggplot(plot_data, aes(x = age_group, y = difference, color = version)) +
-  geom_point(size = 3) +
+  ggplot(plot_data, aes(x = age_group, y = difference)) +
+  geom_point(shape = 18, size = 3) +
   xlab("Age Group") +
   ylab("Difference in AUC") +
-  scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
+  #scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
   scale_x_discrete(labels = age_labels) +
   theme_bw() +
   theme(
@@ -95,12 +95,12 @@ p3ab <-
 
 ###
 
-# Calculate percentage increase in AUC between V4 and V3
+# create a plot that shows the AUC differences as a percentage increase
 plot_data$percentage_increase <- ((plot_data$auroc[plot_data$version == "V4"] / plot_data$auroc[plot_data$version == "V3"]) - 1) * 100
 
 # Create the plot
 p3ac <-
-  ggplot(plot_data, aes(x = age_group, y = percentage_increase, fill = version)) +
+  ggplot(plot_data, aes(x = age_group, y = percentage_increase)) +
   geom_bar(stat = "identity", position = "dodge") +
   xlab("Age Group") +
   ylab("Percentage Increase") +
@@ -113,13 +113,7 @@ p3ac <-
     axis.text.x = element_text(angle = 45, hjust = 1)
   )
 
-
-# combine the plots vertically
-library(gridExtra)
-# p3a <- grid.arrange(p3aa, p3ab, p3ac,
-#                     ncol = 1, heights = c(0.6, 0.4))
-
-ggsave("Figures/pdfs/Fig_3a1.pdf", p3aa,
+ggsave("Figures/pdfs/Fig_3a1.pdf", p3aa_min,
        width = 8.5, height = 9, units = "cm",
        device = cairo_pdf)
 
@@ -130,8 +124,6 @@ ggsave("Figures/pdfs/Fig_3a2.pdf", p3ab,
 ggsave("Figures/pdfs/Fig_3a3.pdf", p3ac,
        width = 8.5, height = 9, units = "cm",
        device = cairo_pdf)
-####
-
 
 
 # CAV: Louis and I discussed that the y-axis can be a bit misleading
