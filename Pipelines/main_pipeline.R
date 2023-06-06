@@ -3057,6 +3057,12 @@ cat("\n\n")
 cat("BCD\n")
 cat(length(intersect(exclude_v3,intersect(exclude_simd,exclude_list))))
 cat("\n\n")
+cat("Number of unique individuals amongst admissions/deaths\n")
+cat(length(unique(all_pred$id[which(all_pred$target==TRUE)])))
+cat("\n\n")
+cat("Number of unique individuals amongst non-admissions/non-deaths\n")
+cat(length(unique(all_pred$id[which(all_pred$target==FALSE)])))
+cat("\n\n")
 
 sink()
 

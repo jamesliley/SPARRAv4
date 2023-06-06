@@ -70,3 +70,8 @@ ACD
 BCD
 258
 
+Number of unique individuals amongst admissions/deaths
+667566
+
+Number of unique individuals amongst non-admissions/non-deaths
+4670756
