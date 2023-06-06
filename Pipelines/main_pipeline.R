@@ -1677,18 +1677,18 @@ sink()
 ## Distribution of predictions across admittees by type 1 ##
 ############################################################
 
-xpred=log10(100*all_pred$super)
-xvar=as.factor(icd2sick(all_pred$main_condition)) # this function is found in auxiliary.R
+xpred=log10(100*all_pred$super); 
+reason1=icd2sick(all_pred$main_condition); xvar=as.factor(reason1) # this function is found in auxiliary.R
 xl0=levels(xvar)
 
 lscore0=xpred[which(all_pred$target==0)]
 d0=density(lscore0)
 xmed0=median(lscore0)
 
-lscorex=xpred[which(all_pred$target==1)]
-dx=density(lscorex)
-xmedx=median(lscorex)
-
+lscorex=xpred[which(all_pred$target==1)]; 
+lscored=xpred[which(all_pred$reason=="D")]; lscoreeb=xpred[which(all_pred$reason %in% c("E","B"))]; 
+dx=density(lscorex); dd=density(lscored); deb=density(lscoreeb)
+xmedx=median(lscorex); xmedd=median(lscored); xmedeb=median(lscoreeb)
 
 xmed=c(); dmax=c()
 for (i in 1:length(xl0)) {
@@ -1705,29 +1705,39 @@ pdf(paste0(plot_dir,"Analytics/disease_class_violin.pdf"),width=6,height=5)
 # lscore=c(0,0); lscore0=c(0,0)
 par(mar=c(8.1,4.1,4.1,2.1))
 dmax=0
-for (i in 1:length(xmed)) {
+for (i in c(1:length(xmed))) {
   dz=get(paste0("d",i))
   dmax=c(dmax,max(dz$y))
 }
+space1=4/3
+space2=1
+
 sc=0.3/max(dmax)
 
-plot(0,type="n",xlim=c(0,2+length(xl0)),ylim=c(0,2),bty="n",xaxt="n",yaxt="n",
-  xlab="",ylab="Score (%), log scale")
+plot(0,type="n",xlim=c(0,4*space1 + length(xmed)*space2),ylim=c(0,2),bty="n",xaxt="n",yaxt="n",
+     xlab="",ylab="Score (%), log scale")
 
-polygon(c(sc*d0$y,rev(-sc*d0$y))+1/3,c(d0$x,rev(d0$x)),col="red",border=NA)
-points(1/3,xmed0,pch=16)
-
-polygon(c(sc*dx$y,rev(-sc*dx$y))+5/3,c(dx$x,rev(dx$x)),col="red",border=NA)
-points(5/3,xmedx,pch=16)
+locs=c()
+for (i in 1:4) {
+  suff = c("0","x","eb","d")[i]
+  
+  d=get(paste0("d",suff))
+  m=get(paste0("xmed",suff))
+  polygon(c(sc*d$y,rev(-sc*d$y))+(i-0.5)*space1,c(d$x,rev(d$x)),col="red",border=NA)
+  points((i-0.5)*space1,m,pch=16)
+  locs=c(locs,(i-0.5)*space1)
+}
+ofs=(i+0.5)*space1
 
 ox=order(-xmed)
 for (i0 in 1:length(xl0)) {
   i=ox[i0]
   dz=get(paste0("d",i))
-  polygon(c(sc*dz$y,rev(-sc*dz$y))+i0+2,c(dz$x,rev(dz$x)),col="gray",border=NA)
-  points(i0+2,xmed[i],pch=16)
+  polygon(c(sc*dz$y,rev(-sc*dz$y))+ofs + (i0-0.5)*space2,c(dz$x,rev(dz$x)),col="gray",border=NA)
+  points(ofs + (i0-0.5)*space2,xmed[i],pch=16)
+  locs=c(locs,ofs + (i0-0.5)*space2)
 }
-axis(1,at=c(1/3,5/3,3:(2+length(xl0))),labels=c("Not admitted","All admitted",xl0[ox]),las=2,cex.axis=0.5)
+axis(1,at=locs,labels=c("No admission/death","All admitted/died","Admitted","Died",xl0[ox]),las=2,cex.axis=0.5)
 yp=pretty(c(0,2),n=5)
 axis(2,at=yp,labels=round((10^yp)),las=2,cex.axis=0.5)
 dev.off()
@@ -1737,10 +1747,20 @@ print(d0$x)
 cat("\n")
 print(d0$y)
 cat("\n\n")
-cat("All_admissions\n")
+cat("All_admissions_deaths\n")
 print(dx$x)
 cat("\n")
 print(dx$y)
+cat("\n\n")
+cat("All_admissions\n")
+print(deb$x)
+cat("\n")
+print(deb$y)
+cat("\n\n")
+cat("All_deaths\n")
+print(dd$x)
+cat("\n")
+print(dd$y)
 cat("\n\n")
 for (i in 1:length(xl0)) {
   cat(xl0[i],"\n")
@@ -1755,9 +1775,13 @@ print(xmed)
 cat(sink_marker)
 cat("d0="); dput(d0); cat("\n\n")
 cat("dx="); dput(dx); cat("\n\n")
+cat("deb="); dput(deb); cat("\n\n")
+cat("dd="); dput(dd); cat("\n\n")
 cat("xl0="); dput(xl0); cat("\n\n")
 cat("xmed0="); dput(xmed0); cat("\n\n")
 cat("xmedx="); dput(xmedx); cat("\n\n")
+cat("xmedeb="); dput(xmedeb); cat("\n\n")
+cat("xmedd="); dput(xmedd); cat("\n\n")
 for (i in 1:length(xl0)) {
   dx=get(paste0("d",i))
   cat(paste0("d",i,"=")); dput(dx); cat("\n\n")
