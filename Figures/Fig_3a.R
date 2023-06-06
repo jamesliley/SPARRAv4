@@ -127,13 +127,6 @@ ggsave("Figures/pdfs/Fig_3a3.pdf", p3ac,
        device = cairo_pdf)
 
 
-# CAV: Louis and I discussed that the y-axis can be a bit misleading
-# as it visually suggest a large difference, when it's not if we consider
-# the scale starting from zero. One potential solution would be to start
-# the y-axis at zero, and then generate a bottom sub-panel that shows the
-# difference in AUROC (similar to what was done in Figure 2).
-# Perhaps you could work on that?
-
 # past attempts
 labs = c()
 age_split = c(0, 20, 30, 40, 50, 60, 70, 80, 120)
@@ -188,8 +181,6 @@ p + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 # with the latter showing the AUC of each version in different colours
 
 ####
-library(ggplot2)
-
 labs = c()
 age_split = c(0, 20, 30, 40, 50, 60, 70, 80, 120)
 
