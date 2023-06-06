@@ -64,6 +64,7 @@ p3c1_min <-
   ) +
   #scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +  # Extend the y-axis to 1
   labs(x = "Cohort", y = "AUROC") +
+  guides(col = guide_legend(title = NULL)) +
   theme_bw() +
   theme(
     legend.position = "bottom",

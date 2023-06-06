@@ -60,6 +60,7 @@ p3b1_min <-
   scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
   # scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +
   labs(x = "SIMD", y = "AUROC") +
+  guides(col = guide_legend(title = NULL)) +
   theme_bw() +
   theme(
     legend.position = "bottom",

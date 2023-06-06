@@ -64,6 +64,7 @@ p3aa_min <-
   scale_x_continuous(breaks = 1:(length(age_labels)), labels = age_labels) +  # Set custom x-axis labels
   # Set y-axis to start from 0/for the original plot, use   scale_y_continuous(expand = c(0, 0), limits = c(min(plot_data$y)-0.1, 0.9)) +
   #scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +
+  guides(col = guide_legend(title = NULL)) +
   theme_bw() +
   theme(
     legend.position = "bottom",
