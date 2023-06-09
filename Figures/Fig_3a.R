@@ -54,26 +54,46 @@ plot_data <- data.frame(
   x = rep(1:(length(age_split)-1), each = 2)  # x-axis values for positioning each version
 )
 
+sd_values <- c(0.0008363494, 0.001016852, 0.0009855209, 0.0008637745, 0.0007508718, 0.0006955779, 0.0006557762, 0.0006895856,
+               0.0008486927, 0.001045860, 0.0010092724, 0.0008837348, 0.0007658613, 0.0007116656, 0.0006741307, 0.0007079138)
+
+# Update the plot_data dataframe
+plot_data$sd <- sd_values
+
+# Calculate the maximum label length of the three plots which will be combined
+max_label_length1 <- max(nchar(as.character(plot_data$auroc)))
+max_label_length2 <- max(nchar(as.character(plot_data$percentage_increase)))
+max_label_length3 <- max(nchar(as.character(diffs$y)))
+
+# Set the maximum label length (in inches) for both plots
+max_label_length <- max(max_label_length1, max_label_length2, max_label_length3) * 0.25  # Adjust the multiplier as needed
+
 # Set up the main plot
 p3aa_min <-
   ggplot(plot_data, aes(x = x, y = auroc, group = version)) +
   geom_point(shape = 18, size = 3, aes(col = version)) +  # Use versions as points
+  #geom_errorbar(aes(ymin = auroc - sd, ymax = auroc + sd), width = 0.2, col = "black") +
+  # create shaded areas representing the confidence intervals
+  geom_ribbon(aes(ymin = auroc - 3*sd, ymax = auroc + 3*sd), fill = "grey", alpha = 0.3) +
   xlab("Age Group") +
   ylab("AUROC") +
   scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
-  scale_x_continuous(breaks = 1:(length(age_labels)), labels = age_labels) +  # Set custom x-axis labels
-  # Set y-axis to start from 0/for the original plot, use   scale_y_continuous(expand = c(0, 0), limits = c(min(plot_data$y)-0.1, 0.9)) +
+  scale_x_continuous(minor_breaks = NULL, breaks = 1:(length(age_labels)), labels = age_labels) +  # Set custom x-axis labels +  # Set custom x-axis labels
+  # Set y-axis to start from 0
   #scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0.65, 0.80)) +
   guides(col = guide_legend(title = NULL)) +
+  coord_fixed(ratio = 1) + # Set aspect ratio to 1:1
   theme_bw() +
   theme(
-    legend.position = "bottom",
+    legend.position = "none",
     legend.title = element_blank(),
-    axis.text.x = element_text(angle = 45, hjust = 1),  # Display x-axis labels diagonally
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank()
+    axis.text.x = element_text(angle = 0, hjust = 1, size = 7),
+    #panel.grid.major.y = element_blank(),
+    #panel.grid.minor.y = element_blank(),
+    #panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank() # Remove vertical grid lines
   )
-
 
 # Set up subpanel
 plot_data$difference <- plot_data$auroc[plot_data$version == "V4"] -
@@ -107,11 +127,12 @@ p3ac <-
   ylab("Percentage Increase") +
   scale_fill_manual(values = c("V4" = "black", "V3" = "red")) +
   scale_x_discrete(labels = age_labels) +
+  coord_fixed(ratio = 1) + # Set aspect ratio to 1:1
   theme_bw() +
   theme(
     legend.position = "bottom",
     legend.title = element_blank(),
-    axis.text.x = element_text(angle = 45, hjust = 1)
+    axis.text.x = element_text(angle = 0, hjust = 1, size = 7)
   )
 
 ggsave("Figures/pdfs/Fig_3a1.pdf", p3aa_min,
@@ -210,7 +231,7 @@ df2 <- data.frame(
 
 diffs <- data.frame(
   x = (m0 + 2)*(-0.5 + 1:n0) - 0.5*(m0 + 2)/n0,
-  y = xrate,
+  y = round(xrate, 3),
   group = factor(rep(1, n0))
 )
 
@@ -233,7 +254,7 @@ p <- ggplot() +
   guides(linetype = FALSE, color = FALSE, fill = FALSE) +
   # annotate(geom = "text", x = n0*(m0 + 2) - floor(m0/2) - 1, y = perfmin,
   #          label = "EA frequency", hjust = 1, vjust = -0.5, size = 5) +
-  geom_col(data = diffs, aes(x = x, y = y, group = group), fill = "blue") + # add bottom sub-panel
+  geom_col(data = diffs, aes(x = x, y = y, group = group), fill = "red") + # add bottom sub-panel
   labs(subtitle = "Difference in AUROC")  # label the sub-panel
 
 p + theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -259,31 +280,45 @@ p1 <- ggplot() +
 
 # plot 2: frequency plot
 p2 <- ggplot(diffs, aes(x = x, y = y, group = group)) +
-  geom_col(color = "black", fill = "blue") +
+  geom_col(color = "black", fill = "red") +
   scale_x_continuous(limits = c(0, n0*(m0 + 2)),
                      breaks = (m0 + 2)*(1:n0) - floor(m0/2) - 1,
                      labels = labs) +
-  scale_y_continuous(limits = c(0, max(diffs$y)),
+  scale_y_continuous(limits = c(0, max(diffs$y) + 0.01),
                      breaks = seq(0, max(diffs$y), length.out = 5),
+                     labels = function(x) round(x, 2),
                      expand = expansion(mult = c(0.0000005, 0.00000005))) +
-  labs(x = "", y = "Frequency", title = "EA frequency by age band") +
-  theme_classic() +
+  labs(x = "Age Group", y = "EA Frequency") +
+  coord_fixed(ratio = 1) +  # Set aspect ratio to 1:1
+  theme_bw() +
   theme(
-    axis.line = element_line(size = 1),
-    axis.text = element_text(size = 8),
-    axis.title = element_text(size = 8, face = "bold"),
-    axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0)),
-    legend.position = "none",
-    panel.border = element_rect(colour = "black", fill = NA, size = 1),
-    panel.grid.major = element_line(colour = "grey", size = 0.5, linetype = "dotted"),
-    panel.grid.minor = element_line(colour = "grey", size = 0.5, linetype = "dotted"),
-    plot.background = element_rect(fill = "white"),
-    panel.background = element_rect(fill = "white"),
-    plot.title = element_text(hjust = 0.35)
+    axis.text.x = element_text(angle = 0, hjust = 1, size = 7)
   )
 
 # combine the plots vertically
 library(gridExtra)
-p3a <- grid.arrange(p1 + theme(axis.text.x = element_text(angle = 45, hjust = 1)),
-             p2 + theme(axis.text.x = element_text(angle = 45, hjust = 1)),
-             ncol = 1, heights = c(0.6, 0.4))
+install.packages("egg")
+library(egg)
+
+figure_width <- 6
+figure_height <- 6
+
+library(patchwork)
+
+# Enforce consistent figure size
+p3aa_min <- p3aa_min + theme(plot.margin = margin(1, 1, 1, 1, "cm"), aspect.ratio = figure_width / figure_height)
+p2 <- p2 + theme(plot.margin = margin(1, 1, 1, 1, "cm"), aspect.ratio = figure_width / figure_height)
+p3ac <- p3ac + theme(plot.margin = margin(1, 1, 1, 1, "cm"), aspect.ratio = figure_width / figure_height)
+
+p3a <- grid.arrange(p3aa_min, p3ac, p2, ncol = 1)
+plot_layout(p3a, ncol = 1, heights = c(10, 10, 10))
+
+# Adjust the width and height as needed
+#set_panel_size(width = 2, height = 2) # returns an error
+#grid.arrange(p3aa_min, p3ac, p2, ncol = 1, align = "v", axis = "lr", rel_heights = c(1, 1))
+# unit(1, "npc"), heights = unit(1, "npc")) , widths = c(4, 4, 4),  heights = c(4, 4, 4)
+ggsave("Figures/pdfs/Fig_3_comb.pdf", p3a,
+       #width = 8.5, height = 9, units = "cm",
+       width = 10.5, height = 10, units = "cm",
+       device = cairo_pdf)
+
