@@ -66,3 +66,9 @@ print(p)
 ggsave("Figures/pdfs/Fig_2a.pdf",
        width = 7.5, height = 7.25, units = "cm",
        device = cairo_pdf)
+
+# Create supplementary figure were we include max(v3,v4) in the comparison
+# re-run and plot p1, p2 without the line: filter(Model != "Max"))
+ggsave("Figures/pdfs/Fig_2a_max.pdf",
+       width = 7.5, height = 7.25, units = "cm",
+       device = cairo_pdf)
