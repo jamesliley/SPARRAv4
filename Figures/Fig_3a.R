@@ -60,40 +60,43 @@ sd_values <- c(0.0008363494, 0.001016852, 0.0009855209, 0.0008637745, 0.00075087
 # Update the plot_data dataframe
 plot_data$sd <- sd_values
 
-# Calculate the maximum label length of the three plots which will be combined
-max_label_length1 <- max(nchar(as.character(plot_data$auroc)))
-max_label_length2 <- max(nchar(as.character(plot_data$percentage_increase)))
-max_label_length3 <- max(nchar(as.character(diffs$y)))
+# # Calculate the maximum label length of the three plots which will be combined
+# max_label_length1 <- max(nchar(as.character(plot_data$auroc)))
+# max_label_length2 <- max(nchar(as.character(plot_data$percentage_increase)))
+# max_label_length3 <- max(nchar(as.character(diffs$y)))
+#
+# # Set the maximum label length (in inches) for both plots
+# max_label_length <- max(max_label_length1, max_label_length2, max_label_length3) * 0.25  # Adjust the multiplier as needed
+#
+# # Set up the main plot
+# # The errorbars overlapped, so use position_dodge to move them horizontally
+# pd <- position_dodge(0.1) # move them .05 to the left and right
 
-# Set the maximum label length (in inches) for both plots
-max_label_length <- max(max_label_length1, max_label_length2, max_label_length3) * 0.25  # Adjust the multiplier as needed
-
-# Set up the main plot
 p3aa_min <-
-  ggplot(plot_data, aes(x = x, y = auroc, group = version)) +
-  geom_point(shape = 18, size = 3, aes(col = version)) +  # Use versions as points
-  #geom_errorbar(aes(ymin = auroc - sd, ymax = auroc + sd), width = 0.2, col = "black") +
-  # create shaded areas representing the confidence intervals
-  geom_ribbon(aes(ymin = auroc - 3*sd, ymax = auroc + 3*sd), fill = "grey", alpha = 0.3) +
-  xlab("Age Group") +
-  ylab("AUROC") +
-  scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
-  scale_x_continuous(minor_breaks = NULL, breaks = 1:(length(age_labels)), labels = age_labels) +  # Set custom x-axis labels +  # Set custom x-axis labels
-  # Set y-axis to start from 0
-  #scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +
-  scale_y_continuous(expand = c(0, 0), limits = c(0.65, 0.80)) +
-  guides(col = guide_legend(title = NULL)) +
-  coord_fixed(ratio = 50) + # Set aspect ratio to 1:1
-  theme_bw() +
-  theme(
-    legend.position = "none",
-    legend.title = element_blank(),
-    axis.text.x = element_text(angle = 0, hjust = 1, size = 7),
-    #panel.grid.major.y = element_blank(),
-    #panel.grid.minor.y = element_blank(),
-    #panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank() # Remove vertical grid lines
-  )
+    ggplot(plot_data, aes(x = x, y = auroc, group = version)) +
+    geom_point(shape = 18, size = 2, aes(col = version)) +  # Use versions as points
+  #geom_linerange(aes(ymin = auroc - 3*sd, ymax = auroc + 3*sd), position = position_dodge(width = 0.5), col = "black") +
+  #geom_errorbarh(aes(xmin = auroc - 3*sd, xmax = auroc + 3*sd), height = 0.2, col = "black") +  #geom_errorbar(aes(ymin = auroc - sd, ymax = auroc + sd), width = 0.2, col = "black") +
+    geom_errorbar(aes(ymin = auroc - 3*sd, ymax = auroc + 3*sd, col = version), width = 0.2, size = 0.4) + # position = position_dodge(width = 1)
+    #geom_errorbarh(aes(xmin = auroc - 3*sd, xmax = auroc + 3*sd), height = 0.2) +
+    xlab("Age Group") +
+    ylab("AUROC") +
+    scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
+    scale_x_continuous(minor_breaks = NULL, breaks = 1:(length(age_labels)), labels = age_labels) +  # Set custom x-axis labels +  # Set custom x-axis labels
+    # Set y-axis to start from 0
+    #scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +
+    scale_y_continuous(expand = c(0, 0), limits = c(0.68, 0.79)) +
+    guides(col = guide_legend(title = NULL)) +
+    coord_fixed(ratio = 100) + # Set aspect ratio to 1:1
+    theme_bw() +
+    theme(
+      legend.position = "none",
+      legend.title = element_blank(),
+      axis.text.x = element_text(angle = 0, hjust = 1, size = 7),
+      panel.grid.major.y = element_blank(),
+      panel.grid.minor.y = element_blank(),
+      panel.grid.minor.x = element_blank() # Remove vertical grid lines
+    )
 
 # Set up subpanel
 plot_data$difference <- plot_data$auroc[plot_data$version == "V4"] -
@@ -108,6 +111,7 @@ p3ab <-
   #scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
   scale_x_discrete(labels = age_labels) +
   coord_fixed(ratio = 500) +
+  #coord_equal()+
   theme_bw() +
   theme(
     legend.position = "bottom",
@@ -123,7 +127,7 @@ plot_data$percentage_increase <- ((plot_data$auroc[plot_data$version == "V4"] / 
 # Create the plot
 p3ac <-
   ggplot(plot_data, aes(x = age_group, y = percentage_increase)) +
-  geom_bar(stat = "identity", position = "dodge") +
+  geom_bar(stat = "identity", position = "dodge", width = 0.5) +
   xlab("Age Group") +
   ylab("Percentage Increase") +
   scale_fill_manual(values = c("V4" = "black", "V3" = "red")) +
@@ -133,6 +137,9 @@ p3ac <-
   theme(
     legend.position = "bottom",
     legend.title = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.minor.x = element_blank(),
     axis.text.x = element_text(angle = 0, hjust = 1, size = 7)
   )
 
@@ -248,10 +255,14 @@ p <- ggplot() +
                      breaks = seq(0, max(perf), length = 4)) + # start y-axis at zero
   labs(x = "", y = "AUROC", title = "ROC and EA frequency by age band") +
   theme_classic() +
-  theme(axis.line = element_blank(),
-        axis.text = element_text(size = 12),
-        axis.title = element_text(size = 14, face = "bold"),
-        legend.position = "bottomright") +
+  theme(
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.line = element_blank(),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 14, face = "bold"),
+    legend.position = "bottomright") +
   guides(linetype = FALSE, color = FALSE, fill = FALSE) +
   # annotate(geom = "text", x = n0*(m0 + 2) - floor(m0/2) - 1, y = perfmin,
   #          label = "EA frequency", hjust = 1, vjust = -0.5, size = 5) +
@@ -281,7 +292,8 @@ p1 <- ggplot() +
 
 # plot 2: frequency plot
 p2 <- ggplot(diffs, aes(x = x, y = y, group = group)) +
-  geom_col(color = "black", fill = "red") +
+  geom_bar(stat = "identity", position = "dodge", width = 0.5) +
+  #geom_col(color = "black", fill = "red") +
   scale_x_continuous(limits = c(0, n0*(m0 + 2)),
                      breaks = (m0 + 2)*(1:n0) - floor(m0/2) - 1 ,
                      labels = labs) +
@@ -293,6 +305,9 @@ p2 <- ggplot(diffs, aes(x = x, y = y, group = group)) +
   coord_fixed(ratio = 100) +  # Set aspect ratio to 1:1
   theme_bw() +
   theme(
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.minor.x = element_blank(),
     axis.text.x = element_text(angle = 0, hjust = 1, size = 7)
   )
 
