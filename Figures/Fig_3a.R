@@ -83,7 +83,7 @@ p3aa_min <-
   #scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0.65, 0.80)) +
   guides(col = guide_legend(title = NULL)) +
-  coord_fixed(ratio = 1) + # Set aspect ratio to 1:1
+  coord_fixed(ratio = 50) + # Set aspect ratio to 1:1
   theme_bw() +
   theme(
     legend.position = "none",
@@ -107,11 +107,12 @@ p3ab <-
   ylab("Difference in AUC") +
   #scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
   scale_x_discrete(labels = age_labels) +
+  coord_fixed(ratio = 500) +
   theme_bw() +
   theme(
     legend.position = "bottom",
     legend.title = element_blank(),
-    axis.text.x = element_text(angle = 45, hjust = 1)
+    axis.text.x = element_text(angle = 0, hjust = 1, size = 7)
   )
 
 ###
@@ -127,7 +128,7 @@ p3ac <-
   ylab("Percentage Increase") +
   scale_fill_manual(values = c("V4" = "black", "V3" = "red")) +
   scale_x_discrete(labels = age_labels) +
-  coord_fixed(ratio = 1) + # Set aspect ratio to 1:1
+  coord_fixed(ratio = 1.5) + # Set aspect ratio to 1:1
   theme_bw() +
   theme(
     legend.position = "bottom",
@@ -282,18 +283,26 @@ p1 <- ggplot() +
 p2 <- ggplot(diffs, aes(x = x, y = y, group = group)) +
   geom_col(color = "black", fill = "red") +
   scale_x_continuous(limits = c(0, n0*(m0 + 2)),
-                     breaks = (m0 + 2)*(1:n0) - floor(m0/2) - 1,
+                     breaks = (m0 + 2)*(1:n0) - floor(m0/2) - 1 ,
                      labels = labs) +
   scale_y_continuous(limits = c(0, max(diffs$y) + 0.01),
                      breaks = seq(0, max(diffs$y), length.out = 5),
                      labels = function(x) round(x, 2),
                      expand = expansion(mult = c(0.0000005, 0.00000005))) +
   labs(x = "Age Group", y = "EA Frequency") +
-  coord_fixed(ratio = 1) +  # Set aspect ratio to 1:1
+  coord_fixed(ratio = 100) +  # Set aspect ratio to 1:1
   theme_bw() +
   theme(
     axis.text.x = element_text(angle = 0, hjust = 1, size = 7)
   )
+
+
+ggsave("Figures/pdfs/Fig_3a4.pdf", p2,
+       width = 8.5, height = 9, units = "cm",
+       device = cairo_pdf)
+
+
+
 
 # combine the plots vertically
 library(gridExtra)
