@@ -66,7 +66,7 @@ p3c1 <-
     #expand = c(0, 0), limits = c(0, 15),  # Adjust the expand argument to extend the x-axis limits
     position = "bottom"
   ) +
-  scale_y_continuous(expand = c(0, 0), limits = c(0.71, 0.81)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0.68, 0.81)) +
   labs(x = "Cohort", y = "AUROC") +
   guides(col = guide_legend(title = NULL)) +
   coord_fixed(ratio = 60) +
@@ -147,3 +147,37 @@ ggsave("Figures/pdfs/Fig_3c.pdf", p3c,
        width = 10, height = 20, units = "cm",
        device = cairo_pdf)
 
+
+
+p3 <- ggarrange( p3a1 + theme(axis.text.x = element_blank(),
+                              axis.ticks.x = element_blank(),
+                              axis.title.x = element_blank(),
+                              plot.margin = margin(t = 0.5, r = 0.2, b = 0, l = 0.2, unit = "cm")),
+                 p3b1 + theme(axis.text.x = element_blank(),
+                              axis.ticks.x = element_blank(),
+                              axis.title.x = element_blank(),
+                              plot.margin = margin(t = 0.5, r = 0.2, b = 0, l = 0.2, unit = "cm")),
+                 p3c1 + theme(axis.text.x = element_blank(),
+                              axis.ticks.x = element_blank(),
+                              axis.title.x = element_blank(),
+                              plot.margin = margin(t = 0.5, r = 0.2, b = 0, l = 0.2, unit = "cm")),
+                 p3a2 + theme(axis.text.x = element_blank(),
+                              axis.ticks.x = element_blank(),
+                              axis.title.x = element_blank(),
+                              plot.margin = margin(t = 0, r = 0.2, b = 0, l = 0.2, unit = "cm")),
+                 p3b2 + theme(axis.text.x = element_blank(),
+                              axis.ticks.x = element_blank(),
+                              axis.title.x = element_blank(),
+                              plot.margin = margin(t = 0, r = 0.2, b = 0, l = 0.2, unit = "cm")),
+                 p3c2 + theme(axis.text.x = element_blank(),
+                              axis.ticks.x = element_blank(),
+                              axis.title.x = element_blank(),
+                              plot.margin = margin(t = 0, r = 0.2, b = 0, l = 0.2, unit = "cm")),
+                 p3a3 + theme(plot.margin = margin(t = 0, r = 0.2, l = 0.2, unit = "cm")),
+                 p3b3 + theme(plot.margin = margin(t = 0, r = 0.2, l = 0.2, unit = "cm")),
+                 p3c3 + theme(plot.margin = margin(t = 0, r = 0.2, l = 0.2, unit = "cm")),
+                 nrow = 3)
+
+ggsave("Figures/pdfs/Fig_3.pdf", p3,
+       width = 30, height = 30, units = "cm",
+       device = cairo_pdf)

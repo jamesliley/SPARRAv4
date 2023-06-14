@@ -62,7 +62,7 @@ p3b1 <-
   scale_x_discrete(labels = labs) + # breaks = (m0 + 2) * (1:n0) - floor(m0 / 2) - 1,
   #scale_y_continuous(expand = c(0, 0), limits = c(min(plot_data$y)-0.1, 0.9)) +
   scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
-  scale_y_continuous(expand = c(0, 0), limits = c(0.71, 0.81)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0.68, 0.81)) +
   labs(x = "SIMD", y = "AUROC") +
   guides(col = guide_legend(title = NULL)) +
   coord_fixed(ratio = 60) +
@@ -141,6 +141,6 @@ p3b <- ggarrange( p3b1 + theme(axis.text.x = element_blank(),
                   nrow = 3)
 
 ggsave("Figures/pdfs/Fig_3b.pdf", p3b,
-       width = 10, height = 20, units = "cm",
+       width = 35, height = 30, units = "cm",
        device = cairo_pdf)
 

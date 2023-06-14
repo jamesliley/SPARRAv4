@@ -36,7 +36,7 @@ p3a1 <-
     #scale_x_continuous(minor_breaks = NULL, breaks = 1:(length(age_labels)), labels = age_labels) +  # Set custom x-axis labels +  # Set custom x-axis labels
     # Set y-axis to start from 0
     #scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +
-    scale_y_continuous(expand = c(0, 0), limits = c(0.68, 0.79)) +
+    scale_y_continuous(expand = c(0, 0), limits = c(0.68, 0.81)) +
     guides(col = guide_legend(title = NULL)) +
     coord_fixed(ratio = 60) + # Set aspect ratio to 1:1
     theme_bw() +
