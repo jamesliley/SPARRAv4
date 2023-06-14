@@ -62,7 +62,7 @@ p3b1 <-
   scale_x_discrete(labels = labs) + # breaks = (m0 + 2) * (1:n0) - floor(m0 / 2) - 1,
   #scale_y_continuous(expand = c(0, 0), limits = c(min(plot_data$y)-0.1, 0.9)) +
   scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
-  scale_y_continuous(expand = c(0, 0), limits = c(0.76, 0.81)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0.71, 0.81)) +
   labs(x = "SIMD", y = "AUROC") +
   guides(col = guide_legend(title = NULL)) +
   coord_fixed(ratio = 60) +
