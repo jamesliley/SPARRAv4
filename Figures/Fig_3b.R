@@ -55,92 +55,69 @@ sd_values <- c(0.0006950962, 0.0007206066, 0.0007468640, 0.0007848581, 0.0007990
   0.0007128243, 0.0007392061, 0.0007657252, 0.0008038775, 0.0008194903, 0.0008559886, 0.0008828196, 0.0009234900, 0.0009403307, 0.0010172065)
 plot_data$sd <- sd_values
 # Set up the plot
-p3b1_min <-
+p3b1 <-
   ggplot(plot_data, aes(x = x, y = y, group = version)) +
   geom_point(shape = 18, size = 2, aes(col = version)) +
   geom_errorbar(aes(ymin = y - 3*sd, ymax = y + 3*sd, col = version), width = 0.2, size = 0.4) + # position = position_dodge(width = 1)
-  scale_x_discrete(breaks = (m0 + 2) * (1:n0) - floor(m0 / 2) - 1, labels = labs) +
+  scale_x_discrete(labels = labs) + # breaks = (m0 + 2) * (1:n0) - floor(m0 / 2) - 1,
   #scale_y_continuous(expand = c(0, 0), limits = c(min(plot_data$y)-0.1, 0.9)) +
   scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
-  # scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0.76, 0.81)) +
   labs(x = "SIMD", y = "AUROC") +
   guides(col = guide_legend(title = NULL)) +
-  coord_fixed(ratio = 200) +
+  coord_fixed(ratio = 60) +
   theme_bw() +
   theme(
     legend.position = "none",
-    axis.text.x = element_text(angle = 0, hjust = 1, size = 7),
+    legend.title = element_blank(),
+    axis.text.x = element_text(size = 8),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank()
   )
 
 
-ggsave("Figures/pdfs/Fig_3b1.pdf", p3b1_min,
+ggsave("Figures/pdfs/Fig_3b1.pdf", p3b1,
        width = 8.5, height = 9, units = "cm",
        device = cairo_pdf)
 
-p3b1_zero <-
-  ggplot(plot_data, aes(x = x, y = y, group = version)) +
-  geom_point(shape = 18, size = 3, aes(col = version)) +
-  scale_x_discrete(breaks = (m0 + 2) * (1:n0) - floor(m0 / 2) - 1, labels = labs) +
-  #scale_y_continuous(expand = c(0, 0), limits = c(min(plot_data$y)-0.1, 0.9)) +
-  scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +
-  labs(x = "SIMD", y = "AUROC") +
-  theme_bw() +
-  theme(
-    legend.position = "bottom",
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank()
-  )
 
-# ggsave("Figures/pdfs/Fig_3b1.pdf", p3b1_zero,
-#        width = 8.5, height = 9, units = "cm",
-#        device = cairo_pdf)
-
-
-# difference in AUC
-plot_data <- data.frame(
-  x = factor(rep((m0 + 2) * (1:n0) - floor(m0 / 2) - 1, each = 1)),
-  y = c(perf[1:m0, ], perf[1:m0, ]),
-  group = factor(rep(1:n0, each = m0)),
-  version = rep(c("V4", "V3"), times = n0)
+plot_data2 <- data.frame(
+  simd = factor(seq_len(ncol(perf))),
+  difference = plot_data$y[plot_data$version == "V4"] -
+    plot_data$y[plot_data$version == "V3"],
+  percentage_increase = ((plot_data$y[plot_data$version == "V4"] / plot_data$y[plot_data$version == "V3"]) - 1) * 100,
+  prop_events = xrate
 )
 
-plot_data$difference <- plot_data$y[plot_data$version == "V4"] -
-  plot_data$y[plot_data$version == "V3"]
-
-# Set up the plot
+# create a plot that shows the AUC differences as a percentage increase (v4 vs v3)
 p3b2 <-
-  ggplot(plot_data, aes(x= x, y = difference)) +
-  geom_point(shape = 18, size = 3) +
-  scale_x_discrete(labels = labs) +
+  ggplot(plot_data2, aes(x = simd, y = percentage_increase)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.5) +
   xlab("SIMD") +
-  ylab("Difference in AUC") +
+  ylab("% increase") +
+  scale_fill_manual(values = c("V4" = "black", "V3" = "red")) +
+  scale_x_discrete(labels = labs) +
+  coord_fixed(ratio = 0.5) + # Set aspect ratio to 1:1
   theme_bw() +
   theme(
     legend.position = "bottom",
     legend.title = element_blank(),
-    axis.text.x = element_text(angle = 45, hjust = 1)
-  )
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    axis.text.x = element_text(size = 8)
+  ) +
+  ylim(0, 4.4)
 
-ggsave("Figures/pdfs/Fig_3b2.pdf", p3b2,
-       width = 8.5, height = 9, units = "cm",
-       device = cairo_pdf)
-
-
-
-# Percentage increase
-plot_data$percentage_increase <- ((plot_data$y[plot_data$version == "V4"] / plot_data$y[plot_data$version == "V3"]) - 1) * 100
-
-
+# create a plot that shows the AUC differences as a percentage increase (v4 vs v3)
 p3b3 <-
-  ggplot(plot_data, aes(x = x, y = percentage_increase)) +
+  ggplot(plot_data2, aes(x = simd, y = prop_events)) +
   geom_bar(stat = "identity", position = "dodge", width = 0.5) +
   xlab("SIMD") +
-  ylab("Percentage Increase") +
+  ylab("% events") +
+  scale_fill_manual(values = c("V4" = "black", "V3" = "red")) +
   scale_x_discrete(labels = labs) +
+  coord_fixed(ratio = 7) + # Set aspect ratio to 1:1
   theme_bw() +
   theme(
     legend.position = "bottom",
@@ -148,43 +125,22 @@ p3b3 <-
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
     panel.grid.minor.x = element_blank(),
-    axis.text.x = element_text(angle = 0, hjust = 1, size = 7)
-  )
+    axis.text.x = element_text(size = 8)
+  ) +
+  ylim(0, 0.33)
 
+p3b <- ggarrange( p3b1 + theme(axis.text.x = element_blank(),
+                               axis.ticks.x = element_blank(),
+                               axis.title.x = element_blank(),
+                               plot.margin = margin(t = 0.5, r = 0.2, b = 0, l = 0.2, unit = "cm")),
+                  p3b2 + theme(axis.text.x = element_blank(),
+                               axis.ticks.x = element_blank(),
+                               axis.title.x = element_blank(),
+                               plot.margin = margin(t = 0, r = 0.2, b = 0, l = 0.2, unit = "cm")),
+                  p3b3 + theme(plot.margin = margin(t = 0, r = 0.2, l = 0.2, unit = "cm")),
+                  nrow = 3)
 
-ggsave("Figures/pdfs/Fig_3b3.pdf", p3b3,
-       width = 8.5, height = 9, units = "cm",
-       device = cairo_pdf)
-
-
-diffs <- data.frame(
-  x = (m0 + 2)*(-0.5 + 1:n0) - 0.5*(m0 + 2)/n0,
-  y = round(xrate, 3),
-  group = factor(rep(1, n0))
-)
-
-freq <- ggplot(diffs, aes(x = x, y = y, group = group)) +
-  geom_bar(stat = "identity", position = "dodge", width = 0.5) +
-  #geom_bar(stat = "identity", color = "black", fill = "red") +
-  scale_x_continuous(limits = c(0, n0*(m0 + 2)),
-                     breaks = (m0 + 2)*(1:n0) - floor(m0/2) - 1 ,
-                     labels = labs) +
-  scale_y_continuous(limits = c(0, max(diffs$y) + 0.01),
-                     breaks = seq(0, max(diffs$y), length.out = 5),
-                     labels = function(x) round(x, 2),
-                     expand = expansion(mult = c(0.0000005, 0.00000005))) +
-  labs(x = "Cohort", y = "EA Frequency") +
-  coord_fixed(ratio = 300) +  # Set aspect ratio to 1:1
-  theme_bw() +
-  theme(
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    axis.text.x = element_text(angle = 0, hjust = 1, size = 7)
-  )
-
-
-ggsave("Figures/pdfs/Fig_3b4.pdf", freq,
-       width = 8.5, height = 9, units = "cm",
+ggsave("Figures/pdfs/Fig_3b.pdf", p3b,
+       width = 10, height = 20, units = "cm",
        device = cairo_pdf)
 
