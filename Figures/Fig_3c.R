@@ -147,20 +147,21 @@ ggsave("Figures/pdfs/Fig_3c.pdf", p3c,
        width = 10, height = 20, units = "cm",
        device = cairo_pdf)
 
-
+# Set the height ratios
+heights <- c(2, 1, 1)  # Specify the heights of each row
 
 p3 <- ggarrange( p3a1 + theme(axis.text.x = element_blank(),
                               axis.ticks.x = element_blank(),
                               axis.title.x = element_blank(),
-                              plot.margin = margin(t = 0.5, r = 0.2, b = 0, l = 0.2, unit = "cm")),
+                              plot.margin = margin(t = 0.2, r = 0.2, b = 0, l = 0.2, unit = "cm")),
                  p3b1 + theme(axis.text.x = element_blank(),
                               axis.ticks.x = element_blank(),
                               axis.title.x = element_blank(),
-                              plot.margin = margin(t = 0.5, r = 0.2, b = 0, l = 0.2, unit = "cm")),
+                              plot.margin = margin(t = 0.2, r = 0.2, b = 0, l = 0.2, unit = "cm")),
                  p3c1 + theme(axis.text.x = element_blank(),
                               axis.ticks.x = element_blank(),
                               axis.title.x = element_blank(),
-                              plot.margin = margin(t = 0.5, r = 0.2, b = 0, l = 0.2, unit = "cm")),
+                              plot.margin = margin(t = 0.2, r = 0.2, b = 0, l = 0.2, unit = "cm")),
                  p3a2 + theme(axis.text.x = element_blank(),
                               axis.ticks.x = element_blank(),
                               axis.title.x = element_blank(),
@@ -176,8 +177,9 @@ p3 <- ggarrange( p3a1 + theme(axis.text.x = element_blank(),
                  p3a3 + theme(plot.margin = margin(t = 0, r = 0.2, l = 0.2, unit = "cm")),
                  p3b3 + theme(plot.margin = margin(t = 0, r = 0.2, l = 0.2, unit = "cm")),
                  p3c3 + theme(plot.margin = margin(t = 0, r = 0.2, l = 0.2, unit = "cm")),
-                 nrow = 3)
+                 nrow = 3, heights=heights)
+
 
 ggsave("Figures/pdfs/Fig_3.pdf", p3,
-       width = 30, height = 30, units = "cm",
+       width = 35, height = 30, units = "cm",
        device = cairo_pdf)
