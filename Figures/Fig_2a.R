@@ -4,11 +4,7 @@ library("patchwork")
 source("Figures/util.R") # for import_sparra_expr()
 source("SPARRAv4/auxiliary.R") # for roc_2panel()
 
-
-
 eval(import_sparra_expr("Analysis/full_model/Performance/v4_final/roc_max.txt"))
-
-
 
 # Old Figure 2(a)
 auc3=signif(xroc3$auc[4],digits=3); se3=signif(xroc3$se[4],digits=2);
@@ -64,11 +60,5 @@ p <- p1 / p2 + plot_layout(heights = c(3,1))
 print(p)
 
 ggsave("Figures/pdfs/Fig_2a.pdf",
-       width = 7.5, height = 7.25, units = "cm",
-       device = cairo_pdf)
-
-# Create supplementary figure were we include max(v3,v4) in the comparison
-# re-run and plot p1, p2 without the line: filter(Model != "Max"))
-ggsave("Figures/pdfs/Fig_2a_max.pdf",
        width = 7.5, height = 7.25, units = "cm",
        device = cairo_pdf)
