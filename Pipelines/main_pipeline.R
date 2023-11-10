@@ -1,25 +1,25 @@
-######################################################
-## Code to generate constituent models for super-   ##
+# ******************************************************
+## Code to generate constituent models for super-   ####
 ##  learner, given a fully constructed data matrix, ##
 ##  and run all principal analyses used for paper.  ##
-######################################################
+# ******************************************************
 ##
 ## James Liley, 2020
 ##
 
 
-######################################################
-## Directories, packages and scripts                ##
-######################################################
+# ******************************************************
+## Directories, packages and scripts                ####
+# ******************************************************
 
 # Working directory and location (windows or linux machine)
-if (file.exists("C:/Users/jliley_1718-0370/Documents")) {
+if (file.exists("")) { ########################## REDACTED
 	location="Windows"
-	setwd("//farr-fs1/Study Data/1718-0370/Research/Code/")
+	setwd("")  ########################## REDACTED
 } else {
 	location="Linux"
-	setwd("/Study_Data/Research/Code")
-}
+	setwd("")  ########################## REDACTED
+ }
 
 # Scripts
 lx=list.files("James/SPARRAv4/",pattern="*.R",full.names=TRUE)
@@ -60,9 +60,9 @@ options(width=1e4)
 
 
 
-######################################################
-## File paths for data matrices and models          ##
-######################################################
+# ******************************************************
+## File paths for data matrices and models          ####
+# ******************************************************
 
 
 loc1=paste0(model_dir,"models_cv/model_fold1") # Model for prediction on fold 1 stored in various files {loc1}.RDS, {loc1}.pred.RDS, {loc1}.model..
@@ -79,18 +79,18 @@ output1_notopic=paste0(loc1_notopic,".output")
 
 
 
-######################################################
-## Ensure determinacy                               ##
-######################################################
+# ******************************************************
+## Ensure determinacy                               ####
+# ******************************************************
 
 seed=220
 set.seed(seed)
 
 
 
-######################################################
-## Collect predictions, type and time of events     ##
-######################################################
+# ******************************************************
+## Collect predictions, type and time of events     ####
+# ******************************************************
 
 all_pred_file=paste0(out_dir,"all_pred.RDS")
 if (!file.exists(all_pred_file)) {
@@ -116,7 +116,7 @@ if (!file.exists(all_pred_file)) {
   pred1_notopic=readRDS(paste0(output1_notopic,".RDS"))
   
   
-  ## Collect predictions from various constituents and super-learner
+  #### Collect predictions from various constituents and super-learner
   cpred=grep("pred.",names(pred1),value=T)
   all_pred=data.frame(matrix(0,dim(nhs)[1],length(cpred)+1))
   colnames(all_pred)=c(cpred,"super")
@@ -129,12 +129,12 @@ if (!file.exists(all_pred_file)) {
     all_pred$super[w]=get(paste0("pred",i))$final.full
   }
   
-  ## Collect predictions from super-learner for predictor with no topic features
+  #### Collect predictions from super-learner for predictor with no topic features
   all_pred$super_notopic=rep(NA,dim(all_pred)[1])
   w1=which (nhs$cv==1)
   all_pred$super_notopic[w1]=pred1_notopic$final.full
   
-  ## Affix various other useful data
+  #### Affix various other useful data
   all_pred=cbind(id=nhs$id,cv=patients$cv[match(nhs$id,patients$id)],
                  time=as.numeric(nhs$time),
                  cv=nhs$cv,
@@ -223,13 +223,13 @@ if (exists("patients")) rm(list=c("patients","episodes","list_of_data_tables"))
 
 
 
-######################################################################################
-######################################################################################
-## Topic inclusion. The following scripts compare performance of models fitted to   ##
+# **************************************************************************************
+# **************************************************************************************
+## Topic inclusion. The following scripts compare performance of models fitted to   ####
 ##  design matrices which either contain or do not contain topic-model derived      ##
 ##  features.                                                                       ##
-######################################################################################
-######################################################################################
+# **************************************************************************************
+# **************************************************************************************
 
 # Relevant data; subset of rows of all_pred corresponding to fold 1
 sub1=which(all_pred$cv==1)
@@ -431,12 +431,12 @@ print(wilcox.test(caldif_t,caldif_nt))
 sink()
 
 
-######################################################################################
-######################################################################################
-## Admission causes. Proportion of 'admissions' which were actually deaths in each  ##
+# **************************************************************************************
+# **************************************************************************************
+## Admission causes. Proportion of 'admissions' which were actually deaths in each  ####
 ##  age group                                                                       ##
-######################################################################################
-######################################################################################
+# **************************************************************************************
+# **************************************************************************************
 
 # Age cutoffs: aggregate groups
 age_cuts=c(0,5,20 + 5*(0:14))
@@ -471,7 +471,6 @@ n_tot[which(n_tot<5)]=0
 n_d[which(n_d<5)]=0
 n_b[which(n_b<5)]=0
 
-
 # Column and row names
 rownames(n_tot)=c(paste0(age_cuts[1:(dim(n_tot)[1]-1)],"_",age_cuts[2:dim(n_tot)[1]]),">90"); 
 colnames(n_tot)=paste0("SIMD",1:10)
@@ -484,7 +483,7 @@ colnames(n_b)=paste0("SIMD",1:10)
 nt=rowSums(n_tot)[1:amax]
 nd=rowSums(n_d)[1:amax]
 nb=rowSums(n_b)[1:amax]
-x=(c(age_cuts,100)+c(0,age_cuts))[2:(amax+1)]/2
+x=2.5 + 5*(0:(amax-1))
 
 # General plot
 pdf(paste0(plot_dir,"Analytics/admission_type_by_age_cumulative.pdf"),width=5,height=5)
@@ -510,8 +509,6 @@ sink()
 
 
 
-
-
 # Breakdown by low/high SIMD
 nt3=cbind(rowSums(n_tot[,1:3]),rowSums(n_tot[,4:7]),rowSums(n_tot[,8:10]))[1:amax,]
 nd3=cbind(rowSums(n_d[,1:3]),rowSums(n_d[,4:7]),rowSums(n_d[,8:10]))[1:amax,]
@@ -525,23 +522,22 @@ for (i in 1:3) {
   #  lines(x,((nb3+nd3)/nt3)[,i],col="red",lty=i)
 }
 legend("topleft",c("SIMD 1-3","SIMD 4-7","SIMD 8-10",
-                   "Death","Both"),
+                    "Death","Both"),
        ncol=1,col=c(rep("black",3),"black","red"),lty=c(1:3,NA,NA),pch=c(rep(NA,3),"|","|"))
 dev.off()
 
 
-
-######################################################################################
-######################################################################################
-## Performance. The following scripts evaluate the performance of SPARRAv4 and      ##
+# **************************************************************************************
+# **************************************************************************************
+## Performance. The following scripts evaluate the performance of SPARRAv4 and      ####
 ##  compare it against SPARRAv3.                                                    ##
-######################################################################################
-######################################################################################
+# **************************************************************************************
+# **************************************************************************************
 
 
-######################################################
-## Generate matrices for each constituent predictor ##
-######################################################
+# ******************************************************
+## Generate matrices for each constituent predictor ####
+# ******************************************************
 
 prednames=grep("pred.",colnames(all_pred),value=TRUE)
 for (i in 1:length(prednames)) {
@@ -576,9 +572,9 @@ longprednames=case_when(
 
 
 
-######################################################
-## Draw ROC and CAL plots for each predictor        ##
-######################################################
+# ******************************************************
+## Draw ROC and CAL plots for each predictor        ####
+# ******************************************************
 
 # Note - predictors include RECONSTRUCTED v3 but not ACTUAL v3. Comparison with v3 is done later, and can't be compared directly with these, since some samples don't have a valid v3 score.
 
@@ -714,9 +710,9 @@ sink()
 
 
 
-######################################################
-## Draw performance plots combined                  ##
-######################################################
+# ******************************************************
+## Draw performance plots combined                  ####
+# ******************************************************
 
 pdf(paste0(plot_dir,"Performance/constituent_predictors/roc_all.pdf"),width=6,height=7)
 xroc0=getroc(super.pred$target,super.pred$risk_score)
@@ -822,9 +818,9 @@ sink()
 
 
 
-######################################################
-## Maximum of v3 and v4                             ##
-######################################################
+# ******************************************************
+## Maximum of v3 and v4                             ####
+# ******************************************************
 
 # We will compare with v3 and v4
 target=(all_pred$target==max(all_pred$target))
@@ -976,9 +972,9 @@ sink()
 
 
 
-######################################################
-## Density plot v3 vs v4                            ##
-######################################################
+# ******************************************************
+## Density plot v3 vs v4                            ####
+# ******************************************************
 
 # Kernel density estimates normalised to unit diagonal
 xcol=colorRampPalette(c("white","darkgray","red","yellow"))(100)
@@ -1074,9 +1070,9 @@ sink()
 
 
 
-######################################################
-## SPARRA v3 vs v4 in various subcohorts            ##
-######################################################
+# ******************************************************
+## SPARRA v3 vs v4 in various subcohorts            ####
+# ******************************************************
 
 super=all_pred$super
 v3=all_pred$v3
@@ -1087,8 +1083,8 @@ times=sort(unique(all_pred$time))
   
 ### Definition of some subcohorts
 subcohorts=list(
-  which(all_pred$age>80), ### High risk: age >80
-  which(all_pred$age>20 & all_pred$age<70 & all_pred$ae2<1), ### Low risk: age 20-70, no previous A&E admissions
+  which(all_pred$age>80), ##### High risk: age >80
+  which(all_pred$age>20 & all_pred$age<70 & all_pred$ae2<1), ##### Low risk: age 20-70, no previous A&E admissions
   setdiff(1:dim(all_pred)[1],c(which(all_pred$age>80),which(all_pred$age>20 & all_pred$age<70 & all_pred$ae2<1))), # complement of previous two
   which(all_pred$time==times[1]), # final year
   which(all_pred$time==times[2]), # middle year
@@ -1226,9 +1222,9 @@ sink()
 
 
 
-######################################################
-## SPARRA v3 vs v4 - other plots                    ##
-######################################################
+# ******************************************************
+## SPARRA v3 vs v4 - other plots                    ####
+# ******************************************************
 
 super=all_pred$super
 v3=all_pred$v3
@@ -1419,16 +1415,16 @@ sink()
 
 
 
-######################################################################################
-######################################################################################
-## Analytics. The following scripts assess the behaviour of SPARRAv4 in terms of    ##
+# **************************************************************************************
+# **************************************************************************************
+## Analytics. The following scripts assess the behaviour of SPARRAv4 in terms of    ####
 ##  patient sub-cohorts.                                                            ##
-######################################################################################
-######################################################################################
+# **************************************************************************************
+# **************************************************************************************
 
-######################################################
-## Distribution of times-to-first-event             ##
-######################################################
+# ******************************************************
+## Distribution of times-to-first-event             ####
+# ******************************************************
 
 xpred=all_pred$super
 xvec=all_pred$time_to_first_event
@@ -1483,9 +1479,9 @@ sink()
 
 
 
-######################################################
-## Distribution of number of events                 ##
-######################################################
+# ******************************************************
+## Distribution of number of events                 ####
+# ******************************************************
 
 xpred=all_pred$super
 xvar=all_pred$n_event
@@ -1544,9 +1540,9 @@ sink()
 
 
 
-######################################################
-## Distribution of times-to-only-event              ##
-######################################################
+# ******************************************************
+## Distribution of times-to-only-event              ####
+# ******************************************************
 
 
 # As for plot of time-to-first-event, but this time only including patients with one admission.
@@ -1605,9 +1601,9 @@ sink()
 
 
 
-######################################################
-## Accuracy of predictions by diagnostic class      ##
-######################################################
+# ******************************************************
+## Accuracy of predictions by diagnostic class      ####
+# ******************************************************
 
 xpred=all_pred$super
 xvar=as.factor(icd2sick(all_pred$main_condition)) # this function is found in auxiliary.R
@@ -1673,9 +1669,9 @@ cat("xfreq="); dput(xfreq); cat("\n\n")
 sink()
 
 
-############################################################
-## Distribution of predictions across admittees by type 1 ##
-############################################################
+# **********************************************************##
+## Distribution of predictions across admittees by type 1 ####
+# **********************************************************##
 
 xpred=log10(100*all_pred$super); 
 reason1=icd2sick(all_pred$main_condition); xvar=as.factor(reason1) # this function is found in auxiliary.R
@@ -1715,12 +1711,12 @@ space2=1
 sc=0.3/max(dmax)
 
 plot(0,type="n",xlim=c(0,4*space1 + length(xmed)*space2),ylim=c(0,2),bty="n",xaxt="n",yaxt="n",
-     xlab="",ylab="Score (%), log scale")
+  xlab="",ylab="Score (%), log scale")
 
 locs=c()
 for (i in 1:4) {
   suff = c("0","x","eb","d")[i]
-  
+
   d=get(paste0("d",suff))
   m=get(paste0("xmed",suff))
   polygon(c(sc*d$y,rev(-sc*d$y))+(i-0.5)*space1,c(d$x,rev(d$x)),col="red",border=NA)
@@ -1728,7 +1724,7 @@ for (i in 1:4) {
   locs=c(locs,(i-0.5)*space1)
 }
 ofs=(i+0.5)*space1
-
+  
 ox=order(-xmed)
 for (i0 in 1:length(xl0)) {
   i=ox[i0]
@@ -1791,9 +1787,9 @@ sink()
 
 
 
-######################################################
-## Accuracy of predictions by diag. cl., PPV scale  ##
-######################################################
+# ******************************************************
+## Accuracy of predictions by diag. cl., PPV scale  ####
+# ******************************************************
 
 xpred=all_pred$super
 xvar=as.factor(icd2sick(all_pred$main_condition)) # this function is found in auxiliary.R
@@ -1850,9 +1846,9 @@ sink()
 
 
 
-######################################################
-## Accuracy of predictions by admission type        ##
-######################################################
+# ******************************************************
+## Accuracy of predictions by admission type        ####
+# ******************************************************
 
 xpred=all_pred$super
 xvar=as.factor(adcode2lit(all_pred$admission_type)) # this function is found in auxiliary.R
@@ -1907,9 +1903,9 @@ cat("xfreq="); dput(xfreq); cat("\n\n")
 sink()
 
 
-######################################################
-## Predictive power in various patient cohorts      ##
-######################################################
+# ******************************************************
+## Predictive power in various patient cohorts      ####
+# ******************************************************
 
 # Age
 age_split=c(0,20,30,40,50,60,70,80,120)
@@ -2053,7 +2049,10 @@ p3=getroc(all_pred$target[sub],all_pred$v3[sub])
 perf=cbind(perf,c(psp$auc,p3$auc,psp$se,p3$se))
 xrate=c(xrate,sum(all_pred$target[sub])/length(sub))
 
-
+# Row and column names
+colnames(perf)=c("FEC","LTC","YED","U16")
+rownames(perf)=c("v4_auc","v3_auc","v4_se","v3_se")
+names(xrate)=colnames(perf)
 
 ## All of YED are in LTC_YED so this is unnecessary
 #sub=which(v3c == "LTC_YED")
@@ -2062,10 +2061,6 @@ xrate=c(xrate,sum(all_pred$target[sub])/length(sub))
 #perf=cbind(perf,c(psp$auc,p3$auc,psp$se,p3$se))
 #xrate=c(xrate,sum(all_pred$target[sub])/length(sub))
 
-# Row and column names
-colnames(perf)=c("FEC","LTC","YED","U16")
-rownames(perf)=c("v4_auc","v3_auc","v4_se","v3_se")
-names(xrate)=colnames(perf)
 
 
 # 
@@ -2106,20 +2101,133 @@ sink()
 
 
 
+# **********************************************************************
+## Conservation of super-learner coefficients in v3 subcohorts      ####
+# **********************************************************************
+
+library(pROC)
+
+# v3c as above indicates v3 cohort.
+chts=unique(v3c)
+
+# Columns containing constituent predictors
+csub=grep("pred.",colnames(all_pred),val=TRUE) 
+
+# Loop through cohorts
+acname="James/Analysis/Data/full_model/alternative_coefficients.RData"
+if (!file.exists(acname)) {
+  xtab=c()
+  for (cvf in 1:3) {
+    
+    # Get full model fitted to fold, and SL coefficients
+    g_i=readRDS(paste0("James/Analysis/Data/full_model/models_cv/model_fold",cvf,".RDS"))$slfit
+    coef_i=g_i$glmnet.fit$beta[,which.min(abs(g_i$lambda-g_i$lambda.min))]
+    
+    # Store in xtab
+    xtab=cbind(xtab,c(coef_i,rep(NA,13)))
+    
+    for (cht in chts) {
+      w=which(v3c==cht & all_pred$cv!=cvf) # Training indices
+      wt=which(v3c==cht & all_pred$cv==cvf) # Testing indices
+      
+      # Fit penalised regression model to other folds
+      m_cht=cv.glmnet(as.matrix(all_pred[w,csub]),
+                      as.matrix(all_pred$target[w]),
+                      family = "binomial",
+                      type.measure = "auc",
+                      weights= rep(1,length(w)))
+      mcoef=m_cht$glmnet.fit$beta[,which.min(abs(m_cht$lambda-m_cht$lambda.min))]
+      
+      # Assess prediction on this fold
+      ypred_new=predict(m_cht,
+                        as.matrix(all_pred[wt,csub]),
+                        type="response",
+                        s="lambda.min")[,1]
+
+      # Find best performing sub-model
+      ytt=all_pred$target[w]
+      xperf=rep(0,length(csub))
+      for (i in 1:length(csub)) {
+        ypredsub=all_pred[w,csub[i]] # Predictions from model i
+        roci=roc(ytt,ypredsub)
+        xperf[i]=roci$auc
+      }
+      rbest=rank(-xperf)
+      cbest=csub[which(rbest==1)]  # best model
+      cbest2=csub[which(rbest==2)] # second-best model
+      ypred_best=all_pred[wt,cbest]
+      
+      # Target
+      ytarget=all_pred$target[wt]
+      
+      # Predictions from notopic super-learner, best model only, and general super-learner
+      if (cvf==1) ypred_notopic=all_pred$super_notopic[wt] else ypred_notopic=rep(NA,length(wt))
+      ypred_old=all_pred$super[wt]
+      
+      
+      # Assess ROC
+      r_best=roc(ytarget,ypred_best)
+      if (cvf==1) r_notopic=roc(ytarget,ypred_notopic)
+      if (cvf==1) auc_notopic=r_notopic$auc else auc_notopic=NA
+      r_old=roc(ytarget,ypred_old)
+      r_new=roc(ytarget,ypred_new)
+      
+      # SEs of AUROC
+      se_best=aucse(sum(ytarget),sum(1-ytarget),r_best$auc)
+      if (cvf==1) se_notopic=aucse(sum(ytarget),sum(1-ytarget),r_notopic$auc) else se_notopic=NA
+      se_old=aucse(sum(ytarget),sum(1-ytarget),r_old$auc)
+      se_new=aucse(sum(ytarget),sum(1-ytarget),r_new$auc)
+      
+      # Compare aucs
+      r_comp_bestvsum=roc.test(r_best,r_old)
+      if (cvf==1) p_comp_notopic=roc.test(r_notopic,r_old)$p.value else p_comp_notopic=NA
+      r_comp=roc.test(r_old,r_new)
+      
+      # Store answer
+      xtab=cbind(xtab,c(mcoef,
+                        which(rbest==1),which(rbest==2),
+                        r_best$auc,se_best,
+                        auc_notopic,se_notopic,
+                        r_old$auc,se_old,
+                        r_new$auc,se_new,
+                        r_comp_bestvsum$p.value,
+                        p_comp_notopic,r_comp$p.value))
+      
+      print(c(cvf,cht))
+    }
+  }
+  rownames(xtab)=c(gsub("pred.","",csub),
+                   "Best_model","Best2_model",
+                   "AUC_best","SE_best",
+                   "AUC_notopic","SE_notopic",
+                   "AUC_old","SE_AUC_old",
+                   "AUC_new","SE_AUC_new",
+                   "PVAL_best_vs_sum","PVAL_notopic_vs_topic","PVAL_old_v_new")
+  colnames(xtab)=as.vector(t(outer(1:3,c("All",chts),function(i,j) 
+    paste0("Fold",i,"_",j))))
+  save(xtab,file=acname)
+} else load(acname)
+
+
+sink(paste0(plot_dir,"Description/coefficient_conservation.txt"))
+cat(xtab)
+cat(sink_marker)
+cat("xtab="); dput(xtab); cat("\n\n")
+sink()
 
 
 
 
-######################################################################################
-######################################################################################
-## Shapley values. The following scripts analyse individual contributions to risk   ##
+# **************************************************************************************
+# **************************************************************************************
+## Shapley values. The following scripts analyse individual contributions to risk   ####
 ##  in SPARRAv4 and overall variable importance using Shapley values.               ##
-######################################################################################
-######################################################################################
+# **************************************************************************************
+# **************************************************************************************
 
-######################################################################################
-## Read in data. These are generated in estimate_shapley_values.R                   ##
-######################################################################################
+# **************************************************************************************
+## Read in data. These are generated in estimate_shapley_values.R                   ####
+# **************************************************************************************
 
 # Fold 1
 shapleyx=readRDS(file=paste0("James/Analysis/Data/full_model/shapley_values.RDS"))
@@ -2139,9 +2247,9 @@ if ("MASS" %in% (.packages())) detach("package:MASS",unload=TRUE)
 
 
 
-######################################################################################
-## Variable importance                                                              ##
-######################################################################################
+# **************************************************************************************
+## Variable importance                                                              ####
+# **************************************************************************************
 
 vx=colMeans(abs(shapley %>% select(-"v3score")),na.rm=T)
 names(vx)=colnames(shapley %>% select(-"v3score"))
@@ -2169,9 +2277,9 @@ sink()
 
 
 
-######################################################################################
-## Age vs Shapley value for age                                                     ##
-######################################################################################
+# **************************************************************************************
+## Age vs Shapley value for age                                                     ####
+# **************************************************************************************
 
 library(MASS)
 
@@ -2269,9 +2377,9 @@ sink()
 
 
 
-######################################################################################
-## SIMD vs Shapley value for SIMD                                                   ##
-######################################################################################
+# **************************************************************************************
+## SIMD vs Shapley value for SIMD                                                   ####
+# **************************************************************************************
 
 rcex=3 # range expansion 
 dbw=0.0003 # bandwidth for KDE: must be wide enough for anonymisation
@@ -2321,9 +2429,9 @@ cat("dxy="); dput(dxy); cat("\n\n")
 sink()
 
 
-######################################################################################
-## Age SIMD equivalents                                                             ##
-######################################################################################
+# **************************************************************************************
+## Age SIMD equivalents                                                             ####
+# **************************************************************************************
 
 dsimd=mx[1]-mx[10]
 ytd=rev(cummin(rev(ytrue))) 
@@ -2353,9 +2461,9 @@ sink()
 
 
 
-######################################################################################
-## N adm vs Shapley value for N adm                                                 ##
-######################################################################################
+# **************************************************************************************
+## N adm vs Shapley value for N adm                                                 ####
+# **************************************************************************************
 
 rcex=3 # range expansion 
 dbw=0.001 # bandwidth for KDE: must be wide enough for anonymisation
@@ -2444,9 +2552,9 @@ cat("dxy2="); dput(dxy2); cat("\n\n")
 sink()
 
 
-######################################################################################
-## SIMD x Age vs Shapley value for age                                              ##
-######################################################################################
+# **************************************************************************************
+## SIMD x Age vs Shapley value for age                                              ####
+# **************************************************************************************
 
 library(MASS)
 
@@ -2510,9 +2618,9 @@ sink()
 
 
 
-######################################################################################
-## Direct effect of age and SIMD on admission rate                                  ##
-######################################################################################
+# **************************************************************************************
+## Direct effect of age and SIMD on admission rate                                  ####
+# **************************************************************************************
 
 xx=seq(2,80); nn=xx; yy=xx; 
 ysimd=matrix(0,length(xx),10); nsimd=ysimd
@@ -2551,9 +2659,9 @@ sink()
 
 
 
-######################################################################################
-## Equivalent ages for different SIMD deciles                                       ##
-######################################################################################
+# **************************************************************************************
+## Equivalent ages for different SIMD deciles                                       ####
+# **************************************************************************************
 
 yeq=0*ysimd
 ydsimd=ysimd
@@ -2582,9 +2690,9 @@ cat("yeq="); dput(yeq); cat("\n\n")
 sink()
 
 
-######################################################################################
-## All Shapley value plots                                                          ##
-######################################################################################
+# **************************************************************************************
+## All Shapley value plots                                                          ####
+# **************************************************************************************
 
 for (ii in 1:dim(shapley)[2]) {# ,which(colnames(shapley) %in% c("target","v3score")))) {
 
@@ -2720,9 +2828,9 @@ sink()
 }
 
 
-######################################################################################
-## Topic analysis                                                                   ##
-######################################################################################
+# **************************************************************************************
+## Topic analysis                                                                   ####
+# **************************************************************************************
 
 # Need to look at fold 1 only
 T1=readRDS(paste0(model_dir,"topic_model_fit_fold_23.rds"))
@@ -2828,7 +2936,7 @@ assign(paste0("topic_summary",f),topic_summary)
 
 }
 
-sink(paste0(plot_dir,"Shapley_values/topic_breakdown.txt"))
+sink(paste0(plot_dir,"Description/topic_breakdown.txt"))
 cat("topic_summary1="); dput(topic_summary1); cat("\n\n")
 cat("topic_summary2="); dput(topic_summary2); cat("\n\n")
 cat("topic_summary3="); dput(topic_summary3); cat("\n\n")
@@ -2837,11 +2945,73 @@ sink()
 
 
 
-######################################################################################
-######################################################################################
-## Miscellaneous                                                                    ##
-######################################################################################
-######################################################################################
+# **************************************************************************************
+## Specific topic example                                                           ####
+# **************************************************************************************
+
+# Look at a specific topic which has lots of high Shapley values, and what it is contributing.
+
+# Find which topics have high Shapley values: specifically which have more than 20 individuals with SV>0.02
+min_shap=0.02 # Minimum Shapley value 
+min_n=20 # At least this many times
+st=shapley[,grep("^topic_",colnames(shapley),fixed=FALSE)]
+p2=apply(st,2,function(x) length(which(abs(x)>min_shap)))
+w=which(p2>min_n)
+w1=names(which.max(p2))
+
+# Identify ID/times associated with these individuals in main dataset. Only look at first time cutoff.
+wm=which(shapley[[w1]]>min_shap)
+idx=xpred$id[wm]
+timex=xpred$time[wm]
+idtx=paste0(idx,"_",as.numeric(timex))
+dshap=shapley[[w1]][wm]
+# Find v3 and v4 scores
+aps0=all_pred[which(all_pred$id %in% idx),]
+idt=paste0(aps0$id,"_",aps0$time)
+aps=aps0[which(idt %in% idtx),]
+dv3=aps$v3
+dv4=aps$super
+dy=aps$target
+
+# Summarise
+npt=100 # Number of points: need at least 5 in each bin.
+cal3=plotcal(dy,dv3,n=npt,kernel=TRUE,plot = FALSE)
+cal4=plotcal(dy,dv4,n=npt,kernel=TRUE,plot = FALSE)
+t43=t.test(dv4,dv3)
+
+
+
+sink(paste0(plot_dir,"Description/topic_specific.txt"))
+cat("Total_patients=",dim(shapley)[1],"\n\n")
+cat("Topic name='",w1,"'\n\n")
+cat("N_samples=",length(wm),"\n\n")
+cat("shap_threshold=",min_shap,"\n\n")
+cat("t_test_v4_v3="); dput(t43); cat("\n\n")
+cat("mean_y",mean(dy),"\n\n")
+cat("cal3="); dput(cal3); cat("\n\n")
+cat("cal4="); dput(cal4); cat("\n\n")
+sink()
+
+
+
+cat("topic_summary1="); dput(topic_summary1); cat("\n\n")
+cat("topic_summary2="); dput(topic_summary2); cat("\n\n")
+cat("topic_summary3="); dput(topic_summary3); cat("\n\n")
+sink()
+
+
+
+# Amongst an essentially random sample of 20000 individual/time pairs, >70 had an absolute SV >0.02 for topic 21. 
+
+
+
+
+
+# **************************************************************************************
+# **************************************************************************************
+## Miscellaneous                                                                    ####
+# **************************************************************************************
+# **************************************************************************************
 
 if ("MASS" %in% (.packages())) detach("package:MASS",unload=TRUE)
 load_cleanData(partition = "all",
@@ -2962,6 +3132,56 @@ fullmatrix=paste0("James/Analysis/Data/full_model/full_data_matrix.RDS")
 nhs=readRDS(fullmatrix)
 exclusions_file=paste0("James/Analysis/Data/full_model/design_exclusions.RData")
 load(exclusions_file)
+
+# Table of admissions/deaths in excluded individuals
+xtab=c()
+exclude_death=which(is.na(nhs$target))
+exclude_v3=which(is.na(nhs$v3score))
+exclude_simd=which(!(nhs$SIMD_DECILE_2016_SCT %in% 1:10))
+exclude_list=which(nhs$id %in% read.csv(paste0("../../Linked Data/Unmatched_UPIs_without_UPI.csv.gz"))$UNIQUE_STUDY_ID)
+wlist=list("Death"=exclude_death,
+        "v3"=exclude_v3,
+        "SIMD"=exclude_simd,
+        "Unmatched"=exclude_list,
+        "Death_v3"=intersect(exclude_death,exclude_v3),
+        "Death_SIMD"=intersect(exclude_death,exclude_simd),
+        "Death_Unmatched"=intersect(exclude_death,exclude_list),
+        "v3_SIMD"=intersect(exclude_v3,exclude_simd),
+        "v3_Unmatched"=intersect(exclude_v3,exclude_list),
+        "SIMD_Unmatched"=intersect(exclude_simd,exclude_list),
+        "Death_v3_SIMD"=intersect(intersect(exclude_death,exclude_v3),exclude_simd),
+        "Death_v3_Unmatched"=intersect(intersect(exclude_death,exclude_v3),exclude_list),
+        "Death_SIMD_Unmatched"=intersect(intersect(exclude_death,exclude_simd),exclude_list),
+        "v3_SIMD_Unmatched"=intersect(intersect(exclude_v3,exclude_simd),exclude_list),
+        "All"=intersect(intersect(exclude_death,exclude_v3),intersect(exclude_simd,exclude_list)),
+        "Excluded"=union(union(exclude_death,exclude_v3),union(exclude_simd,exclude_list)),
+        "Included"=setdiff(1:dim(nhs)[1],union(union(exclude_death,exclude_v3),union(exclude_simd,exclude_list))))
+for (i in 1:length(wlist)) {
+  xt=nhs$reason[wlist[[i]]]
+  vec=c(length(wlist[[i]]),length(which(xt=="E")),length(which(xt=="D")),length(which(xt=="B")))
+  xtab=rbind(xtab,vec)
+}
+rownames(xtab)=names(wlist)
+colnames(xtab)=c("Total","Admitted_only","Died","Both")
+xtab[which(xtab<5)]=0 # Security: note
+
+sink(paste0(plot_dir,"Description/exclusion_admissions_table.txt"))
+cat(xtab)
+cat(sink_marker)
+cat("xtab="); dput(xtab); cat("\n\n")
+sink()
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Generate table of demographics
 xtab=c()
@@ -3087,7 +3307,6 @@ cat("\n\n")
 cat("Number of unique individuals amongst non-admissions/non-deaths\n")
 cat(length(unique(all_pred$id[which(all_pred$target==FALSE)])))
 cat("\n\n")
-
 sink()
 
 

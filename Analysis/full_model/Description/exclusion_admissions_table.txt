@@ -1,0 +1,35 @@
+                        Total Admitted_only  Died   Both
+Death                  585322             0     0      0
+v3                    4528514        121857  6036   3011
+SIMD                   199746         12688   151    263
+Unmatched               13524           526     0      0
+Death_v3               585089             0     0      0
+Death_SIMD               1258             0     0      0
+Death_Unmatched             0             0     0      0
+v3_SIMD                112992          6648    48    110
+v3_Unmatched             6468           179     0      0
+SIMD_Unmatched            303            20     0      0
+Death_v3_SIMD            1258             0     0      0
+Death_v3_Unmatched          0             0     0      0
+Death_SIMD_Unmatched        0             0     0      0
+v3_SIMD_Unmatched         258            17     0      0
+All                         0             0     0      0
+Excluded              4622512        128241  6139   3166
+Included             12866084        977159 57183 107827
+
+
+
+***************
+
+xtab=structure(c(585322, 4528514, 199746, 13524, 585089, 1258, 0, 
+112992, 6468, 303, 1258, 0, 0, 258, 0, 4622512, 12866084, 0, 
+121857, 12688, 526, 0, 0, 0, 6648, 179, 20, 0, 0, 0, 17, 0, 128241, 
+977159, 0, 6036, 151, 0, 0, 0, 0, 48, 0, 0, 0, 0, 0, 0, 0, 6139, 
+57183, 0, 3011, 263, 0, 0, 0, 0, 110, 0, 0, 0, 0, 0, 0, 0, 3166, 
+107827), dim = c(17L, 4L), dimnames = list(c("Death", "v3", "SIMD", 
+"Unmatched", "Death_v3", "Death_SIMD", "Death_Unmatched", "v3_SIMD", 
+"v3_Unmatched", "SIMD_Unmatched", "Death_v3_SIMD", "Death_v3_Unmatched", 
+"Death_SIMD_Unmatched", "v3_SIMD_Unmatched", "All", "Excluded", 
+"Included"), c("Total", "Admitted_only", "Died", "Both")))
+
+
