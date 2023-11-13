@@ -1,6 +1,6 @@
 # Pipelines/main_pipeline.R
 source("Figures/util.R") # for import_sparra_expr()
-plot_dir="~/SPARRAv4/Analysis/full_model/"
+plot_dir="Analysis/full_model/"
 
 eval(import_sparra_expr(paste0(plot_dir,"Analytics/performance_by_v3_cohort.txt")))
 

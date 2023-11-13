@@ -1,8 +1,8 @@
 # Pipelines/main_pipeline.R
 source("Figures/util.R") # for import_sparra_expr()
-plot_dir="~/SPARRAv4/Analysis/full_model/"
+plot_dir="Analysis/full_model/"
 ## If running from loaded data, first run
-lscore=c(0,0); lscore0=c(0,0)
+lscore=c(0,0); lscore0=c(0,0); lscoreeb=c(0,0); lscored=c(0,0)
 eval(import_sparra_expr(paste0(plot_dir,"Analytics/disease_class_violin.txt")))
 
 # old code
@@ -19,10 +19,10 @@ sc=0.3/max(dmax)
 plot(0,type="n",xlim=c(0,2+length(xl0)),ylim=c(0,2),bty="n",xaxt="n",yaxt="n",
      xlab="",ylab="Score (%), log scale")
 
-polygon(c(sc*d0$y,rev(-sc*d0$y))+1/3,c(d0$x,rev(d0$x)),col="red",border=NA)
+polygon(c(sc*d0$y,rev(-sc*d0$y))+1/3,c(d0$x,rev(d0$x)),col="blue",border=NA)
 points(1/3,xmed0,pch=16)
 
-polygon(c(sc*dx$y,rev(-sc*dx$y))+5/3,c(dx$x,rev(dx$x)),col="red",border=NA)
+polygon(c(sc*dx$y,rev(-sc*dx$y))+5/3,c(dx$x,rev(dx$x)),col="blue",border=NA)
 points(5/3,xmedx,pch=16)
 
 ox=order(-xmed)
