@@ -1,6 +1,6 @@
 
 # Pipelines/time_attenuation.R
-plot_dir="~/SPARRAv4/Analysis/time_attenuation/"
+plot_dir="Analysis/time_attenuation/"
 
 source("Figures/util.R") # for import_sparra_expr()
 

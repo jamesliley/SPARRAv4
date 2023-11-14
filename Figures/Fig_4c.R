@@ -44,7 +44,7 @@ test_times=c(
 ## code to generate the new plot
 ntx <- length(test_times)
 
-# Calibration curves for each time point
+# Calibration curves for each time cutoff
 cals <- list(cx1, cx2, cx3, cx4, cx5)
 
 # Generate colors
@@ -69,7 +69,7 @@ cal_plot <- ggplot(df, aes(x = x, y = y, color = Time, linetype = Time)) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray")
 
 # Differences in lower panel
-# Define the reference time point
+# Define the reference time cutoff
 ref_time <- 1
 
 # Calculate the differences between each calibration curve and the reference curve

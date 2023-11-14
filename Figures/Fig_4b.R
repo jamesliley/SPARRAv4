@@ -33,7 +33,7 @@ test_times=c(
   dmy_hm("1-12-2016 00:00"),
   dmy_hm("1-5-2017 00:00")
 )
-# Number of time points
+# Number of time cutoffs
 ntx=5
 pdf(paste0(plot_dir,"cohort/drift/drift_prc.pdf"),width=3,height=3.5)
 prc_2panel(list(px1,px2,px3,px4,px5),labels=as.character(test_times),
@@ -41,7 +41,7 @@ prc_2panel(list(px1,px2,px3,px4,px5),labels=as.character(test_times),
 dev.off()
 
 ## new code
-# PRC curves for each time point
+# PRC curves for each time cutoff
 prc <- list(px1, px2, px3, px4, px5)
 
 # Generate colors

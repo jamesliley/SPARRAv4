@@ -33,21 +33,21 @@ test_times=c(
   dmy_hm("1-12-2016 00:00"),
   dmy_hm("1-5-2017 00:00")
 )
-# Number of time points
+# Number of time cutoffs
 ntx=5
 
-## ROC curves for predictor at various time points
+## ROC curves for predictor at various time cutoffs
 pdf(paste0(plot_dir,"cohort/drift/drift_roc.pdf"),width=3,height=3.5)
 roc_2panel(list(xy1,xy2,xy3,xy4,xy5),labels=as.character(test_times),col=gray(((1:ntx)-1)/(1.3*ntx)))
 dev.off()
 
-# use ggplot2 to create ROC curves for a predictor at various time points
+# use ggplot2 to create ROC curves for a predictor at various time cutoffs
 
 # The following code uses the default colours in ggplot2.
 # It also creates the lower panel with the differences wrt to the curve
-# corresponding to the first time point
+# corresponding to the first time cutoff
 
-# ROC curves for each time point
+# ROC curves for each time cutoff
 rocs <- list(xy1, xy2, xy3, xy4, xy5)
 
 # Generate colors
