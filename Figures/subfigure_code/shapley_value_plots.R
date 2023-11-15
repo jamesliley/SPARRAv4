@@ -63,8 +63,8 @@ for (i in 1:length(lx)) {
   par(mar=c(7,4.1,4.1,2.1))
   plot(0,type="n",xlim=range(x0),ylim=yvar,main=longvarnames(xname),xaxt="n",
        xlab="",ylab="Shapley value") # note fixed ylim
-  lines(x0,mx,lty=2,col="red")
-  segments(x0,mx-sdx,x0,mx+sdx,col="red")
+  lines(x0,mx,lty=2,col="red",lwd=2)
+  segments(x0,mx-sdx,x0,mx+sdx,col="red",lwd=2)
   points(x0,mx,pch=16,col="red")
   axis(1,at=x0,labels=lab,las=2)
   abline(h=0,lty=2)

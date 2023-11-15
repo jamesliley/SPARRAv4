@@ -16,8 +16,8 @@ for (i in 0:10) abline(h=i/10,col="lightgray",lty=2)
 axis(1,labels=c(expression("t"[1]),expression("t"[2]),expression("t"[3]),expression("t"[4]),expression("t"[5])),
      at=1:length(test_times))
 nquant=dim(qmat)[1]
-for (i in 1:nquant) lines(1:ntx,qmat[i,],col="lightblue",lty=1)
-for (i in 1:10) lines(1:ntx,qmat[round(nquant*i/10),],col="blue",lty=1)
+for (i in 1:nquant) lines(1:ntx,qmat[i,],col="lightblue",lty=1,lwd=2)
+for (i in 1:10) lines(1:ntx,qmat[round(nquant*i/10),],col="blue",lty=1,lwd=2)
 dev.off()
 
 
@@ -36,6 +36,6 @@ plot(0,type="n",xlim=c(1,ntx),ylim=c(0,0.05+max(qmatc)),
 for (i in 0:10) abline(h=i/10,col="lightgray",lty=2)
 axis(1,labels=c(expression("t"[1]),expression("t"[2]),expression("t"[3]),expression("t"[4]),expression("t"[5])),
      at=1:length(test_times))
-for (i in 1:nquant) lines(1:ntx,qmatc[i,],col="lightblue",lty=1)
-for (i in 1:10) lines(1:ntx,qmatc[round(nquant*i/10),],col="blue",lty=1)
+for (i in 1:nquant) lines(1:ntx,qmatc[i,],col="lightblue",lty=1,lwd=2)
+for (i in 1:10) lines(1:ntx,qmatc[round(nquant*i/10),],col="blue",lty=1,lwd=2)
 dev.off()

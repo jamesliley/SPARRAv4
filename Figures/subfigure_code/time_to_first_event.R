@@ -23,6 +23,6 @@ for (i in 1:xmax) lines(get(paste0("d",i)),col=gcol[i],lty=1,lwd=2)
 lines(d0,col="blue",lwd=2)
 
 legend("topright",lty=1,lwd=2,col=c(gcol[1],"white",gcol[xmax],"blue"),
-       c(expression(paste(hat(P),"(EA)>0.1")),"...",bquote(paste(hat(P),"(EA)>",.(xmax/10))),"All"))
+       c("v4 > 0.1","...","v4 > 0.8","All"))
 
 dev.off()

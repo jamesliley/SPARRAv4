@@ -30,7 +30,7 @@ p3a1 <-
     ggplot(plot_data, aes(x = age, y = auroc, group = version)) +
     geom_point(shape = 18, size = 2, aes(col = version)) +  # Use versions as points
     geom_errorbar(aes(ymin = auroc - 3*sd, ymax = auroc + 3*sd, col = version),
-                  width = 0.2, linewidth = 0.4) + # position = position_dodge(width = 1)
+                  width = 0.2, linewidth = 1) + # position = position_dodge(width = 1)
     xlab("Age group") +
     ylab("AUROC") +
     scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
@@ -157,7 +157,7 @@ plot_data$sd <- sd_values
 p3b1 <-
   ggplot(plot_data, aes(x = x, y = y, group = version)) +
   geom_point(shape = 18, size = 2, aes(col = version)) +
-  geom_errorbar(aes(ymin = y - 3*sd, ymax = y + 3*sd, col = version), width = 0.2, size = 0.4) + # position = position_dodge(width = 1)
+  geom_errorbar(aes(ymin = y - 3*sd, ymax = y + 3*sd, col = version), width = 0.2, linewidth=1, size = 0.4) + # position = position_dodge(width = 1)
   scale_x_discrete(labels = labs) + # breaks = (m0 + 2) * (1:n0) - floor(m0 / 2) - 1,
   #scale_y_continuous(expand = c(0, 0), limits = c(min(plot_data$y)-0.1, 0.9)) +
   scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
@@ -272,7 +272,7 @@ plot_data$se <- se
 p3c1 <-
   ggplot(plot_data, aes(x = x, y = y, group = version)) +
   geom_point(aes(color = version), shape = 18, size = 2) +
-  geom_errorbar(aes(ymin = y - 3*se, ymax = y + 3*se, col = version), width = 0.2, size = 0.4) + # position = position_dodge(width = 1)
+  geom_errorbar(aes(ymin = y - 3*se, ymax = y + 3*se, col = version), width = 0.2, linewidth=1,size = 0.4) + # position = position_dodge(width = 1)
   
   scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
   scale_x_discrete(
