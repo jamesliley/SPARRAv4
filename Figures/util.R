@@ -4,6 +4,9 @@ import_sparra_expr <- function(f) {
   parse(text = strsplit(gsub("\r", "", f2), sink_marker, fixed = TRUE)[[1]][2])
 }
 
+
+
+
 ##' build_diff
 ##' Prepares a data frame for a ggplot object to compare differences using linear interpolation.
 ##' 
@@ -32,10 +35,11 @@ build_diff = function(df, xvar) {
     df2=rbind(df2,d0)
   }
   colnames(df2)=c("Model",xvar,xnames)
-  df2$Model=factor(df2$Model)
+  df2$Model=factor(df2$Model,levels=models)
   
   return(df2)
 }
+
 
 
 ### Dumped from fairness package
@@ -102,7 +106,7 @@ roc_2panel_gg=function(rocs,labels=names(rocs),col=1:length(rocs),
   p2 = ggplot(df2) + 
     geom_path(aes(x = .data$spec, y = .data$dsens, col = .data$Model), linewidth = 0.4) +
     xlim(0, 1) + 
-    xlab("Recall") + ylab(expression(paste(Delta," Sensitivity"))) +
+    xlab("1 - Specificity") + ylab(expression(paste(Delta," Sensitivity"))) +
     theme_minimal(base_size = 8) + theme(legend.position = "none")
   
   
@@ -298,7 +302,7 @@ cal_2panel_gg=function(cals,labels,col=1:length(cals),
                                                 ymax = .data$du,fill=.data$Model),alpha = 0.25)
   p2 = p2 +  geom_path(aes(x = .data$obs, y = .data$dexp,col=.data$Model), linewidth = 0.4) +
     xlim(0, 1) + 
-    xlab("Expected") + ylab(expression(paste(Delta," Expected"))) +
+    xlab("Expected") + ylab(expression(paste(Delta," from calibrated"))) +
     theme_minimal(base_size = 8) + theme(legend.position = "none")
   
   
@@ -335,7 +339,4 @@ cal_2panel_gg=function(cals,labels,col=1:length(cals),
   suppressWarnings(print(p))
   invisible(p)
 }  
-
-
-
 

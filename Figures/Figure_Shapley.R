@@ -8,6 +8,4 @@ file.copy("Figures/pdfs/Unsorted/age_effect.pdf",ff,overwrite=TRUE)
 file.copy("Figures/pdfs/Unsorted/simd_effect.pdf",ff,overwrite=TRUE)
 file.copy("Figures/pdfs/Unsorted/equivalent_years_older_shapley.pdf",ff,overwrite=TRUE)
 file.copy("Figures/pdfs/Unsorted/age_simd_equivalent.pdf",ff,overwrite=TRUE)
-
-
-
+f_order=c("age_effect","simd_effect","equivalent_years_older_shapley","age_simd_equivalent")

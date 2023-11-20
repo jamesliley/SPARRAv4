@@ -5,6 +5,3 @@ source("Figures/subfigure_code/calibration_constituents.R")
 ff="Figures/pdfs/SF_const_calib/"
 fx=list.files("Figures/pdfs/Unsorted/",pattern="cal_*",full.names=TRUE)
 for (i in 1:length(ff)) file.copy(fx[i],ff,overwrite=TRUE)
-
-
-

@@ -12,5 +12,3 @@ file.copy("Figures/pdfs/Unsorted/variable_score_cal.pdf",ff,overwrite=TRUE)
 file.copy("Figures/pdfs/Unsorted/cohort_change_over_time.pdf",ff,overwrite=TRUE)
 file.copy("Figures/pdfs/Unsorted/individual_change_over_time.pdf",ff,overwrite=TRUE)
 
-
-

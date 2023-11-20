@@ -37,10 +37,6 @@ test_times=c(
 # Number of time cutoffs
 ntx=5
 
-## ROC curves for predictor at various time cutoffs
-pdf(paste0(plot_dir,"cohort/drift/drift_roc.pdf"),width=3,height=3.5)
-roc_2panel(list(xy1,xy2,xy3,xy4,xy5),labels=as.character(test_times),col=gray(((1:ntx)-1)/(1.3*ntx)))
-dev.off()
 
 # use ggplot2 to create ROC curves for a predictor at various time cutoffs
 
@@ -118,10 +114,6 @@ test_times=c(
 )
 # Number of time cutoffs
 ntx=5
-pdf(paste0(plot_dir,"cohort/drift/drift_prc.pdf"),width=3,height=3.5)
-prc_2panel(list(px1,px2,px3,px4,px5),labels=as.character(test_times),
-           col=gray(((1:ntx)-1)/(1.3*ntx)))
-dev.off()
 
 ## new code
 # PRC curves for each time cutoff
@@ -193,11 +185,6 @@ test_times=c(
 )
 
 ## code that generates old plot
-# pdf(paste0(plot_dir,"recalculate/CAL/cal.",xname,".pdf"),width=3,height=3.5)
-# cci=rgb((ntx-1)/(1.3*ntx),(ntx-1)/(1.3*ntx),(ntx-1)/(1.3*ntx),alpha=0.5) # colour for confidence envelope
-# cal_2panel(list(cx1,cx2,cx3,cx4,cx5),as.character(test_times),col=gray(((1:ntx)-1)/(1.3*ntx)),
-#            ci_col=c(NA,NA,NA,NA,cci))
-# dev.off()
 
 ## code to generate the new plot
 ntx <- length(test_times)

@@ -354,9 +354,6 @@ p3c <- ggarrange( p3c1 + theme(axis.text.x = element_blank(),
                   p3c3 + theme(plot.margin = margin(t = 0, r = 0.2, l = 0.2, unit = "cm")),
                   nrow = 3)
 
-ggsave("Figures/pdfs/Fig_3c.pdf", p3c,
-       width = 10, height = 20, units = "cm",
-       device = cairo_pdf)
 
 # Set the height ratios
 heights <- c(2, 1, 1)  # Specify the heights of each row

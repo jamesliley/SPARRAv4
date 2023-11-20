@@ -19,7 +19,6 @@ cal_2panel(list(cv3h3,cv3h4,cv4h3,cv4h4),labels=c("v3, v3>v4","v3, v4>v3","v4, v
            lty=c(1,2,1,2),ci_col=cic)
 
 
-
 # New Figure 2(d)
 df <- rbind(
   cbind(Model = "v3",

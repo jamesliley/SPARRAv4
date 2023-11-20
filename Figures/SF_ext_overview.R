@@ -7,4 +7,3 @@ file.copy("Figures/pdfs/Unsorted/age_simd_distributions.pdf",ff,overwrite=TRUE)
 file.copy("Figures/pdfs/Unsorted/event_type.pdf",ff,overwrite=TRUE)
 
 
-
