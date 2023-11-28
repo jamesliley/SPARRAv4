@@ -18,7 +18,7 @@ groc=roc_2panel_gg(list(xroc3b,xroc4b),labels=labs,
            legend_title="AUROC (SE)")
 
 
-sc=1.5
+sc=1.3
 ggsave("Figures/pdfs/Unsorted/roc_v3v4.pdf",plot=groc,
        width = sc*7.5, height = sc*7.25, units = "cm",
        device = cairo_pdf)

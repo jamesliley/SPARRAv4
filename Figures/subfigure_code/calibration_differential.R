@@ -27,7 +27,7 @@ cx=cal_2panel_gg(list(cv3h3,cv3h4,cv4h3,cv4h4),
            col=c("blue","blue","red","red"),
            ci_col=cic)
 
-sc=1.5
+sc=1.3
 ggsave("Figures/pdfs/Unsorted/calibration_differential.pdf",cx,
        width = sc*7.5, height = sc*7.25, units = "cm",
        device = cairo_pdf)
