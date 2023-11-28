@@ -18,6 +18,18 @@ cal_2panel(list(cv3h3,cv3h4,cv4h3,cv4h4),labels=c("v3, v3>v4","v3, v4>v3","v4, v
            title=paste0("|v3-v4| > ",del),xy_col="gray",xy_lty=2,col=c("red","red","black","black"),
            lty=c(1,2,1,2),ci_col=cic)
 
+# New figure
+cx=cal_2panel_gg(list(cv3h3,cv3h4,cv4h3,cv4h4),
+              labels=c("v3, v3>v4","v3, v4>v3","v4, v3>v4", "v4, v4>v3"),
+           legend_title=paste0("|v3-v4| > ",del),
+           xy_col="gray",
+           col=c("red","red","black","black"),
+           ci_col=cic)
+
+ggsave("Figures/pdfs/Unsorted/calibration_differential.pdf",cx,
+       width = 7.5, height = 7.25, units = "cm",
+       device = cairo_pdf)
+
 
 # New Figure 2(d)
 df <- rbind(
@@ -73,8 +85,9 @@ p2 <- ggplot(df) +
 
 p <- p1 / p2 + plot_layout(heights = c(3,1))
 
-print(p)
+#print(p)
 
-ggsave("Figures/pdfs/Unsorted/calibration_differential.pdf",
-       width = 7.5, height = 7.25, units = "cm",
-       device = cairo_pdf)
+# Louis' original code: changed to generic function.
+#ggsave("Figures/pdfs/Unsorted/calibration_differential.pdf",
+#       width = 7.5, height = 7.25, units = "cm",
+#       device = cairo_pdf)

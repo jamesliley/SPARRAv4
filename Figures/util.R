@@ -1,3 +1,6 @@
+library(ggplot2)
+library(patchwork)
+
 import_sparra_expr <- function(f) {
   sink_marker <- "***************"
   f2 <- readChar(f, file.info(f)$size)
@@ -80,7 +83,7 @@ roc_2panel_gg=function(rocs,labels=names(rocs),col=1:length(rocs),
   df1=df
   df1$spec=1-df1$spec
   p1 = ggplot(df1) +
-    geom_path(aes(x = .data$spec, y = .data$sens, col = .data$Model), linewidth = 0.4) +
+    geom_path(aes(x = .data$spec, y = .data$sens, col = .data$Model), linewidth = 0.8) +
     xlim(0, 1) + ylim(0, 1) +
     xlab("") + ylab("Sensitivity") +
     theme_minimal(base_size = 8) + theme(legend.justification = c(1,0),
@@ -104,7 +107,7 @@ roc_2panel_gg=function(rocs,labels=names(rocs),col=1:length(rocs),
   colnames(df2)[3]="dsens"
   
   p2 = ggplot(df2) + 
-    geom_path(aes(x = .data$spec, y = .data$dsens, col = .data$Model), linewidth = 0.4) +
+    geom_path(aes(x = .data$spec, y = .data$dsens, col = .data$Model), linewidth = 0.8) +
     xlim(0, 1) + 
     xlab("1 - Specificity") + ylab(expression(paste(Delta," Sensitivity"))) +
     theme_minimal(base_size = 8) + theme(legend.position = "none")
@@ -174,11 +177,11 @@ prc_2panel_gg=function(prcs,labels=names(prcs),col=1:length(prcs),
   
   # Assemble top figure
   p1 = ggplot(df) +
-    geom_path(aes(x = .data$sens, y = .data$ppv, col = .data$Model), linewidth = 0.4) +
+    geom_path(aes(x = .data$sens, y = .data$ppv, col = .data$Model), linewidth = 0.8) +
     xlim(0, 1) + ylim(0, 1) +
     xlab("") + ylab("Precision") +
-    theme_minimal(base_size = 8) + theme(legend.justification = c(1,0),
-                                         legend.position = c(1,0),
+    theme_minimal(base_size = 8) + theme(legend.justification = c(1,1),
+                                         legend.position = c(1,1),
                                          legend.spacing = unit(0, "npc"),
                                          legend.margin = margin(),
                                          legend.background = 
@@ -198,7 +201,7 @@ prc_2panel_gg=function(prcs,labels=names(prcs),col=1:length(prcs),
   colnames(df2)[3]="dppv"
   
   p2 = ggplot(df2) + 
-    geom_path(aes(x = .data$sens, y = .data$dppv, col = .data$Model), linewidth = 0.4) +
+    geom_path(aes(x = .data$sens, y = .data$dppv, col = .data$Model), linewidth = 0.8) +
     xlim(0, 1) + 
     xlab("Recall") + ylab(expression(paste(Delta," Precision"))) +
     theme_minimal(base_size = 8) + theme(legend.position = "none")
@@ -239,6 +242,7 @@ prc_2panel_gg=function(prcs,labels=names(prcs),col=1:length(prcs),
 ##' @param labels labels to use in legend
 ##' @param col line colours
 ##' @param xy_col line colour for x-y line, defaults to phs-magenta
+##' @param lty specify line type; vector of length 'cals'
 ##' @param ci_col colours to draw confidence intervals on lower panel; NA to not draw. 
 ##' @param highlight if non-null, highlight a particular value
 ##' @param yrange_lower y range for lower plot. If NULL, generates automatically
@@ -248,13 +252,14 @@ prc_2panel_gg=function(prcs,labels=names(prcs),col=1:length(prcs),
 ##' @examples 
 ##' # See vignette
 cal_2panel_gg=function(cals,labels,col=1:length(cals),
-                    xy_col="black",
+                    xy_col="black",lty=rep("solid",length(cals)),
                     ci_col=col,highlight=NULL,yrange_lower=NULL,
-                    legend_title="") {
+                    legend_title="Legend") {
   
   # Fix colours
   if (length(col)>length(cals)) col=col[1:length(cals)]
   
+  col0=col
   
   # Compose data frame for ggplot
   df=data.frame()
@@ -266,14 +271,15 @@ cal_2panel_gg=function(cals,labels,col=1:length(cals),
                         du=cals[[i]]$upper,
                         dl=cals[[i]]$lower))
   df$Model=factor(df$Model,levels=unique(df$Model))
-  
+
   # Assemble top figure
   if (!is.null(ci_col)) ccol=ci_col[as.factor(df$Model)]
   p1 = ggplot(df)
   if (!is.null(ci_col)) p1=p1 + geom_ribbon(aes(x = .data$obs, ymin = .data$dl, 
                                                 ymax = .data$du,fill=.data$Model),alpha = 0.25)
   p1=p1 +
-    geom_path(aes(x = .data$obs, y = .data$exp, col = .data$Model), linewidth = 0.4) +
+    geom_path(aes(x = .data$obs, y = .data$exp, col = .data$Model,linetype=.data$Model), 
+              linewidth = 0.6) + 
     xlim(0, 1) + ylim(0, 1) +
     xlab("") + ylab("Observed") +
     theme_minimal(base_size = 8) + theme(legend.justification = c(1,0),
@@ -300,7 +306,7 @@ cal_2panel_gg=function(cals,labels,col=1:length(cals),
   p2 = ggplot(df2)
   if (!is.null(ci_col)) p2=p2 + geom_ribbon(aes(x = .data$obs, ymin = .data$dl, 
                                                 ymax = .data$du,fill=.data$Model),alpha = 0.25)
-  p2 = p2 +  geom_path(aes(x = .data$obs, y = .data$dexp,col=.data$Model), linewidth = 0.4) +
+  p2 = p2 +  geom_path(aes(x = .data$obs, y = .data$dexp,col=.data$Model), linewidth = 0.8) +
     xlim(0, 1) + 
     xlab("Expected") + ylab(expression(paste(Delta," from calibrated"))) +
     theme_minimal(base_size = 8) + theme(legend.position = "none")
@@ -309,7 +315,7 @@ cal_2panel_gg=function(cals,labels,col=1:length(cals),
   ## Modify styles
   # Line colours
   cval=c("r1"="red","r2"="black")
-  p1=p1 + scale_color_manual(values=col,name=legend_title) 
+  p1=p1 + scale_color_manual(values=col,name=legend_title) + scale_linetype_manual(name=legend_title,values= lty)
   p2=p2 + scale_color_manual(values=col)
   
   if (!is.null(ci_col)) {
