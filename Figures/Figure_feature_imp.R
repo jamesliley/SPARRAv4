@@ -4,7 +4,7 @@ source("Figures/subfigure_code/shapley_value_plots.R")
 source("Figures/subfigure_code/n_adm_effect.R")
 
 # Move ROC/PRC/CAL files
-ff="Figures/pdfs/SF_feature_imp/"
+ff="Figures/pdfs/Figures_feature_imp/"
 file.copy("Figures/pdfs/Unsorted/topic_roc.pdf",ff,overwrite=TRUE)
 file.copy("Figures/pdfs/Unsorted/topic_prc.pdf",ff,overwrite=TRUE)
 file.copy("Figures/pdfs/Unsorted/topic_cal.pdf",ff,overwrite=TRUE)

@@ -20,9 +20,9 @@ plot(0,type="n",xlim=c(0,365),xlab="Days after time cutoff",ylim=c(0,mh),
 
 gcol=gray((1:xmax)/(1.5*xmax))
 for (i in 1:xmax) lines(get(paste0("d",i)),col=gcol[i],lty=1,lwd=2)
-lines(d0,col="blue",lwd=2)
+lines(d0,col="black",lwd=4)
 
-legend("topright",lty=1,lwd=2,col=c(gcol[1],"white",gcol[xmax],"blue"),
+legend("topright",lty=1,lwd=c(2,2,2,4),col=c(gcol[1],"white",gcol[xmax],"black"),,
        c("v4 > 0.1","...","v4 > 0.8","All"))
 
 dev.off()
