@@ -61,7 +61,7 @@ eval(import_sparra_expr("Analysis/full_model/Performance/v4_final/cal_max.txt"))
 
 # Old Figure 2(c)
 labs=c("v3", "v4")
-cic=c(rgb(0,0,1,alpha=0.5),rgb(0,0,1,alpha=0.5))
+cic=c(rgb(0,0,1,alpha=0.5),rgb(1,0,0,alpha=0.5))
 
 
 # New Figure 2(c)

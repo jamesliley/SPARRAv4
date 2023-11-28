@@ -16,7 +16,11 @@ aucNT=signif(xrocNT$auc,digits=4); seNT=signif(xrocNT$se,digits=2);
 labs=c(paste0("Topics: ",aucT," (",seT,")"),
        paste0("No topics: ",aucNT," (",seNT,")"))
 xcol=c("red","black")
-roc_2panel(list(xrocT,xrocNT),labels=labs,col=xcol,title="AUROC (SE)",text.col=xcol,title.col="black",xy_col="blue")
+roc_2panel_gg(list(xrocT,xrocNT),
+              labels=labs,
+              col=xcol,
+              legend_title="AUROC (SE)",
+              xy_col="blue")
 dev.off()
 
 
@@ -27,7 +31,10 @@ aucNT=signif(xprcNT$auc,digits=4); seNT=signif(xprcNT$se,digits=2);
 labs=c(paste0("Topics: ",aucT," (",seT,")"),
        paste0("No topics: ",aucNT," (",seNT,")"))
 xcol=c("red","black")
-prc_2panel(list(xprcT,xprcNT),labels=labs,col=xcol,title="AUPRC (SE)",text.col=xcol,title.col="black")
+prc_2panel_gg(list(xprcT,xprcNT),
+              labels=labs,
+              col=xcol,
+              legend_title="AUPRC (SE)")
 dev.off()
 
 ## Calibration curves
@@ -35,5 +42,9 @@ pdf("Figures/pdfs/Unsorted/topic_cal.pdf",width=3,height=3.5)
 labs=c("Topics","No topics")
 xcol=c("red","black")
 cci=rgb(0.5,0.5,0.5,alpha=0.5) # colour for confidence envelope
-cal_2panel(list(xcalT,xcalNT),labels=labs,col=xcol,text.col=xcol,ci_col=c(NA,cci),xy_col="blue")
+cal_2panel_gg(list(xcalT,xcalNT),
+           labels=labs,
+           col=xcol,
+           ci_col=c(NA,cci),
+           xy_col="blue")
 dev.off()

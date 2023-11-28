@@ -259,6 +259,10 @@ cal_2panel_gg=function(cals,labels,col=1:length(cals),
   # Fix colours
   if (length(col)>length(cals)) col=col[1:length(cals)]
   
+  blank=rgb(1,1,1,alpha=1)
+  ci_col[which(is.na(ci_col))]=blank
+  col[which(is.na(col))]=blank
+  
   col0=col
   
   # Compose data frame for ggplot
