@@ -306,7 +306,7 @@ cal_2panel_gg=function(cals,labels,col=1:length(cals),
   p2 = ggplot(df2)
   if (!is.null(ci_col)) p2=p2 + geom_ribbon(aes(x = .data$obs, ymin = .data$dl, 
                                                 ymax = .data$du,fill=.data$Model),alpha = 0.25)
-  p2 = p2 +  geom_path(aes(x = .data$obs, y = .data$dexp,col=.data$Model), linewidth = 0.8) +
+  p2 = p2 +  geom_path(aes(x = .data$obs, y = .data$dexp,col=.data$Model,linetype=.data$Model), linewidth = 0.8) +
     xlim(0, 1) + 
     xlab("Expected") + ylab(expression(paste(Delta," from calibrated"))) +
     theme_minimal(base_size = 8) + theme(legend.position = "none")
@@ -316,7 +316,7 @@ cal_2panel_gg=function(cals,labels,col=1:length(cals),
   # Line colours
   cval=c("r1"="red","r2"="black")
   p1=p1 + scale_color_manual(values=col,name=legend_title) + scale_linetype_manual(name=legend_title,values= lty)
-  p2=p2 + scale_color_manual(values=col)
+  p2=p2 + scale_color_manual(values=col,name=legend_title)+ scale_linetype_manual(values= lty,name=legend_title)
   
   if (!is.null(ci_col)) {
     p1=p1 + scale_fill_manual(values=ci_col,name=legend_title) 

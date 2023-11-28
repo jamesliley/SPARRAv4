@@ -24,8 +24,9 @@ cx=cal_2panel_gg(list(cv3h3,cv3h4,cv4h3,cv4h4),
               labels=c("v3, v3>v4","v3, v4>v3","v4, v3>v4", "v4, v4>v3"),
            legend_title=" ", #paste0("|v3-v4| > ",del),
            xy_col="gray",
+           lty=c("solid","dashed","solid","dashed"),
            col=c("blue","blue","red","red"),
-           ci_col=cic)
+           ci_col=cic2)
 
 sc=1.3
 ggsave("Figures/pdfs/Unsorted/calibration_differential.pdf",cx,
