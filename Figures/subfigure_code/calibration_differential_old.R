@@ -1,0 +1,61 @@
+
+# New Figure 2(d)
+df <- rbind(
+  cbind(Model = "v3",
+        Order = "v3>v4",
+        data.frame(pred = cv3h3$x,
+                   obs  = cv3h3$y[,1],
+                   del  = cv3h3$y[,1] - cv3h3$x,
+                   dell = cv3h3$lower[,1] - cv3h3$x,
+                   delu = cv3h3$upper[,1] - cv3h3$x)),
+  cbind(Model = "v3",
+        Order = "v4>v3",
+        data.frame(pred = cv3h4$x,
+                   obs  = cv3h4$y[,1],
+                   del  = cv3h4$y[,1] - cv3h4$x,
+                   dell = cv3h4$lower[,1] - cv3h4$x,
+                   delu = cv3h4$upper[,1] - cv3h4$x)),
+  cbind(Model = "v4",
+        Order = "v3>v4",
+        data.frame(pred = cv4h3$x,
+                   obs  = cv4h3$y[,1],
+                   del  = cv4h3$y[,1] - cv4h3$x,
+                   dell = cv4h3$lower[,1] - cv4h3$x,
+                   delu = cv4h3$upper[,1] - cv4h3$x)),
+  cbind(Model = "v4",
+        Order = "v4>v3",
+        data.frame(pred = cv4h4$x,
+                   obs  = cv4h4$y[,1],
+                   del  = cv4h4$y[,1] - cv4h4$x,
+                   dell = cv4h4$lower[,1] - cv4h4$x,
+                   delu = cv4h4$upper[,1] - cv4h4$x))
+) |> mutate(Model = fct_relevel(Model, "v3", "v4"),
+            Order = fct_relevel(Order, "v3>v4", "v4>v3"))
+
+p1 <- ggplot(df) +
+  geom_line(aes(x = pred, y = obs, linetype = Model, col = Order), linewidth = 0.4) +
+  xlim(0, 1) + ylim(0, 1) +
+  xlab("") + ylab("Observed") +
+  guides(linetype = guide_legend(title = "", direction = "horizontal", order = 1, label.position = "top"),
+         col = guide_legend(title = "", direction = "horizontal", order = 2, label.position = "top")) +
+  theme_minimal(base_size = 8) + theme(legend.justification = c(0,1),
+                                       legend.position = c(0,1),
+                                       legend.spacing = unit(0, "npc"),
+                                       legend.margin = unit(0, "npc"),
+                                       legend.background = element_rect(fill = "white", size = 0, colour = "white"))
+
+p2 <- ggplot(df) +
+  geom_ribbon(aes(x = pred, ymin = dell, ymax = delu, linetype = Model, fill = Order), alpha = 0.5) +
+  geom_line(aes(x = pred, y = del, linetype = Model, col = Order), linewidth = 0.4) +
+  xlim(0, 1) +
+  xlab("Predicted") + ylab("Δ from Calibrated") +
+  theme_minimal(base_size = 8) + theme(legend.position = "none")
+
+p <- p1 / p2 + plot_layout(heights = c(3,1))
+
+#print(p)
+
+# Louis' original code: changed to generic function.
+#ggsave("Figures/pdfs/Unsorted/calibration_differential.pdf",
+#       width = 7.5, height = 7.25, units = "cm",
+#       device = cairo_pdf)
