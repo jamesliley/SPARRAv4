@@ -65,7 +65,7 @@ ggsave("Figures/pdfs/Unsorted/variable_score_roc.pdf",rx,
 plot_dir = "Analysis/time_attenuation/"
 eval(import_sparra_expr("Analysis/time_attenuation/recalculate/PRC/prc.super.txt"))
 
-px=prc_2panel(
+px=prc_2panel_gg(
   list(px1,px2,px3,px4,px5),
   labels=as.character(test_times),
   col=timecol)

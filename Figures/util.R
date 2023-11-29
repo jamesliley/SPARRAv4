@@ -242,6 +242,7 @@ prc_2panel_gg=function(prcs,labels=names(prcs),col=1:length(prcs),
 ##' @param labels labels to use in legend
 ##' @param col line colours
 ##' @param xy_col line colour for x-y line, defaults to phs-magenta
+##' @param xy_lty line type for xy line, default to dashed
 ##' @param lty specify line type; vector of length 'cals'
 ##' @param ci_col colours to draw confidence intervals on lower panel; NA to not draw. 
 ##' @param highlight if non-null, highlight a particular value
@@ -252,7 +253,7 @@ prc_2panel_gg=function(prcs,labels=names(prcs),col=1:length(prcs),
 ##' @examples 
 ##' # See vignette
 cal_2panel_gg=function(cals,labels,col=1:length(cals),
-                    xy_col="black",lty=rep("solid",length(cals)),
+                    xy_col="black",xy_lty=2,lty=rep("solid",length(cals)),
                     ci_col=col,highlight=NULL,yrange_lower=NULL,
                     legend_title="Legend") {
   
@@ -262,6 +263,7 @@ cal_2panel_gg=function(cals,labels,col=1:length(cals),
   blank=rgb(1,1,1,alpha=1)
   ci_col[which(is.na(ci_col))]=blank
   col[which(is.na(col))]=blank
+  if (is.na(xy_col)) xy_col=blank
   
   col0=col
   
@@ -328,7 +330,7 @@ cal_2panel_gg=function(cals,labels,col=1:length(cals),
   }
   
   # A-B line
-  p1=p1 + geom_abline(slope=1,color=xy_col,linetype=2)
+  p1=p1 + geom_abline(slope=1,color=xy_col,linetype=xy_lty)
   # Scale for lower plot
   if (!is.null(yrange_lower)) p2=p2 + ylim(yrange_lower[1],yrange_lower[2])
   

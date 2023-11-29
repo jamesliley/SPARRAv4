@@ -23,7 +23,7 @@ cic2=c(rgb(0,0,1,alpha=0.5),rgb(0,0,1,alpha=0.5),rgb(1,0,0,alpha=0.5),rgb(1,0,0,
 cx=cal_2panel_gg(list(cv3h3,cv3h4,cv4h3,cv4h4),
               labels=c("v3, v3>v4","v3, v4>v3","v4, v3>v4", "v4, v4>v3"),
            legend_title=" ", #paste0("|v3-v4| > ",del),
-           xy_col="gray",
+           xy_col=NA,xy_lty="solid",
            lty=c("solid","dashed","solid","dashed"),
            col=c("blue","blue","red","red"),
            ci_col=cic2)

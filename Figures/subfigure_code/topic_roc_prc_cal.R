@@ -46,5 +46,5 @@ cal_2panel_gg(list(xcalT,xcalNT),
            labels=labs,
            col=xcol,
            ci_col=c(NA,cci),
-           xy_col="blue")
+           xy_col=NA)
 dev.off()

@@ -33,7 +33,7 @@ p3a1 <-
                   width = 0.2, linewidth = 1) + # position = position_dodge(width = 1)
     xlab("Age group") +
     ylab("AUROC") +
-    scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
+    scale_color_manual(values = c("V4" = "red", "V3" = "blue")) +
     scale_x_discrete(labels = age_labels) +
     #scale_x_continuous(minor_breaks = NULL, breaks = 1:(length(age_labels)), labels = age_labels) +  # Set custom x-axis labels +  # Set custom x-axis labels
     # Set y-axis to start from 0
@@ -68,7 +68,7 @@ p3a2 <-
   geom_bar(stat = "identity", position = "dodge", width = 0.5) +
   xlab("Age group") +
   ylab("% increase") +
-  scale_fill_manual(values = c("V4" = "black", "V3" = "red")) +
+  scale_fill_manual(values = c("V4" = "red", "V3" = "blue")) +
   scale_x_discrete(labels = age_labels) +
   coord_fixed(ratio = 0.5) + # Set aspect ratio to 1:1
   theme_bw() +
@@ -88,7 +88,7 @@ p3a3 <-
   geom_bar(stat = "identity", position = "dodge", width = 0.5) +
   xlab("Age group") +
   ylab("% events") +
-  scale_fill_manual(values = c("V4" = "black", "V3" = "red")) +
+  scale_fill_manual(values = c("V4" = "red", "V3" = "blue")) +
   scale_x_discrete(labels = age_labels) +
   coord_fixed(ratio = 7) + # Set aspect ratio to 1:1
   theme_bw() +
@@ -160,7 +160,7 @@ p3b1 <-
   geom_errorbar(aes(ymin = y - 3*sd, ymax = y + 3*sd, col = version), width = 0.2, linewidth=1, size = 0.4) + # position = position_dodge(width = 1)
   scale_x_discrete(labels = labs) + # breaks = (m0 + 2) * (1:n0) - floor(m0 / 2) - 1,
   #scale_y_continuous(expand = c(0, 0), limits = c(min(plot_data$y)-0.1, 0.9)) +
-  scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
+  scale_color_manual(values = c("V4" = "red", "V3" = "blue")) +
   scale_y_continuous(expand = c(0, 0), limits = c(0.68, 0.81)) +
   labs(x = "SIMD", y = "AUROC") +
   guides(col = guide_legend(title = NULL)) +
@@ -188,7 +188,7 @@ p3b2 <-
   geom_bar(stat = "identity", position = "dodge", width = 0.5) +
   xlab("SIMD") +
   ylab("% increase") +
-  scale_fill_manual(values = c("V4" = "black", "V3" = "red")) +
+  scale_fill_manual(values = c("V4" = "red", "V3" = "blue")) +
   scale_x_discrete(labels = labs) +
   coord_fixed(ratio = 0.5) + # Set aspect ratio to 1:1
   theme_bw() +
@@ -208,7 +208,7 @@ p3b3 <-
   geom_bar(stat = "identity", position = "dodge", width = 0.5) +
   xlab("SIMD") +
   ylab("% events") +
-  scale_fill_manual(values = c("V4" = "black", "V3" = "red")) +
+  scale_fill_manual(values = c("V4" = "red", "V3" = "blue")) +
   scale_x_discrete(labels = labs) +
   coord_fixed(ratio = 7) + # Set aspect ratio to 1:1
   theme_bw() +
@@ -274,7 +274,7 @@ p3c1 <-
   geom_point(aes(color = version), shape = 18, size = 2) +
   geom_errorbar(aes(ymin = y - 3*se, ymax = y + 3*se, col = version), width = 0.2, linewidth=1,size = 0.4) + # position = position_dodge(width = 1)
   
-  scale_color_manual(values = c("V4" = "black", "V3" = "red")) +
+  scale_color_manual(values = c("V4" = "red", "V3" = "blue")) +
   scale_x_discrete(
     #breaks = (m0 + 2) * (1:n0) - floor(m0 / 2) - 1,
     labels = labs,
@@ -309,7 +309,7 @@ p3c2 <-
   geom_bar(stat = "identity", position = "dodge", width = 0.5) +
   xlab("Cohort") +
   ylab("% increase") +
-  scale_fill_manual(values = c("V4" = "black", "V3" = "red")) +
+  scale_fill_manual(values = c("V4" = "red", "V3" = "blue")) +
   scale_x_discrete(labels = labs) +
   coord_fixed(ratio = 0.5) + # Set aspect ratio to 1:1
   theme_bw() +
@@ -329,7 +329,7 @@ p3c3 <-
   geom_bar(stat = "identity", position = "dodge", width = 0.5) +
   xlab("Cohort") +
   ylab("% events") +
-  scale_fill_manual(values = c("V4" = "black", "V3" = "red")) +
+  scale_fill_manual(values = c("V4" = "red", "V3" = "blue")) +
   scale_x_discrete(labels = labs) +
   coord_fixed(ratio = 7) + # Set aspect ratio to 1:1
   theme_bw() +

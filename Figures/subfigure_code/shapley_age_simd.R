@@ -18,7 +18,7 @@ lines(xtrue,ytrue,lwd=2)
 lines(xtrue,ytrue + sqrt(yvar),lty=2,lwd=2)
 lines(xtrue,ytrue - sqrt(yvar),lty=2,lwd=2)
 
-legend("topleft",c("Mean","SD","Density"),lty=c(1,2,NA),lwd=2,
+legend("topleft",c("Mean","Mean +/- SD","Density"),lty=c(1,2,NA),lwd=2,
        pch=c(NA,NA,16),pt.cex=c(NA,NA,2),col=c("black","black","gray"),bty="n")
 
 dev.off()

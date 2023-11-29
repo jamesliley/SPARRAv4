@@ -18,7 +18,7 @@ dev.off()
 
 eval(import_sparra_expr("Analysis/full_model/Shapley_values/age_simd_equivalent.txt"))
 xx=seq(2,80);
-xcol=colorRampPalette(c("blue","gray","red"))(10)
+xcol=colorRampPalette(c("purple","gray","orange"))(10)
 pdf("Figures/pdfs/Unsorted/age_simd_equivalent.pdf",width=5,height=5)
 plot(0,type="n",xlab="Chron. age",ylab="Effective age",xlim=c(15,max(xx)),ylim=c(20,max(xx)))
 abline(0,1,col="black",lty=2,lwd=2)

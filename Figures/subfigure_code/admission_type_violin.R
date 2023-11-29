@@ -8,7 +8,7 @@ eval(import_sparra_expr(paste0(plot_dir,"Analytics/disease_class_violin.txt")))
 # old code
 pdf("Figures/pdfs/Unsorted/disease_class_violin.pdf",width=6,height=5)
 
-col1="blue" # Colour for categories
+col1=gray(0.5) # Colour for categories
 
 par(mar=c(8.1,4.1,4.1,2.1))
 dmax=0
@@ -59,5 +59,6 @@ axis(1,at=locs[5:length(locs)],
      col.axis="black",
      las=2,cex.axis=0.5)
 
-
+mtext("Event status",1,line=5,outer=0,adj=0.05,col=col1)
+mtext("Diagnosis assigned during EA",1,line=5,outer=0,adj=0.8)
 dev.off()

@@ -54,11 +54,15 @@ for (i in 1:length(test_times)) {
       lines(q0,q1,col="blue",lwd=2)
       
       #lines(q0a,q1a,col="black",lwd=4)
-      lines(q0a,q1a,col="darkgreen",lwd=2)
+      # lines(q0a,q1a,col="darkgreen",lwd=2)
       
-      legend("bottomright",c("Density (low)","", "Density (high)", "Marginal", "X-Y","Q-Q","Median (col)","Median (row)"),
-             pch=c(16,16,16,NA,NA,NA,NA,NA),lty=c(NA,NA,NA,1,2,1,1,2),lwd=c(NA,NA,NA,1,2,2,2,2),
-             col=c("darkgray","red","yellow","black","black","blue","darkgreen","darkgreen"))
+      #legend("bottomright",c("Density (low)","", "Density (high)", "Marginal", "X-Y","Q-Q","Median (col)","Median (row)"),
+      #       pch=c(16,16,16,NA,NA,NA,NA,NA),lty=c(NA,NA,NA,1,2,1,1,2),lwd=c(NA,NA,NA,1,2,2,2,2),
+      #       col=c("darkgray","red","yellow","black","black","blue","darkgreen","darkgreen"))
+      legend("bottomright",c("Density (low)","", "Density (high)", "X-Y","Q-Q"),
+             pch=c(16,16,16,NA,NA),lty=c(NA,NA,NA,2,1),lwd=c(NA,NA,NA,2,2),
+             col=c("darkgray","red","yellow","black","blue"))
+      
       dev.off()
     }
   }

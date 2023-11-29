@@ -66,7 +66,7 @@ cic=c(rgb(0,0,1,alpha=0.5),rgb(1,0,0,alpha=0.5))
 
 # New Figure 2(c)
 gcal=cal_2panel_gg(list(xcal3,xcal4),labels=labs,col=c("blue","red"),
-                   ci_col=cic,xy_col="gray")
+                   ci_col=cic,xy_col=NA)
 
 
 ggsave("Figures/pdfs/Unsorted/cal_v3v4.pdf",plot=gcal,
