@@ -32,7 +32,8 @@ test_times=c(
   dmy_hm("1-12-2016 00:00"),
   dmy_hm("1-5-2017 00:00")
 )
-timecol=palette.colors(palette = "R4")[1:length(test_times)]
+#timecol=palette.colors(palette = "R4")[1:length(test_times)]
+timecol=as.vector(palette.colors(palette = "Okabe-Ito")[c(1,2,4,5,8)])
 
 # Number of time cutoffs
 ntx=5
