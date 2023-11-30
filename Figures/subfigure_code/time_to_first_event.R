@@ -23,7 +23,7 @@ sub=c(1,3,5,7)
 for (i in sub) lines(get(paste0("d",i)),col=gcol[i],lty=1,lwd=2)
 lines(d0,col="black",lwd=4)
 
-legend("topright",lty=1,lwd=c(2,2,2,4),col=c(gcol[1],"white",gcol[xmax],"black"),,
-       c("v4 > 0.1","...","v4 > 0.8","All"))
+legend("topright",lty=1,lwd=c(2,2,2,4),col=c(gcol[1],"white",gcol[xmax],"black"),
+       c("Risk score > 0.2","> 0.4,0.6","Risk score > 0.8","All"))
 
 dev.off()
