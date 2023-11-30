@@ -32,7 +32,7 @@ test_times=c(
   dmy_hm("1-12-2016 00:00"),
   dmy_hm("1-5-2017 00:00")
 )
-timecol=scales::hue_pal()(length(test_times))
+timecol=palette.colors(palette = "R4")[1:length(test_times)]
 
 # Number of time cutoffs
 ntx=5
