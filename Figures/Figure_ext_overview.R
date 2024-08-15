@@ -5,5 +5,6 @@ source("Figures/subfigure_code/age_simd_event_exclusion_distributions.R")
 ff="Figures/pdfs/Figure_ext_overview//"
 file.copy("Figures/pdfs/Unsorted/age_simd_distributions.pdf",ff,overwrite=TRUE)
 file.copy("Figures/pdfs/Unsorted/event_type.pdf",ff,overwrite=TRUE)
+file.copy("Diagrams/timelines.pdf",ff,overwrite=TRUE)
 
 
